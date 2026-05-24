@@ -1,0 +1,221 @@
+import { useState } from "react";
+import { FiLock, FiMinus, FiPlus } from "react-icons/fi";
+import { useCatalogStore } from "@/features/catalog/stores";
+import { useHistoryStore } from "@/features/history/stores";
+import { useNgStore } from "@/features/ng-filter/stores";
+import { useSettingsStore } from "@/features/settings/hooks";
+import { FONT_SIZE_MAX, FONT_SIZE_MIN } from "@/features/settings/stores";
+import { Select, SettingRow, SettingSection } from "@/features/settings/ui";
+import { Button, Input, Toggle } from "@/shared/ui/form";
+import { ConfirmDialog } from "@/shared/ui/overlay";
+
+/**
+ * 表示設定タブのコンテンツ
+ */
+export const DisplaySettings: React.FunctionComponent = () => {
+  const {
+    darkMode,
+    deleteKey,
+    setDeleteKey,
+    privacyMode,
+    setDarkMode,
+    setPrivacyMode,
+    fontSize,
+    setFontSize,
+    spaceMode,
+    setSpaceMode,
+    resetSettings,
+  } = useSettingsStore();
+  const {
+    columns,
+    showNew,
+    showCount,
+    catalogAnim,
+    setColumns,
+    setShowNew,
+    setShowCount,
+    setCatalogAnim,
+    resetCatalogSettings,
+  } = useCatalogStore();
+  const { clearHistory } = useHistoryStore();
+  const { clearAllNgSettings } = useNgStore();
+
+  const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
+  const [showClearAllDataDialog, setShowClearAllDataDialog] = useState(false);
+
+  const handleClearHistory = (): void => {
+    clearHistory();
+  };
+
+  const handleClearAllData = (): void => {
+    // すべてのストアをクリア
+    clearHistory();
+    clearAllNgSettings();
+    resetCatalogSettings();
+    resetSettings();
+  };
+
+  return (
+    <>
+      <SettingSection title="表示設定">
+        <SettingRow label="ダークモード">
+          <Toggle
+            checked={darkMode !== false}
+            onChange={setDarkMode}
+            aria-label="ダークモード切替"
+          />
+        </SettingRow>
+        <SettingRow
+          label={
+            <div className="flex items-center gap-2">
+              <FiLock size={16} />
+              <span>プライバシーモード</span>
+            </div>
+          }
+          description="画像を薄暗くして周囲から見えにくくします"
+        >
+          <Toggle
+            checked={privacyMode}
+            onChange={setPrivacyMode}
+            aria-label="プライバシーモード切替"
+          />
+        </SettingRow>
+        <SettingRow
+          label="アニメ画像を再生"
+          description="※オンにするとGIF/WebP等のアニメ画像が表示されます。通信量を節約したい場合はオフにしてください"
+        >
+          <Toggle
+            checked={catalogAnim === "always"}
+            onChange={(v: boolean): void =>
+              setCatalogAnim(v ? "always" : "never")
+            }
+            aria-label="アニメ画像"
+          />
+        </SettingRow>
+        <SettingRow label="文字サイズ" description={`${fontSize}px`}>
+          <div className="flex items-center gap-2 flex-1">
+            <button
+              type="button"
+              onClick={(): void => setFontSize(fontSize - 1)}
+              disabled={fontSize <= FONT_SIZE_MIN}
+              className="flex items-center justify-center w-8 h-8 rounded-md bg-card border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="文字サイズを小さく"
+            >
+              <FiMinus size={16} aria-hidden="true" />
+            </button>
+            <input
+              type="range"
+              min={FONT_SIZE_MIN}
+              max={FONT_SIZE_MAX}
+              step={1}
+              value={fontSize}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>): void =>
+                setFontSize(Number(e.target.value))
+              }
+              className="flex-1"
+              aria-label="文字サイズ"
+            />
+            <button
+              type="button"
+              onClick={(): void => setFontSize(fontSize + 1)}
+              disabled={fontSize >= FONT_SIZE_MAX}
+              className="flex items-center justify-center w-8 h-8 rounded-md bg-card border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="文字サイズを大きく"
+            >
+              <FiPlus size={16} aria-hidden="true" />
+            </button>
+          </div>
+        </SettingRow>
+        <SettingRow label="宇宙モード">
+          <Toggle
+            checked={spaceMode}
+            onChange={setSpaceMode}
+            aria-label="宇宙モード切替"
+          />
+        </SettingRow>
+      </SettingSection>
+      <SettingSection title="カタログ設定">
+        <SettingRow label="カタログ列数">
+          <Select
+            value={columns}
+            onChange={(value: string): void => setColumns(Number(value))}
+          >
+            {[3, 4, 5, 6, 7, 8].map((n) => (
+              <option key={n} value={n}>
+                {n}列
+              </option>
+            ))}
+          </Select>
+        </SettingRow>
+        <SettingRow label="NEW表示">
+          <Toggle
+            checked={showNew}
+            onChange={setShowNew}
+            aria-label="NEW表示切替"
+          />
+        </SettingRow>
+        <SettingRow label="レス数表示">
+          <Toggle
+            checked={showCount}
+            onChange={setShowCount}
+            aria-label="レス数表示切替"
+          />
+        </SettingRow>
+      </SettingSection>
+      <SettingSection title="投稿設定">
+        <SettingRow
+          label="削除キー"
+          description="投稿削除時に使用するパスワードです"
+        >
+          <Input
+            type="text"
+            value={deleteKey}
+            onChange={(
+              e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>,
+            ): void => setDeleteKey(e.target.value)}
+          />
+        </SettingRow>
+      </SettingSection>
+      <SettingSection title="データ管理">
+        <SettingRow>
+          <Button
+            variant="default"
+            className="w-full py-3"
+            onClick={(): void => setShowClearHistoryDialog(true)}
+          >
+            履歴をクリア
+          </Button>
+        </SettingRow>
+        <SettingRow>
+          <Button
+            variant="destructive"
+            className="w-full py-3"
+            onClick={(): void => setShowClearAllDataDialog(true)}
+          >
+            全データをクリア
+          </Button>
+        </SettingRow>
+      </SettingSection>
+
+      <ConfirmDialog
+        isOpen={showClearHistoryDialog}
+        onClose={(): void => setShowClearHistoryDialog(false)}
+        onConfirm={handleClearHistory}
+        title="履歴をクリア"
+        message="スレッド閲覧履歴をすべて削除します。この操作は取り消せません。"
+        confirmText="削除"
+        variant="destructive"
+      />
+
+      <ConfirmDialog
+        isOpen={showClearAllDataDialog}
+        onClose={(): void => setShowClearAllDataDialog(false)}
+        onConfirm={handleClearAllData}
+        title="全データをクリア"
+        message={`以下のすべてのデータを削除します。この操作は取り消せません。\n\n・スレッド閲覧履歴\n・NG設定（非表示スレッド、NGワード等）\n・カタログ設定（ソート、列数、表示設定等）\n・その他の設定（テーマ、プライバシーモード等）`}
+        confirmText="削除"
+        variant="destructive"
+      />
+    </>
+  );
+};

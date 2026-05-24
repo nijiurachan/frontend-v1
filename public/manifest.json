@@ -1,0 +1,22 @@
+{
+    "name": "二次元裏@αimg(あいもげ)",
+    "short_name": "あいもげ",
+    "description": "二次元裏@αimg(あいもげ) 画像掲示板",
+    "start_url": "/ts/",
+    "scope": "/ts/",
+    "display": "standalone",
+    "background_color": "#1a1a2e",
+    "theme_color": "#00aaff",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/favicon.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": ["social", "entertainment"],
+    "lang": "ja",
+    "dir": "ltr"
+}

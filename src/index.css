@@ -1,0 +1,410 @@
+@import "tailwindcss";
+
+@theme {
+  /* セマンティックカラーシステム */
+  --color-primary: #00d4ff;
+  --color-primary-foreground: #1b021f;
+  --color-secondary: #0099cc;
+  --color-secondary-foreground: #ffffff;
+  --color-background: #1a1a2e;
+  --color-foreground: #eee;
+  --color-muted: rgba(255, 255, 255, 0.07);
+  --color-muted-foreground: #aaa;
+  --color-accent: #ff64b5;
+  --color-accent-foreground: #000000;
+  --color-destructive: #ff6b6b;
+  --color-destructive-foreground: #ffffff;
+  --color-quote: #22c55e;
+  --color-quote-foreground: #ffffff;
+  --color-border: rgba(255, 255, 255, 0.1);
+  --color-card: #1f2940;
+  --color-card-foreground: #eee;
+  /* 特別機能色 */
+  --color-otegaki: #33ff33;
+  --color-act: #9aa0e3;
+  --color-soudane: #22c55e;
+}
+
+/* ライトモード（クラスベースの切り替え） */
+:root.light-mode {
+  --color-primary: #00e;
+  --color-primary-foreground: #fafafa;
+  --color-secondary: #ea8;
+  --color-secondary-foreground: #800000;
+  --color-background: #ffe;
+  --color-foreground: #800000;
+  --color-muted: #f5f5ec;
+  --color-muted-foreground: #a71b1b;
+  --color-accent: #0099cc;
+  --color-accent-foreground: #fafafa;
+  --color-destructive: #ff6b6b;
+  --color-destructive-foreground: #fafafa;
+  --color-quote: #16a34a;
+  --color-quote-foreground: #fafafa;
+  --color-border: rgba(0, 0, 0, 0.1);
+  --color-card: #f0e0d6;
+  --color-card-foreground: #333;
+  /* 特別機能色 */
+  --color-otegaki: #119911;
+  --color-act: #1020e0;
+  --color-soudane: #16a34a;
+}
+
+/* 背景色ちらつき防止。*/
+html {
+  background-color: var(--color-background);
+}
+
+/* スクロールバー */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* タッチアクションの最適化 */
+html {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
+/* 行制限 */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* selectボックスのスタイリング - ダークモード対応 */
+select {
+  background-color: var(--color-muted);
+  color: var(--color-foreground);
+  border: 1px solid var(--color-border);
+}
+
+select option {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  padding: 4px;
+}
+
+/* 管理者スレッドの炎エフェクト (透過 Animated WebP) */
+.admin-flame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: bottom;
+  pointer-events: none;
+  border-radius: inherit;
+  z-index: 1;
+  opacity: 0.3;
+}
+
+/* 特定文字列の光輝エフェクト */
+@keyframes text-glow-pulse {
+  0%,
+  100% {
+    text-shadow:
+      0 0 4px #ffd700,
+      0 0 8px #ffd700;
+  }
+  50% {
+    text-shadow:
+      0 0 6px #fff,
+      0 0 14px #ffd700,
+      0 0 22px #ff8c00;
+  }
+}
+
+.text-glow {
+  font-weight: bold;
+  animation: text-glow-pulse 1.4s ease-in-out infinite;
+}
+
+/* プライバシーモード */
+#app-root.privacy-vignette {
+  &::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+    background: radial-gradient(
+      ellipse at center,
+      transparent 0%,
+      transparent 30%,
+      rgba(0, 0, 0, 0.4) 70%,
+      rgba(0, 0, 0, 0.7) 100%
+    );
+    transition: opacity 0.3s ease;
+  }
+
+  img,
+  video {
+    filter: brightness(0.15) blur(2px);
+    &:hover {
+      filter: none;
+    }
+  }
+}
+
+/* ========================================
+   宇宙モード（映画オープニング風クロール）
+   ======================================== */
+
+.sw-scene {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  overflow: hidden;
+  color: #ffe81f;
+  isolation: isolate;
+}
+
+.sw-starfield {
+  position: absolute;
+  inset: 0;
+  background-color: #000;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 75% 10%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 40% 80%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 85% 65%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 10% 55%, #fff 50%, transparent 51%),
+    radial-gradient(1px 1px at 55% 25%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 30% 70%, #fff 50%, transparent 51%),
+    radial-gradient(2px 2px at 90% 40%, #fff 50%, transparent 51%);
+  background-size:
+    200px 200px,
+    250px 250px,
+    300px 300px,
+    220px 220px,
+    180px 180px,
+    260px 260px,
+    400px 400px,
+    350px 350px;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sw-viewport {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* 傾いた「窓」。ビューポート底に固定され rotateX で奥に倒れる。
+   内側の .sw-crawl はこの窓の中を top: 100% → translateY(-progress) で流れる。 */
+.sw-board {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: min(80vw, 720px);
+  height: 100%;
+  transform: translateX(-50%) perspective(400px) rotateX(25deg);
+  transform-origin: 50% 100%;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 25%, #000 100%);
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    #000 25%,
+    #000 100%
+  );
+}
+
+.sw-crawl {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  transform: translateY(calc(-1 * var(--sw-progress-px, 0px)));
+  will-change: transform;
+  text-align: justify;
+  font-weight: 700;
+  line-height: 1.6;
+  text-shadow: 0 0 2px rgba(255, 232, 31, 0.35);
+  font-size: clamp(1.1rem, 2.6vw, 1.6rem);
+}
+
+.sw-crawl > *:last-child {
+  text-align: center;
+}
+
+.sw-prologue-overlay,
+.sw-logo-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.sw-prologue-overlay {
+  background: #000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 28vh 2rem 0 clamp(1.5rem, 15vw, 10rem);
+}
+
+/* ロゴはクロールと重なる時間帯があるため、イベントは拾わず、
+   画面中央へ配置して縮み切る時も中央に収束させる */
+.sw-logo-overlay {
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sw-prologue-text {
+  margin: 0;
+  color: #4bd5ee;
+  font-family:
+    "Helvetica Neue", Helvetica, Arial, "Hiragino Kaku Gothic ProN", "Yu Gothic",
+    sans-serif;
+  font-weight: 400;
+  /* 本編の長い一行 "A long time ago in a galaxy far," (約32字) が
+     はみ出ない幅になるよう、フォントと max-width を ch 基準に寄せる。 */
+  font-size: clamp(1rem, 3vw, 2.2rem);
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: normal;
+  word-break: normal;
+  max-width: min(90vw, 36ch);
+  text-shadow: 0 0 6px rgba(75, 213, 238, 0.35);
+}
+
+/* 0→10%: ease-out で滑らかにフェードイン
+   10→60%: 静止
+   60→100%: ease-in で末尾へ向けて徐々に加速しながらフェード&縮小 */
+@keyframes sw-logo-sequence {
+  0% {
+    opacity: 0;
+    transform: scale(1.15);
+    animation-timing-function: ease-out;
+  }
+  10% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1);
+    animation-timing-function: ease-in;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.05);
+  }
+}
+
+.sw-logo-image {
+  display: block;
+  width: min(70vw, 720px);
+  max-height: 50vh;
+  height: auto;
+  object-fit: contain;
+  transform-origin: 50% 50%;
+  filter: drop-shadow(0 0 14px rgba(255, 232, 31, 0.3));
+  animation: sw-logo-sequence var(--sw-logo-duration, 12s) linear forwards;
+}
+
+/* 本編クロールの 1 行最長（"station with enough power to" などで約28字）を
+   基準にコンテナ幅を固定。ペーストしたテキストの \n がそのまま再現される。 */
+.sw-post-block {
+  margin: 0 auto 2.5rem;
+  max-width: 32ch;
+}
+
+.sw-post-block p {
+  margin: 0 0 1rem;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.sw-post-image {
+  display: block;
+  margin: 1.5rem auto;
+  width: min(50vw, 480px);
+  height: auto;
+  max-height: 60vh;
+  object-fit: contain;
+  filter: drop-shadow(0 0 6px rgba(255, 232, 31, 0.15));
+}
+
+.sw-back-button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.sw-back-button:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.sw-back-button:focus-visible {
+  outline: 2px solid #ffe81f;
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sw-viewport {
+    overflow: auto;
+  }
+  .sw-board {
+    position: static;
+    transform: none;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+  .sw-crawl {
+    position: static;
+    transform: none;
+    top: auto;
+    left: auto;
+    right: auto;
+    width: 100%;
+    padding: 2rem 1rem;
+  }
+}
