@@ -1,0 +1,74 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.3.1/schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "defaultBranch": "dev",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "*.json",
+      "*.jsonc",
+      "*.js",
+      "*.ts",
+      "*.html",
+      "src/**/*.json",
+      "src/**/*.ts",
+      "src/**/*.tsx",
+      "src/**/*.css",
+      "src/**/*.html",
+      "!**/*.gen.*",
+      "!node_modules"
+    ]
+  },
+  "formatter": {
+    "useEditorconfig": true,
+    "formatWithErrors": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "nursery": {
+        "useExplicitType": "warn",
+        "noFloatingPromises": "error"
+      },
+      "suspicious": {
+        "noVar": "error"
+      }
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "enabled": true
+    }
+  },
+  "css": {
+    "formatter": {
+      "enabled": true
+    },
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "html": {
+    "formatter": {
+      "enabled": true
+    }
+  },
+  "json": {
+    "formatter": {
+      "enabled": true,
+      "expand": "always"
+    }
+  }
+}

@@ -1,0 +1,50 @@
+name: PRチェック
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    outputs:
+      js: ${{ steps.filter.outputs.js }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: dorny/paths-filter@v3
+      id: filter
+      with:
+        filters: |
+          js:
+            - '**.ts'
+            - '**.tsx'
+            - '**.json'
+            - '*.yaml'
+            - '*.lock'
+
+  check-js:
+    name: TS(フォーマット+型チェック)
+    needs: changes
+    if: ${{ needs.changes.outputs.js == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+
+      - uses: oven-sh/setup-bun@v2
+
+      - name: インストール
+        run: bun install --frozen-lockfile
+
+      - name: TSリント＆フォーマット
+        run: bun run --bun biome ci
+
+      - name: TSビルド
+        run: bun run --bun build

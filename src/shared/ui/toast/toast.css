@@ -1,0 +1,17 @@
+/* Toast コンテナ */
+.toast-container {
+  /* React Hot Toast デフォルトコンテナのスタイル補強 */
+}
+
+/* Toast メッセージ本体 */
+div[class*="react-hot-toast"] {
+  /* デフォルトスタイルのオーバーライド */
+}
+
+/* 同時表示個数リミット（暫定処理）3個以上のとき新しい方2個残してそれ以外を隠す */
+.toast-container > div {
+  visibility: hidden;
+}
+.toast-container > div:nth-child(-n + 2) {
+  visibility: visible;
+}
