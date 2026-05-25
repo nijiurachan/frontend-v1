@@ -1,0 +1,16 @@
+FROM oven/bun:debian
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    ca-certificates \
+    openssh-client \
+    git && \
+    apt-get autoremove -y && \
+    apt-get clean -y && \
+    rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* && \
+    chsh -s $(which bash) bun
+
+RUN ln -s /usr/local/bin/bun /usr/local/bin/node
+
+USER bun
+ENV PATH="${HOME}/.bun/bin:${PATH}"
