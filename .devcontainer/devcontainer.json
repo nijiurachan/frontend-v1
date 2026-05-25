@@ -1,0 +1,20 @@
+{
+  "name": "Bun",
+  "dockerFile": "Containerfile",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bierner.markdown-mermaid",
+        "biomejs.biome",
+        "bradlc.vscode-tailwindcss",
+        "EditorConfig.EditorConfig",
+        "oven.bun-vscode",
+        "vitest.explorer"
+      ]
+    }
+  },
+  "postCreateCommand": {
+    "configure-vscode": "cp .vscode/settings.json.example .vscode/settings.json",
+    "init-install": "bun install"
+  },
+}

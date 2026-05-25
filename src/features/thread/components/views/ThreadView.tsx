@@ -1,4 +1,4 @@
-import { useRouter } from "@tanstack/react-router";
+import { useLocation, useRouter } from "@tanstack/react-router";
 import {
   type LazyExoticComponent,
   lazy,
@@ -78,6 +78,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
 }: Props) => {
   const { data, isLoading, error, refetch, isFetching } = useThread(threadId);
   const router = useRouter();
+  const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
   const { openSideMenu } = useSideMenu();
 
@@ -172,12 +173,25 @@ export const ThreadView: React.FunctionComponent<Props> = ({
   }, []);
 
   // 指定されたレス番号の位置へスクロール
-  const scrollToPost = useCallback((postIndex: number) => {
-    const element = document.getElementById(`post-${postIndex}`);
-    if (element) {
-      element.scrollIntoView({ behavior: "auto", block: "center" });
-    }
-  }, []);
+  const scrollToPost = useCallback(
+    (postIndex: number) => {
+      const nearest =
+        data?.posts.findLast(({ id }) => id <= postIndex) ?? data?.posts[0];
+
+      if (nearest) {
+        requestAnimationFrame(() => {
+          router.navigate({
+            hash: `post-${nearest.id}`,
+            replace: true,
+            hashScrollIntoView: {
+              block: "center",
+            },
+          });
+        });
+      }
+    },
+    [data?.posts, router.navigate],
+  );
 
   // モーダルからレスへジャンプ
   const handleJumpToPost = useCallback(
@@ -223,6 +237,17 @@ export const ThreadView: React.FunctionComponent<Props> = ({
   useEffect(() => {
     if (threadId) addViewed(threadId);
   }, [threadId, addViewed]);
+
+  // ハッシュ変更時レス番号にスクロール
+  useEffect(() => {
+    if (!isLoading && hash) {
+      const match = hash.match(/^(?:post-)?(\d+)$/);
+      if (match) {
+        const postIndex = Number.parseInt(match[1], 10);
+        scrollToPost(postIndex);
+      }
+    }
+  }, [isLoading, hash, scrollToPost]);
 
   // Pin "now" to a single value per data update so the render stays pure.
   // Lifetime is variable server-side, so the snapshot refreshes whenever the
