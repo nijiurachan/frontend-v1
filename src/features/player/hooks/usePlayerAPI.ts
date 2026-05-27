@@ -17,6 +17,7 @@ import { useMemo } from "react";
 import type {
   HistorySingleQuery,
   PlaybackStatus,
+  PlayerQuery,
   PlaylistState,
   PlayMode,
   PlayModeSub,
@@ -286,7 +287,10 @@ export function usePlayerAPI(): PlayerAPI {
       threadId: string,
       options: PlayListOptions = {},
     ): void => {
-      const tracks = urls.map(urlToTrack).filter((t): t is Track => t !== null);
+      // 連続再生は YouTube のみ対応（登録段階で絞っているが二重の安全網）
+      const tracks = urls
+        .map(urlToTrack)
+        .filter((t): t is Track => t !== null && t.provider === "youtube");
       if (tracks.length === 0) return;
 
       const origin = buildOrigin(threadId, location.pathname, options.label);
@@ -294,14 +298,18 @@ export function usePlayerAPI(): PlayerAPI {
       const queryKey = `playlist:${origin.threadId}:${tracks.map((t) => t.id).join(",")}`;
       const s = getStore();
 
-      s.initFromQuery({
+      const query: PlayerQuery = {
         queryKey,
         raw: urls.join("\n"),
         mode: "playlist",
         subMode,
         origin,
         tracks,
-      });
+      };
+
+      s.initFromQuery(query);
+      // 連続再生クエリを1個のクエリオブジェクトとして history に記録
+      s.upsertHistory({ query, lastIndex: startIndex, lastTime: 0 });
       if (startIndex > 0) {
         s.jumpTo(startIndex);
       }

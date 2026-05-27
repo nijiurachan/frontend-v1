@@ -96,6 +96,8 @@ export interface PlayerInstance {
 export interface PlaylistState {
   /** 現在のモード（null = 未起動） */
   mode: PlayMode | null;
+  /** 起動元クエリのキー（history 更新の参照に使用。null = 未起動） */
+  queryKey: string | null;
   /** 再生サブモード */
   subMode: PlayModeSub;
   /** 再生元情報 */
@@ -175,6 +177,8 @@ export interface MiniPlayerState {
   position: MiniPlayerPosition;
   /** サイズインデックス（0=sm, 1=md, 2=lg） */
   sizeIndex: number;
+  /** 画面外スタッシュ中か（現在の隅から画面端外へ収納） */
+  stashed: boolean;
 }
 
 // ----------------------------------------------------------
@@ -253,6 +257,8 @@ export interface PlayerStore {
   setMiniPlayerPosition: (position: MiniPlayerPosition) => void;
   /** MiniPlayer のサイズを巡回切り替え（sm → md → lg → sm） */
   cycleMiniPlayerSize: () => void;
+  /** MiniPlayer の画面外スタッシュ状態を設定 */
+  setMiniPlayerStashed: (stashed: boolean) => void;
 }
 
 // ----------------------------------------------------------
@@ -273,10 +279,12 @@ const initialMiniPlayerState: MiniPlayerState = {
   visible: false,
   position: "br",
   sizeIndex: 1, // デフォルト「中」
+  stashed: false,
 };
 
 const initialPlaylistState: PlaylistState = {
   mode: null,
+  queryKey: null,
   subMode: "none",
   origin: null,
   tracks: [],
@@ -411,6 +419,7 @@ export const usePlayerStore = create<PlayerStore>()(
           set({
             playlist: {
               mode: query.mode,
+              queryKey: query.queryKey,
               subMode: query.subMode,
               origin: query.origin,
               tracks: query.tracks,
@@ -498,6 +507,14 @@ export const usePlayerStore = create<PlayerStore>()(
                   shuffleOrder[j],
                   shuffleOrder[i],
                 ];
+              }
+              // 現在再生中のトラックを強制的に先頭（track1）へ。
+              // 再生中トラックは維持したまま以降をランダム順で続ける。
+              const cur = state.playlist.currentIndex;
+              const pos = shuffleOrder.indexOf(cur);
+              if (pos > 0) {
+                shuffleOrder.splice(pos, 1);
+                shuffleOrder.unshift(cur);
               }
             }
 
@@ -692,7 +709,12 @@ export const usePlayerStore = create<PlayerStore>()(
         // ---- MiniPlayer アクション ----
         setMiniPlayerVisible: (visible: boolean) =>
           set((state) => ({
-            miniPlayer: { ...state.miniPlayer, visible },
+            // 新規再生で表示する際はスタッシュを解除して必ず見える状態にする
+            miniPlayer: {
+              ...state.miniPlayer,
+              visible,
+              stashed: visible ? false : state.miniPlayer.stashed,
+            },
           })),
 
         setMiniPlayerPosition: (position: MiniPlayerPosition) =>
@@ -704,8 +726,13 @@ export const usePlayerStore = create<PlayerStore>()(
           set((state) => ({
             miniPlayer: {
               ...state.miniPlayer,
-              sizeIndex: (state.miniPlayer.sizeIndex + 1) % 3,
+              sizeIndex: (state.miniPlayer.sizeIndex + 1) % 4,
             },
+          })),
+
+        setMiniPlayerStashed: (stashed: boolean) =>
+          set((state) => ({
+            miniPlayer: { ...state.miniPlayer, stashed },
           })),
       }),
       {

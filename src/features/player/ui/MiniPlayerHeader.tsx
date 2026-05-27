@@ -8,7 +8,7 @@ import { FiX } from "react-icons/fi";
 import type { MiniPlayerPosition } from "../stores/playerStore";
 
 const SWIPE_THRESHOLD = 30;
-const SIZE_LABELS = ["小", "中", "大"] as const;
+const SIZE_LABELS = ["小", "中", "大", "豆"] as const;
 
 interface MiniPlayerHeaderProps {
   position: MiniPlayerPosition;
@@ -16,6 +16,8 @@ interface MiniPlayerHeaderProps {
   onPositionChange: (position: MiniPlayerPosition) => void;
   onCycleSize: () => void;
   onClose: () => void;
+  /** 外向き横フリックで画面外スタッシュ */
+  onStash: () => void;
 }
 
 /** フリック方向からポジション遷移を計算 */
@@ -57,6 +59,7 @@ export const MiniPlayerHeader: React.FunctionComponent<
   onPositionChange,
   onCycleSize,
   onClose,
+  onStash,
 }: MiniPlayerHeaderProps) => {
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
@@ -75,12 +78,22 @@ export const MiniPlayerHeader: React.FunctionComponent<
 
       if (dist < SWIPE_THRESHOLD) return;
 
+      // 外向きの横フリック（右隅で右／左隅で左）→ 画面外スタッシュ
+      if (Math.abs(dx) > Math.abs(dy)) {
+        const isRightCorner = position === "tr" || position === "br";
+        const isLeftCorner = position === "tl" || position === "bl";
+        if ((isRightCorner && dx > 0) || (isLeftCorner && dx < 0)) {
+          onStash();
+          return;
+        }
+      }
+
       const next = getNextPosition(position, dx, dy);
       if (next !== position) {
         onPositionChange(next);
       }
     },
-    [position, onPositionChange],
+    [position, onPositionChange, onStash],
   );
 
   return (
@@ -102,7 +115,7 @@ export const MiniPlayerHeader: React.FunctionComponent<
         onPointerUp={handlePointerUp}
       >
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full min-h-[44px]"></div>
-        <span className="block w-full h-7 mx-1 bg-white/10 text-white/70 text-[14px] text-center py-1 rounded select-none pointer-events-none">
+        <span className="block w-full h-7 mx-1 bg-white/10 text-white/70 text-[14px] text-center py-1 rounded select-none pointer-events-none truncate">
           ↔️↕️ フリックで移動
         </span>
       </div>

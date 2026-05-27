@@ -1,9 +1,14 @@
 // ============================================================
 // adapters/YouTubeEmbed.tsx
 // YouTube iframe API 埋め込み — API ローダー + コンポーネント + ストア同期
+//
+// 連続再生対応: プレイヤーは一度だけ生成し、videoId 変更時は
+// destroy/再生成ではなく loadVideoById で差し替える。これにより
+// iframe を作り直さない＝iOS のユーザージェスチャー活性化を保持し、
+// 音声付きのまま自動でトラックを継続再生できる。
 // ============================================================
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { SlotId } from "../stores/playerStore";
 import { usePlayerStore } from "../stores/playerStore";
 
@@ -64,11 +69,27 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
   const mountedRef = useRef(true);
   // 非同期 init のレースコンディション防止用 generation counter
   const generationRef = useRef(0);
+  // player が ready になったか
+  const isReadyRef = useRef(false);
+  // 最新の providerId（差し替え判定に使用）
+  const videoIdRef = useRef(providerId);
+  // player に現在ロード済みの videoId
+  const loadedVideoIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     onFullControlChange?.(true);
   }, [onFullControlChange]);
 
+  // 最新 videoId を player に反映（destroy せず差し替え）
+  const syncVideo = useCallback((): void => {
+    const p = playerRef.current;
+    if (!p || !isReadyRef.current) return;
+    if (loadedVideoIdRef.current === videoIdRef.current) return;
+    loadedVideoIdRef.current = videoIdRef.current;
+    p.loadVideoById(videoIdRef.current);
+  }, []);
+
+  // ---- 生成 / 破棄（slotId 単位。providerId 変更では再実行しない） ----
   useEffect(() => {
     mountedRef.current = true;
     const generation = ++generationRef.current;
@@ -100,10 +121,16 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
       const innerDiv = document.createElement("div");
       containerRef.current.appendChild(innerDiv);
 
+      const initialVideoId = videoIdRef.current;
+      loadedVideoIdRef.current = initialVideoId;
+
       player = new YT.Player(innerDiv, {
-        videoId: providerId,
+        videoId: initialVideoId,
         width: "100%",
         height: "100%",
+        // OGP埋め込みと同じ nocookie ドメインに揃える。
+        // 一部動画が youtube.com 既定ドメインだと iOS でロード失敗するため。
+        host: "https://www.youtube-nocookie.com",
         playerVars: {
           autoplay: 1,
           playsinline: 1,
@@ -115,14 +142,26 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
           onReady: (): void => {
             if (!mountedRef.current) return;
             playerRef.current = player;
+            isReadyRef.current = true;
+            // ready までに providerId が変わっていたら差し替える
+            syncVideo();
           },
           onStateChange: (event: YT.OnStateChangeEvent): void => {
             if (!mountedRef.current) return;
             handleStateChange(event.data);
           },
-          onError: (): void => {
+          onError: (event: YT.OnErrorEvent): void => {
             if (!mountedRef.current) return;
-            getStore().setStatus(slotId, "error");
+            console.warn(
+              `[YouTubeEmbed] YT error code=${event.data} videoId=${videoIdRef.current}`,
+            );
+            const store = getStore();
+            store.setStatus(slotId, "error");
+            // 連続再生中は再生不能トラックをスキップして次へ送る。
+            // currentIndex 変化を usePlaylistController のブリッジが拾って次をロードする。
+            if (slotId === "primary" && store.playlist.mode === "playlist") {
+              store.next();
+            }
           },
         },
       });
@@ -218,6 +257,8 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
 
     return (): void => {
       mountedRef.current = false;
+      isReadyRef.current = false;
+      loadedVideoIdRef.current = null;
       stopTimeUpdate();
       unsubStatus();
       unsubSeek();
@@ -237,7 +278,13 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
         containerRef.current.innerHTML = "";
       }
     };
-  }, [providerId, slotId]);
+  }, [slotId, syncVideo]);
+
+  // ---- videoId 差し替え（再マウントせず loadVideoById） ----
+  useEffect(() => {
+    videoIdRef.current = providerId;
+    syncVideo();
+  }, [providerId, syncVideo]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 };

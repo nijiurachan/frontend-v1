@@ -4,57 +4,56 @@
 // ============================================================
 
 import {
-  FiPause,
-  FiPlay,
+  FiRepeat,
+  FiShuffle,
   FiSkipBack,
   FiSkipForward,
-  FiSquare,
   FiVolume2,
   FiVolumeX,
 } from "react-icons/fi";
-import type { PlaybackStatus, PlayMode } from "../stores/playerStore";
 
 interface MiniPlayerControlsProps {
-  status: PlaybackStatus;
-  mode: PlayMode | null;
   currentTime: number;
   duration: number | undefined;
   hasFullControl: boolean;
   isLive?: boolean;
   muted?: boolean;
-  onPlay: () => void;
-  onPause: () => void;
+  shuffle?: boolean;
+  repeat?: "none" | "all" | "one";
+  /** 現在のトラック位置（1始まり。シャッフル時は置換後配列での位置） */
+  trackPosition?: number;
+  /** トラック総数 */
+  trackTotal?: number;
   onNext: () => void;
   onPrev: () => void;
-  onStop: () => void;
   onToggleMute?: () => void;
+  onToggleShuffle?: () => void;
+  onCycleRepeat?: () => void;
 }
 
 export const MiniPlayerControls: React.FunctionComponent<
   MiniPlayerControlsProps
 > = ({
-  status,
-  mode,
   currentTime,
   duration,
   hasFullControl,
   isLive,
   muted,
-  onPlay,
-  onPause,
+  shuffle,
+  repeat = "none",
+  trackPosition,
+  trackTotal,
   onNext,
   onPrev,
-  onStop,
   onToggleMute,
+  onToggleShuffle,
+  onCycleRepeat,
 }: MiniPlayerControlsProps) => {
-  const isPlaying = status === "playing";
-  const isPlaylist = mode === "playlist";
-
-  // ライブ配信: play/pause + mute のみ
+  // ライブ配信: mute のみ（再生制御は埋め込みプレイヤー側に委ねる）
   if (isLive) {
     return (
       <div className="bg-black/80">
-        <div className="flex items-center justify-center gap-2 px-2 py-1">
+        <div className="flex items-center justify-center gap-1 px-2 h-[35px]">
           {onToggleMute && (
             <ControlButton
               onClick={onToggleMute}
@@ -72,41 +71,55 @@ export const MiniPlayerControls: React.FunctionComponent<
     );
   }
 
+  // 連続再生（playlist）モードのコントロール出力。
+  // 現状このブロックは playlist 専用（単品は showControls=false で非描画、
+  // ライブは上の早期 return で分岐済み）。今後モードが増えたらここで分岐する。
+  // 再生/一時停止・停止は埋め込みプレイヤーの操作とヘッダの閉じるに委ねるため置かない。
   return (
     <div className="bg-black/80">
-      {/* コントロールボタン */}
-      <div className="flex items-center justify-center gap-2 px-2 py-1">
-        {/* Prev（playlist 時のみ） */}
-        {isPlaylist && hasFullControl && (
-          <ControlButton onClick={onPrev} label="前のトラック">
-            <FiSkipBack className="w-4 h-4" />
-          </ControlButton>
-        )}
-
-        {/* Play / Pause（フル制御時のみ） */}
-        {hasFullControl && (
+      <div className="flex items-center justify-center gap-1 px-2 h-[35px]">
+        {/* Shuffle / Repeat（責務が近いので隣接配置） */}
+        {onToggleShuffle && (
           <ControlButton
-            onClick={isPlaying ? onPause : onPlay}
-            label={isPlaying ? "一時停止" : "再生"}
+            onClick={onToggleShuffle}
+            label={shuffle ? "シャッフル解除" : "シャッフル"}
+            active={shuffle}
           >
-            {isPlaying ? (
-              <FiPause className="w-5 h-5" />
-            ) : (
-              <FiPlay className="w-5 h-5" />
-            )}
+            <FiShuffle className="w-4 h-4" />
+          </ControlButton>
+        )}
+        {onCycleRepeat && (
+          <ControlButton
+            onClick={onCycleRepeat}
+            label={
+              repeat === "one"
+                ? "リピート: 1曲"
+                : repeat === "all"
+                  ? "リピート: 全曲"
+                  : "リピート: なし"
+            }
+            active={repeat !== "none"}
+          >
+            <span className="relative inline-flex">
+              <FiRepeat className="w-4 h-4" />
+              {repeat === "one" && (
+                <span className="absolute -top-1.5 -right-1.5 text-[9px] font-bold leading-none">
+                  1
+                </span>
+              )}
+            </span>
           </ControlButton>
         )}
 
-        {/* Next（playlist 時のみ） */}
-        {isPlaylist && hasFullControl && (
-          <ControlButton onClick={onNext} label="次のトラック">
-            <FiSkipForward className="w-4 h-4" />
-          </ControlButton>
-        )}
-
-        {/* Stop */}
-        <ControlButton onClick={onStop} label="停止">
-          <FiSquare className="w-3.5 h-3.5" />
+        {/* Prev / トラック位置 / Next */}
+        <ControlButton onClick={onPrev} label="前のトラック">
+          <FiSkipBack className="w-4 h-4" />
+        </ControlButton>
+        <span className="text-[10px] text-white/70 tabular-nums text-center select-none min-w-[2.75rem]">
+          {trackPosition ?? 0}/{trackTotal ?? 0}
+        </span>
+        <ControlButton onClick={onNext} label="次のトラック">
+          <FiSkipForward className="w-4 h-4" />
         </ControlButton>
       </div>
 
@@ -132,20 +145,25 @@ export const MiniPlayerControls: React.FunctionComponent<
 interface ControlButtonProps {
   onClick: () => void;
   label: string;
+  active?: boolean;
   children: React.ReactNode;
 }
 
 const ControlButton: React.FunctionComponent<ControlButtonProps> = ({
   onClick,
   label,
+  active,
   children,
 }: ControlButtonProps) => {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="w-8 h-8 flex items-center justify-center text-white/80 hover:text-white rounded-full hover:bg-white/15 transition-colors cursor-pointer"
+      className={`min-w-[38px] h-full flex items-center justify-center rounded-full hover:bg-white/15 transition-colors cursor-pointer ${
+        active ? "text-primary" : "text-white/80 hover:text-white"
+      }`}
       aria-label={label}
+      aria-pressed={active}
     >
       {children}
     </button>

@@ -54,6 +54,9 @@ export const PlayerTrigger: React.FunctionComponent<PlayerTriggerProps> = ({
   const analysis = useMemo(() => analyzeUrl(url), [url]);
   const { provider, providerId, isLive, hasDouji } = analysis;
   const isPlayable = provider !== null && providerId !== null;
+  // 連続再生は YouTube のみ対応（iOS の autoplay 制約により他プロバイダーは
+  // 自動次送りできないため、プレイリスト候補から除外する）
+  const canPlaylist = provider === "youtube";
 
   // threadId は number で受け取るが、ストアのキーは string
   const threadIdStr = String(threadId);
@@ -79,6 +82,8 @@ export const PlayerTrigger: React.FunctionComponent<PlayerTriggerProps> = ({
   // 依存配列に含めても安全（参照が変わらない）。
   useEffect(() => {
     if (!isPlayable || isLive || !provider || !providerId || isSubView) return;
+    // 連続再生候補は YouTube のみ登録する
+    if (!canPlaylist) return;
     registerMedia(threadIdStr, url, provider, providerId, postNo);
     return (): void => unregisterMedia(threadIdStr, url);
   }, [
@@ -90,6 +95,7 @@ export const PlayerTrigger: React.FunctionComponent<PlayerTriggerProps> = ({
     isLive,
     isPlayable,
     isSubView,
+    canPlaylist,
     registerMedia,
     unregisterMedia,
   ]);
@@ -113,6 +119,7 @@ export const PlayerTrigger: React.FunctionComponent<PlayerTriggerProps> = ({
   return (
     <VideoTriggerPanel
       hasDouji={hasDouji}
+      canPlaylist={canPlaylist}
       checked={checked}
       isFirstMedia={isFirstMedia}
       isSubView={isSubView}
@@ -133,6 +140,7 @@ export const PlayerTrigger: React.FunctionComponent<PlayerTriggerProps> = ({
 
 interface VideoTriggerPanelProps {
   hasDouji: boolean;
+  canPlaylist: boolean;
   checked: boolean;
   isFirstMedia: boolean;
   isSubView?: boolean;
@@ -145,6 +153,7 @@ interface VideoTriggerPanelProps {
 
 const VideoTriggerPanel: React.FunctionComponent<VideoTriggerPanelProps> = ({
   hasDouji,
+  canPlaylist,
   checked,
   isFirstMedia,
   isSubView,
@@ -160,10 +169,9 @@ const VideoTriggerPanel: React.FunctionComponent<VideoTriggerPanelProps> = ({
         <MdPictureInPicture className="w-7 h-5 text-primary" /> 再生
       </TriggerButton>
 
-      {!isSubView && isFirstMedia && (
-        <TriggerButton onClick={onPlayPlaylist} title="連続再生:未実装">
-          <MdFormatListBulleted className="w-7 h-5 text-primary" />{" "}
-          連続再生:未実装
+      {!isSubView && canPlaylist && isFirstMedia && (
+        <TriggerButton onClick={onPlayPlaylist} title="連続再生">
+          <MdFormatListBulleted className="w-7 h-5 text-primary" /> 連続再生
         </TriggerButton>
       )}
 
@@ -172,7 +180,7 @@ const VideoTriggerPanel: React.FunctionComponent<VideoTriggerPanelProps> = ({
           <TriggerButton onClick={onPlaySingleSync} title="同時視聴">
             <MdPictureInPicture className="w-7 h-5 text-destructive" /> 同時視聴
           </TriggerButton>
-          {!isSubView && isFirstMedia && (
+          {!isSubView && canPlaylist && isFirstMedia && (
             <TriggerButton
               onClick={onPlayPlaylistSync}
               title="連続再生+同時視聴:未実装"
@@ -184,10 +192,10 @@ const VideoTriggerPanel: React.FunctionComponent<VideoTriggerPanelProps> = ({
         </>
       )}
 
-      {!isSubView && (
+      {!isSubView && canPlaylist && (
         <label
           className="inline-flex items-center gap-1.5 text-xs cursor-pointer select-none"
-          title="連続再生に含める（未実装）"
+          title="連続再生に含める"
         >
           連続再生
           <input
