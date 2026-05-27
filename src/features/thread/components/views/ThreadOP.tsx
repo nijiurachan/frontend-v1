@@ -28,7 +28,6 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
   const spaceMode = useSettingsStore((s) => s.spaceMode);
   const showSpaceButton = spaceMode && !(isNg && !showNgContent);
   const [expanded, setExpanded] = useState(false);
-  const fontSize = useSettingsStore((s) => `${s.fontScalePosts / 100}rem`);
 
   // NGかつshowNgContentがfalseの場合のみ非表示メッセージを表示
   if (isNg && !showNgContent) {
@@ -82,7 +81,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
   };
 
   return (
-    <div id="post-0" className="relative" style={{ fontSize }}>
+    <div id="post-0" className="relative">
       {isNg && showNgContent && (
         // biome-ignore lint: <label>＆非表示<button>に乗り換え予定
         <div

@@ -23,6 +23,7 @@ import { HiOutlineMenu } from "react-icons/hi";
 import { useSideMenu } from "@/app/layouts/SideMenuContext";
 import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
+import { useSettingsStore } from "@/features/settings/hooks";
 import type * as modals from "@/features/thread/components/modals";
 import { type ActionButton, BottomActionBar } from "@/features/thread/ui";
 import { useSwipeBack } from "@/shared/hooks/useSwipeBack";
@@ -105,6 +106,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isQuoteSearchOpen, setIsQuoteSearchOpen] = useState(false);
   const [quoteSearchText, setQuoteSearchText] = useState("");
+  const fontSize = useSettingsStore((s) => `${s.fontScalePosts}%`);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: スレ表示切り替え時に返信モーダルの状態をリセット
   useEffect(() => (): void => resetReplyModal(), [threadId]);
@@ -322,7 +324,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
       <title>{`${data.posts?.[0]?.plainBody.slice(0, 20) ?? `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
       <div ref={swipeContentRef}>
         <PullRefresh onRefresh={handleRefresh}>
-          <div className="pb-14">
+          <div className="pb-14" style={{ fontSize }}>
             {firstPost && (
               <ThreadOP
                 post={firstPost}
