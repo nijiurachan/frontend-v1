@@ -12,7 +12,7 @@ export interface SettingRowProps {
   /**
    * オプションの説明文
    */
-  description?: string;
+  description?: string | React.ReactNode;
   /**
    * カスタムクラス名
    */
