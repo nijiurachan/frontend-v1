@@ -4,7 +4,12 @@ import { useCatalogStore } from "@/features/catalog/stores";
 import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
-import { FONT_SIZE_MAX, FONT_SIZE_MIN } from "@/features/settings/stores";
+import {
+  FONT_SCALE_MAX,
+  FONT_SCALE_MIN,
+  FONT_SIZE_MAX,
+  FONT_SIZE_MIN,
+} from "@/features/settings/stores";
 import { Select, SettingRow, SettingSection } from "@/features/settings/ui";
 import { Button, Input, Toggle } from "@/shared/ui/form";
 import { ConfirmDialog } from "@/shared/ui/overlay";
@@ -25,6 +30,8 @@ export const DisplaySettings: React.FunctionComponent = () => {
     spaceMode,
     setSpaceMode,
     resetSettings,
+    fontScalePosts,
+    setFontScalePosts,
   } = useSettingsStore();
   const {
     columns,
@@ -92,14 +99,14 @@ export const DisplaySettings: React.FunctionComponent = () => {
             aria-label="アニメ画像"
           />
         </SettingRow>
-        <SettingRow label="文字サイズ" description={`${fontSize}px`}>
+        <SettingRow label="全体文字サイズ" description={`${fontSize}px`}>
           <div className="flex items-center gap-2 flex-1">
             <button
               type="button"
               onClick={(): void => setFontSize(fontSize - 1)}
               disabled={fontSize <= FONT_SIZE_MIN}
               className="flex items-center justify-center w-8 h-8 rounded-md bg-card border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="文字サイズを小さく"
+              aria-label="全体文字サイズを小さく"
             >
               <FiMinus size={16} aria-hidden="true" />
             </button>
@@ -113,14 +120,48 @@ export const DisplaySettings: React.FunctionComponent = () => {
                 setFontSize(Number(e.target.value))
               }
               className="flex-1"
-              aria-label="文字サイズ"
+              aria-label="全体文字サイズ"
             />
             <button
               type="button"
               onClick={(): void => setFontSize(fontSize + 1)}
               disabled={fontSize >= FONT_SIZE_MAX}
               className="flex items-center justify-center w-8 h-8 rounded-md bg-card border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-              aria-label="文字サイズを大きく"
+              aria-label="全体文字サイズを大きく"
+            >
+              <FiPlus size={16} aria-hidden="true" />
+            </button>
+          </div>
+        </SettingRow>
+        <SettingRow label="本文文字倍率" description={`${fontScalePosts}%`}>
+          <div className="flex items-center gap-2 flex-1">
+            <button
+              type="button"
+              onClick={(): void => setFontScalePosts(fontScalePosts - 10)}
+              disabled={fontScalePosts <= FONT_SCALE_MIN}
+              className="flex items-center justify-center w-8 h-8 rounded-md bg-card border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="本文文字倍率を小さく"
+            >
+              <FiMinus size={16} aria-hidden="true" />
+            </button>
+            <input
+              type="range"
+              min={FONT_SCALE_MIN}
+              max={FONT_SCALE_MAX}
+              step={5}
+              value={fontScalePosts}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>): void =>
+                setFontScalePosts(Number(e.target.value))
+              }
+              className="flex-1"
+              aria-label="本文文字倍率"
+            />
+            <button
+              type="button"
+              onClick={(): void => setFontScalePosts(fontScalePosts + 10)}
+              disabled={fontScalePosts >= FONT_SCALE_MAX}
+              className="flex items-center justify-center w-8 h-8 rounded-md bg-card border border-border text-foreground hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+              aria-label="本文文字倍率を大きく"
             >
               <FiPlus size={16} aria-hidden="true" />
             </button>

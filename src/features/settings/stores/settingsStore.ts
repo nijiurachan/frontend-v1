@@ -12,20 +12,46 @@ export const FONT_SIZE_MAX = 28;
 /** 初期文字サイズ(px) */
 export const FONT_SIZE_DEFAULT = 16;
 
+/** 最小文字倍率(%) */
+export const FONT_SCALE_MIN = 50;
+/** 最大文字倍率(%) */
+export const FONT_SCALE_MAX = 300;
+/** デフォルト文字倍率(%) */
+export const FONT_SCALE_DEFAULT = 100;
+
+/** 数値欄を有効な範囲に丸める。異常値は初期値にフォールバック */
+function clampSize(
+  value: unknown,
+  min: number,
+  max: number,
+  defaultValue: number,
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    return defaultValue;
+  }
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
 /** 文字サイズを有効な範囲に丸める。異常値は初期値にフォールバック */
 function clampFontSize(value: unknown): number {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    return FONT_SIZE_DEFAULT;
-  }
-  return Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, Math.round(value)));
+  return clampSize(value, FONT_SIZE_MIN, FONT_SIZE_MAX, FONT_SIZE_DEFAULT);
+}
+
+/** 文字倍率を有効な範囲に丸める。異常値は初期値にフォールバック */
+function clampFontScale(value: unknown): number {
+  return clampSize(value, FONT_SCALE_MIN, FONT_SCALE_MAX, FONT_SCALE_DEFAULT);
 }
 
 /** 表示設定のAPI */
 export type SettingsStore = SettingsStoreBase & {
-  /** 文字サイズ */
+  /** 全体文字サイズ */
   fontSize: number;
-  /** 文字サイズを設定 */
+  /** 全体文字サイズを設定 */
   setFontSize(value: number): void;
+  /** スレ内文字倍率 */
+  fontScalePosts: number;
+  /** スレ内文字倍率を設定 */
+  setFontScalePosts(value: number): void;
   /** 宇宙モード（映画オープニング風クロール表示）を有効にする */
   spaceMode: boolean;
   /** 宇宙モードを設定 */
@@ -42,12 +68,16 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
         ...base,
         fontSize: FONT_SIZE_DEFAULT,
         setFontSize: (value: number) => set({ fontSize: clampFontSize(value) }),
+        fontScalePosts: FONT_SCALE_DEFAULT,
+        setFontScalePosts: (value: number) =>
+          set({ fontScalePosts: clampFontScale(value) }),
         spaceMode: false,
         setSpaceMode: (spaceMode: boolean) => set({ spaceMode }),
         resetSettings(): void {
           base.resetSettings();
           set({
             fontSize: FONT_SIZE_DEFAULT,
+            fontScalePosts: FONT_SCALE_DEFAULT,
             spaceMode: false,
           });
         },
@@ -63,10 +93,8 @@ async function initSettings(store: SettingsStore | undefined): Promise<void> {
   }
 
   // 永続化された文字サイズが範囲外/壊れていた場合は補正
-  const clamped = clampFontSize(store.fontSize);
-  if (clamped !== store.fontSize) {
-    store.setFontSize(clamped);
-  }
+  store.setFontSize(clampFontSize(store.fontSize));
+  store.setFontScalePosts(clampFontScale(store.fontScalePosts));
 
   if (store.deleteKey) {
     return;
