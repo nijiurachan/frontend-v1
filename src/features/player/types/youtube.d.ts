@@ -30,6 +30,7 @@ declare namespace YT {
     width?: string | number;
     height?: string | number;
     videoId?: string;
+    host?: string;
     playerVars?: PlayerVars;
     events?: Events;
   }
@@ -56,6 +57,8 @@ declare namespace YT {
     playVideo(): void;
     pauseVideo(): void;
     stopVideo(): void;
+    loadVideoById(videoId: string, startSeconds?: number): void;
+    cueVideoById(videoId: string, startSeconds?: number): void;
     seekTo(seconds: number, allowSeekAhead?: boolean): void;
     getPlayerState(): PlayerState;
     getCurrentTime(): number;

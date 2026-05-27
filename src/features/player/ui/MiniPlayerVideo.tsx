@@ -12,30 +12,39 @@ import type { SlotId, Track } from "../stores/playerStore";
 interface MiniPlayerVideoProps {
   currentTrack: Track | null;
   slotId: SlotId;
+  /** 動画本体の幅（CSS幅値）。親が最小幅で広がっても動画はこの幅に保つ */
+  videoWidth?: string;
   onFullControlChange?: (hasFullControl: boolean) => void;
 }
 
 export const MiniPlayerVideo: React.FunctionComponent<MiniPlayerVideoProps> = ({
   currentTrack,
   slotId,
+  videoWidth,
   onFullControlChange,
 }: MiniPlayerVideoProps) => {
-  if (!currentTrack) {
-    return (
-      <div className="relative w-full aspect-video bg-black flex items-center justify-center">
-        <div className="text-white/30 text-sm">再生待機中</div>
-      </div>
-    );
-  }
-
+  // 親（プレイヤ枠）がコントロール用に最小幅まで広がっても、動画本体は videoWidth に
+  // 留める。flex の子にすると stretch で iframe 既定高さまで伸びて aspect-video が
+  // 効かないため、ブロック + mx-auto で中央寄せし高さは aspect-video に追従させる。
   return (
-    <div className="relative w-full aspect-video bg-black">
-      <EmbedDispatch
-        key={`${currentTrack.provider}:${currentTrack.providerId}`}
-        track={currentTrack}
-        slotId={slotId}
-        onFullControlChange={onFullControlChange}
-      />
+    <div className="w-full bg-black">
+      <div
+        className="relative aspect-video bg-black mx-auto"
+        style={{ width: videoWidth ?? "100%" }}
+      >
+        {!currentTrack ? (
+          <div className="absolute inset-0 flex items-center justify-center text-white/30 text-sm">
+            再生待機中
+          </div>
+        ) : (
+          <EmbedDispatch
+            key={currentTrack.provider}
+            track={currentTrack}
+            slotId={slotId}
+            onFullControlChange={onFullControlChange}
+          />
+        )}
+      </div>
     </div>
   );
 };
