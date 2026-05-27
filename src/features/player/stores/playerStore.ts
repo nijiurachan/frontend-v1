@@ -175,7 +175,7 @@ export interface MiniPlayerState {
   visible: boolean;
   /** 画面4隅のポジション */
   position: MiniPlayerPosition;
-  /** サイズインデックス（0=sm, 1=md, 2=lg） */
+  /** サイズインデックス（0=sm, 1=md, 2=lg, 3=xs「豆」） */
   sizeIndex: number;
   /** 画面外スタッシュ中か（現在の隅から画面端外へ収納） */
   stashed: boolean;
@@ -255,7 +255,7 @@ export interface PlayerStore {
   setMiniPlayerVisible: (visible: boolean) => void;
   /** MiniPlayer の4隅ポジションを設定 */
   setMiniPlayerPosition: (position: MiniPlayerPosition) => void;
-  /** MiniPlayer のサイズを巡回切り替え（sm → md → lg → sm） */
+  /** MiniPlayer のサイズを巡回切り替え（sm → md → lg → xs「豆」→ sm） */
   cycleMiniPlayerSize: () => void;
   /** MiniPlayer の画面外スタッシュ状態を設定 */
   setMiniPlayerStashed: (stashed: boolean) => void;
