@@ -79,6 +79,9 @@ function useRenderSettings(): void {
   }, [darkMode]);
 
   useLayoutEffect(() => {
-    document.documentElement.style.setProperty("font-size", `${fontSize}px`);
+    document.documentElement.style.setProperty(
+      "font-size",
+      `${fontSize / 16}rem`,
+    );
   }, [fontSize]);
 }
