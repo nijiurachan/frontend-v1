@@ -151,7 +151,7 @@ export const MiniPlayer: React.FunctionComponent = () => {
               onPositionChange={setMiniPlayerPosition}
               onCycleSize={cycleMiniPlayerSize}
               onClose={stop}
-              onStash={() => setMiniPlayerStashed(true)}
+              onStash={(): void => setMiniPlayerStashed(true)}
             />
 
             <MiniPlayerVideo
@@ -187,7 +187,7 @@ export const MiniPlayer: React.FunctionComponent = () => {
         {visible && stashed && (
           <MiniPlayerStashHandle
             position={position}
-            onRestore={() => setMiniPlayerStashed(false)}
+            onRestore={(): void => setMiniPlayerStashed(false)}
           />
         )}
       </AnimatePresence>

@@ -4,8 +4,8 @@
 // ============================================================
 
 import { motion } from "motion/react";
-import { FiVideo } from "react-icons/fi";
 import { BsChevronCompactLeft, BsChevronCompactRight } from "react-icons/bs";
+import { FiVideo } from "react-icons/fi";
 import type { MiniPlayerPosition } from "../stores/playerStore";
 
 // 隅 → 画面端へ密着させる配置（縦位置はプレイヤ本体のアンカーと揃える）
@@ -42,7 +42,10 @@ export const MiniPlayerStashHandle: React.FunctionComponent<
       exit={{ x: slideOut, opacity: 0 }}
       transition={{ type: "spring", damping: 25, stiffness: 300 }}
     >
-      <FiVideo className="absolute top-4 w-5 h-5 opacity-80" aria-hidden="true" />
+      <FiVideo
+        className="absolute top-4 w-5 h-5 opacity-80"
+        aria-hidden="true"
+      />
       {right ? (
         <BsChevronCompactLeft className="w-9 h-9" aria-hidden="true" />
       ) : (

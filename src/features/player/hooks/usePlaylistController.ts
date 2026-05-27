@@ -29,7 +29,10 @@ export function usePlaylistController(): void {
     if (!track) return;
 
     const s = usePlayerStore.getState();
-    if (s.players.primary.currentTrack?.id === track.id) return;
+    const cur = s.players.primary;
+    // 同一 id でも、直前トラックが終了(ended)していれば再ロードする。
+    // （連続する重複 videoId で次送りが空振りせず再生継続するように）
+    if (cur.currentTrack?.id === track.id && cur.status !== "ended") return;
 
     s.loadTrack("primary", track);
     s.play("primary");
@@ -39,7 +42,11 @@ export function usePlaylistController(): void {
       (h) => h.query.queryKey === s.playlist.queryKey,
     );
     if (entry) {
-      s.upsertHistory({ query: entry.query, lastIndex: currentIndex, lastTime: 0 });
+      s.upsertHistory({
+        query: entry.query,
+        lastIndex: currentIndex,
+        lastTime: 0,
+      });
     }
   }, [mode, currentIndex, tracks]);
 

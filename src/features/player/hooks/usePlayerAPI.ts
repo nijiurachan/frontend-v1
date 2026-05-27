@@ -295,6 +295,9 @@ export function usePlayerAPI(): PlayerAPI {
 
       const origin = buildOrigin(threadId, location.pathname, options.label);
       const { subMode = "none", startIndex = 0, slotId = "primary" } = options;
+      // startIndex を [0, tracks.length-1] に正規化。
+      // 範囲外のまま history に入ると、復元時に track を取得できなくなる。
+      const safeIndex = Math.min(Math.max(startIndex, 0), tracks.length - 1);
       const queryKey = `playlist:${origin.threadId}:${tracks.map((t) => t.id).join(",")}`;
       const s = getStore();
 
@@ -309,11 +312,11 @@ export function usePlayerAPI(): PlayerAPI {
 
       s.initFromQuery(query);
       // 連続再生クエリを1個のクエリオブジェクトとして history に記録
-      s.upsertHistory({ query, lastIndex: startIndex, lastTime: 0 });
-      if (startIndex > 0) {
-        s.jumpTo(startIndex);
+      s.upsertHistory({ query, lastIndex: safeIndex, lastTime: 0 });
+      if (safeIndex > 0) {
+        s.jumpTo(safeIndex);
       }
-      s.loadTrack(slotId, tracks[startIndex] ?? tracks[0]);
+      s.loadTrack(slotId, tracks[safeIndex]);
       s.play(slotId);
       s.setMiniPlayerVisible(true);
     };
