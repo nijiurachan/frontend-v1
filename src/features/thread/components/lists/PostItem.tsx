@@ -3,7 +3,6 @@ import { memo, useState } from "react";
 import { MdBlock, MdExpandMore } from "react-icons/md";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
-import { useSettingsStore } from "@/features/settings/hooks";
 import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
 import { PostDisplay } from "../PostDisplay";
 
@@ -28,7 +27,6 @@ export const PostItem: React.FunctionComponent<Props> = memo(function PostItem({
   const { isPostHidden, showNgContent } = useNgStore();
   const isNg = showNgContent && isPostHidden(post);
   const [expanded, setExpanded] = useState(false);
-  const fontSize = useSettingsStore((s) => `${s.fontScalePosts / 100}rem`);
 
   if (isNg && !expanded) {
     return (
@@ -54,7 +52,7 @@ export const PostItem: React.FunctionComponent<Props> = memo(function PostItem({
   }
 
   return (
-    <div id={`post-${post.id}`} className="relative" style={{ fontSize }}>
+    <div id={`post-${post.id}`} className="relative">
       {isNg && (
         // biome-ignore lint: <label>＆非表示<button>に乗り換え予定
         <div

@@ -99,7 +99,10 @@ export const DisplaySettings: React.FunctionComponent = () => {
             aria-label="アニメ画像"
           />
         </SettingRow>
-        <SettingRow label="全体文字サイズ" description={`${fontSize}px`}>
+        <SettingRow
+          label="全体文字サイズ"
+          description={<span className="text-[1rem]">{fontSize}px</span>}
+        >
           <div className="flex items-center gap-2 flex-1">
             <button
               type="button"
@@ -133,7 +136,14 @@ export const DisplaySettings: React.FunctionComponent = () => {
             </button>
           </div>
         </SettingRow>
-        <SettingRow label="本文文字倍率" description={`${fontScalePosts}%`}>
+        <SettingRow
+          label="本文文字倍率"
+          description={
+            <span style={{ fontSize: `${fontScalePosts}%` }}>
+              {fontScalePosts}%
+            </span>
+          }
+        >
           <div className="flex items-center gap-2 flex-1">
             <button
               type="button"
