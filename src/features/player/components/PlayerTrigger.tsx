@@ -172,10 +172,9 @@ const VideoTriggerPanel: React.FunctionComponent<VideoTriggerPanelProps> = ({
   onPlaySingle,
   onPlayPlaylist,
   onPlaySingleSync,
-  onPlayPlaylistSync,
 }: VideoTriggerPanelProps) => {
   return (
-    <span className="inline-flex items-center gap-1 ml-1 align-middle">
+    <span className="inline-flex flex-wrap items-center gap-1 ml-1 align-middle">
       <TriggerButton onClick={onPlaySingle} title="再生">
         <MdPictureInPicture className="w-7 h-5 text-primary" /> 再生
       </TriggerButton>
@@ -184,23 +183,6 @@ const VideoTriggerPanel: React.FunctionComponent<VideoTriggerPanelProps> = ({
         <TriggerButton onClick={onPlayPlaylist} title="連続再生">
           <MdFormatListBulleted className="w-7 h-5 text-primary" /> 連続再生
         </TriggerButton>
-      )}
-
-      {hasDouji && (
-        <>
-          <TriggerButton onClick={onPlaySingleSync} title="同時視聴">
-            <MdPictureInPicture className="w-7 h-5 text-destructive" /> 同時視聴
-          </TriggerButton>
-          {!isSubView && canPlaylist && isFirstMediaOfProvider && (
-            <TriggerButton
-              onClick={onPlayPlaylistSync}
-              title="連続再生+同時視聴:未実装"
-            >
-              <MdFormatListBulleted className="w-7 h-5 text-destructive" />{" "}
-              連続再生同時視聴:未実装
-            </TriggerButton>
-          )}
-        </>
       )}
 
       {!isSubView && canPlaylist && (
@@ -216,6 +198,16 @@ const VideoTriggerPanel: React.FunctionComponent<VideoTriggerPanelProps> = ({
             className="w-3.5 h-3.5 rounded border-border accent-primary cursor-pointer"
           />
         </label>
+      )}
+
+      {hasDouji && (
+        <>
+          {/* 改行用のダミー要素（幅100%で次の要素を折り返す） */}
+          <span aria-hidden="true" className="basis-full h-0" />
+          <TriggerButton onClick={onPlaySingleSync} title="同時視聴">
+            <MdPictureInPicture className="w-7 h-5 text-destructive" /> 同時視聴
+          </TriggerButton>
+        </>
       )}
     </span>
   );

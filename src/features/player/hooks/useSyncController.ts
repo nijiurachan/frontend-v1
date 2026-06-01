@@ -88,6 +88,11 @@ export function useSyncController(): void {
     let mode: SyncMode = "none";
     let appliedRate = 1;
     let lastSeekAt = 0;
+    // iOS は最初のユーザー操作による再生が来るまで programmatic な play() を
+    // 拒否する。上映開始前に先回りで pause すると、0 秒到達時の自動 play が
+    // 拒否され「自動で始まらない」体験になる。そのため、一度でも playing 状態を
+    // 観測する（= ユーザーが初回タップ済み）までは pause もオーバーレイも行わない。
+    let playbackUnlocked = false;
 
     const applyRate = (next: SyncMode): void => {
       mode = next;
@@ -107,17 +112,41 @@ export function useSyncController(): void {
     };
 
     const tick = (): void => {
-      const p = usePlayerStore.getState().players.primary;
-      if (p.status !== "playing") return;
+      const store = usePlayerStore.getState();
+      const p = store.players.primary;
 
       const track = p.currentTrack;
       // syncStartTime は epoch ms。0（=1970）も有効な基準時刻なので
       // falsy 判定ではなく null/undefined 判定で未設定を見分ける。
       if (track?.syncStartTime == null) return;
 
+      // 初回タップ検知: 一度でも playing を観測したらユーザー操作で gesture が
+      // 通ったとみなす。以降は programmatic な play() が iOS でも通る。
+      if (p.status === "playing") playbackUnlocked = true;
+
       const expected = (getSyncedNow() - track.syncStartTime) / 1000;
-      // 基準時刻がまだ未来 → 開始前なので何もしない（先頭から等倍再生）
-      if (expected < 0) return;
+
+      // 基準時刻がまだ未来 → 上映開始前。
+      // ユーザー初回タップ前は何もしない（先回り pause で 0 秒到達時の
+      // 自動再生が iOS に拒否される事故を避ける）。タップ後は beforeStart を
+      // 立てて pause を維持し、オーバーレイで残り時間を見せる。
+      if (expected < 0) {
+        if (!playbackUnlocked) return;
+        if (!store.beforeStart) store.setBeforeStart(true);
+        if (p.status === "playing") store.pause("primary");
+        // オーバーレイ中に再生位置が先頭でなければ 0 へ戻す。
+        // 0 秒到達時にちょうど先頭から始まる体験を保証する。
+        if (p.currentTime > 0.2) doSeek(0);
+        return;
+      }
+
+      // 上映開始時刻に達した初回フレーム: 再生を開始しつつフラグを下ろす。
+      if (store.beforeStart) {
+        store.setBeforeStart(false);
+        store.play("primary");
+      }
+
+      if (p.status !== "playing") return;
       // 既に終了範囲なら補正しない（自然終了に委ねる）
       if (track.duration && expected > track.duration) return;
 
@@ -146,12 +175,18 @@ export function useSyncController(): void {
       }
     };
 
+    // 初回は即時に判定する（開始前の pause を 1 秒待たずに反映するため）
+    tick();
     const id = setInterval(tick, CHECK_INTERVAL);
     return (): void => {
       clearInterval(id);
       // 同期終了時は速度を等倍へ戻す（次の通常再生が速度を引きずらないように）
       if (appliedRate !== 1) {
         usePlayerStore.getState().setPlaybackRate("primary", 1);
+      }
+      // beforeStart は同期モードの内部状態なのでスコープ終了でリセット
+      if (usePlayerStore.getState().beforeStart) {
+        usePlayerStore.getState().setBeforeStart(false);
       }
     };
   }, [subMode, provider, syncStartTime, trackId]);

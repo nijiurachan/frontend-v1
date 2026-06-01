@@ -203,6 +203,12 @@ export interface PlayerStore {
   // ---- MiniPlayer 状態 ----
   miniPlayer: MiniPlayerState;
 
+  // ---- 同時視聴: 上映開始前フラグ ----
+  // syncStartTime がまだ未来のあいだ true。開始時刻に達した最初のフレームで
+  // useSyncController が play しつつ false へ落とす。
+  beforeStart: boolean;
+  setBeforeStart: (value: boolean) => void;
+
   // ---- PlayerSlice アクション ----
   loadTrack: (slotId: SlotId, track: Track) => void;
   play: (slotId: SlotId) => void;
@@ -319,6 +325,9 @@ export const usePlayerStore = create<PlayerStore>()(
         maxHistorySize: 200,
         mediaListInThread: {},
         miniPlayer: { ...initialMiniPlayerState },
+        beforeStart: false,
+
+        setBeforeStart: (value: boolean) => set({ beforeStart: value }),
 
         // ---- PlayerSlice アクション ----
         loadTrack: (slotId: SlotId, track: Track) =>
