@@ -259,7 +259,7 @@ function isNgImageMatch(ngBitsList: string[], base64Hash: string): boolean {
     for (let i = 0; i < 64; i++) {
       if (bits[i] === ng[i]) match++;
     }
-    if (match >= 52) return true;
+    if (match >= 61) return true;
   }
   return false;
 }
