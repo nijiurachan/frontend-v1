@@ -35,7 +35,7 @@ export function segmentize(text: string): Segment[] {
   // リンクを検出
   const linkMatches = find(text, "url")
     // localhostは除外
-    .filter(link => {
+    .filter((link) => {
       try {
         return new URL(link.href).hostname !== "localhost";
       } catch {
