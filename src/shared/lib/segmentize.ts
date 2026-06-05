@@ -33,7 +33,15 @@ export function segmentize(text: string): Segment[] {
   const diceMatches = Array.from(text.matchAll(diceRegex));
 
   // リンクを検出
-  const linkMatches = find(text, "url");
+  const linkMatches = find(text, "url")
+    // localhostは除外
+    .filter(link => {
+      try {
+        return new URL(link.href).hostname !== "localhost";
+      } catch {
+        return true;
+      }
+    });
 
   // マッチ位置の配列を作成
   const allMatches: Array<{
