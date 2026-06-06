@@ -74,9 +74,10 @@ function fetchAd(slot: string): Promise<Ad | null> {
  *
  * - 取得は {@link fetchAd} 経由でページロード単位にキャッシュされる
  *   （同接数表示と同じ調子）。マウントごとには fetch しない。
- * - 204（配信対象なし）/ エラー / 広告なし のときは何も描画しない
- *   （広告が出ないことを許容する設計）。
- * - 入稿規格 468×60px に合わせて max-width を制限し、レスポンシブ表示する。
+ * - 取得確定で広告なし（204/エラー/不正）のときは何も描画しない（高さ0に畳む）。
+ * - 入稿規格 468×60 に高さを固定し（aspect-ratio）、取得中も枠を確保するため、
+ *   読み込み・ローテーション時にレイアウトシフト（カクッ）が起きない。画像は
+ *   object-cover で枠を満たす。
  *
  * クリックは `click_url`（= `/ads/click/:id`）アクセス時にサーバ側で
  * 302 リダイレクト + click 計上される。
@@ -84,7 +85,9 @@ function fetchAd(slot: string): Promise<Ad | null> {
 export const BmgBanner: FunctionComponent<BmgBannerProps> = ({
   slot = "default",
 }: BmgBannerProps) => {
-  const [ad, setAd] = useState<Ad | null>(null);
+  // undefined = 取得中, null = 広告なし確定, Ad = 取得済み。
+  // 取得中も枠を確保したいので初期値は undefined（null と区別する）。
+  const [ad, setAd] = useState<Ad | null | undefined>(undefined);
 
   useEffect(() => {
     let active = true;
@@ -98,28 +101,34 @@ export const BmgBanner: FunctionComponent<BmgBannerProps> = ({
     };
   }, [slot]);
 
-  if (!ad) return null;
+  // 取得が確定して「広告なし」(204/エラー/不正) なら何も描画しない（高さ0に畳む）。
+  if (ad === null) return null;
 
-  // サーバ由来のURLは DOM に渡す前に検証する。相対パスは配信ベースに解決し、
-  // 許可ドメイン以外や危険なスキームは弾く。画像URLは必須で、無効なら非表示。
-  const imageUrl = safeAdUrl(ad.image_url);
-  if (!imageUrl) return null;
+  // 取得済みなら URL を検証する。相対パスは配信ベースに解決し、許可ドメイン以外や
+  // 危険なスキームは弾く。取得済みで画像URLが不正なら広告なし扱い。
+  const imageUrl = ad ? safeAdUrl(ad.image_url) : null;
+  if (ad && !imageUrl) return null;
 
   // click_url が null（リンク無し広告）/ 不正URLのときはリンクを作らず、
   // <img> 単体で描画する（アンカー無し・onClick 無しでクリックしても何も起きない）。
-  const clickUrl = safeAdUrl(ad.click_url);
+  const clickUrl = ad ? safeAdUrl(ad.click_url) : null;
 
-  const image = (
+  // 468×60 に高さを固定する枠（背景は指定なし＝透明）。取得中も含め常にこの枠を
+  // 確保するため、読み込み・広告ローテーション時にレイアウトシフト（カクッ）が
+  // 起きない。広告は全て 468×60 入稿前提なので、画像はちょうど枠を満たす。
+  const frameClassName = "block aspect-[468/60] w-full max-w-[468px]";
+
+  const image = imageUrl && (
     <img
       src={imageUrl}
-      alt={ad.title}
+      alt={ad?.title ?? ""}
       loading="lazy"
       // 配信元(storage.nijiurachan.net)はリファラ(ホットリンク)保護があり、
       // 許可ドメイン以外（localhost 等）からの Referer を 403 で弾く。
       // Referer を送らなければ環境を問わず取得でき、閲覧中スレッドのURLを
       // 広告CDNへ漏らさないプライバシー面のメリットもある。
       referrerPolicy="no-referrer"
-      className="h-auto w-full"
+      className="h-full w-full object-contain"
     />
   );
 
@@ -130,12 +139,12 @@ export const BmgBanner: FunctionComponent<BmgBannerProps> = ({
           href={clickUrl}
           target="_blank"
           rel="noopener noreferrer sponsored"
-          className="block w-full max-w-[468px]"
+          className={frameClassName}
         >
           {image}
         </a>
       ) : (
-        <div className="block w-full max-w-[468px]">{image}</div>
+        <div className={frameClassName}>{image}</div>
       )}
     </div>
   );
