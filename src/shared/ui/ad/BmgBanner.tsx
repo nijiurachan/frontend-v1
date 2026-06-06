@@ -22,17 +22,33 @@ interface BmgBannerProps {
  *
  * 同接数表示（`OnlineUsersIndicatorElement`）と同じ調子で、モジュールレベルの
  * 共有 Promise に取得結果を保持する。SPA なのでカタログ⇄スレッドの画面遷移では
- * モジュールが再評価されず、同一 slot への `/ads/serve` は1ページロードにつき
- * 1回だけ走る。大量のページ表示で広告サーバ（Workers）へ毎回直撃するのを防ぐ。
+ * モジュールが再評価されず、同一 slot への `/ads/serve` は基本1回だけ走る。
+ * 大量のページ表示で広告サーバ（Workers）へ毎回直撃するのを防ぐ。
  *
- * 副作用としてセッション中は同じ広告が固定表示される（impression も1回のみ計上）
- * が、ここではリクエスト数を抑える方を優先する。フル再読み込みでリセットされる。
+ * ただし SPA（特にスマホ）はフル再読み込みがほぼ発生しないため、それだけだと
+ * セッション中ずっと同じ広告が固定表示されてしまう。そこで {@link AD_CACHE_TTL_MS}
+ * の有効期限を設け、期限切れ後に**バナーが次にマウントされた時だけ**取り直す。
+ * 画面遷移（= マウント）が「再読み込みの代わり」になる。タイマーや
+ * visibilitychange 監視を使わないので、アイドル時の負荷はゼロ。
  */
-const adCache: Map<string, Promise<Ad | null>> = new Map();
+const AD_CACHE_TTL_MS: number = 5 * 60 * 1000;
+
+interface AdCacheEntry {
+  promise: Promise<Ad | null>;
+  /** 取得を開始した時刻（epoch ms）。TTL 判定に使う。 */
+  fetchedAt: number;
+}
+
+const adCache: Map<string, AdCacheEntry> = new Map();
 
 function fetchAd(slot: string): Promise<Ad | null> {
+  // 呼び出しは useEffect 内（描画中ではない）なので Date.now() の参照は安全。
+  const now = Date.now();
   const cached = adCache.get(slot);
-  if (cached) return cached;
+  // TTL 内のキャッシュはそのまま再利用。期限切れ/未取得なら取り直す。
+  if (cached && now - cached.fetchedAt < AD_CACHE_TTL_MS) {
+    return cached.promise;
+  }
 
   const promise = (async (): Promise<Ad | null> => {
     try {
@@ -49,7 +65,7 @@ function fetchAd(slot: string): Promise<Ad | null> {
     }
   })();
 
-  adCache.set(slot, promise);
+  adCache.set(slot, { promise, fetchedAt: now });
   return promise;
 }
 
