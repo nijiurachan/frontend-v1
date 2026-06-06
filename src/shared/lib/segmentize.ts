@@ -50,7 +50,9 @@ export function segmentize(text: string): Segment[] {
           // IPv6も除外
           shouldExclude = true;
         } else {
-          shouldExclude = !(url.protocol === "http:" || url.protocol === "https:");
+          shouldExclude = !(
+            url.protocol === "http:" || url.protocol === "https:"
+          );
         }
       } catch {
         // このケースは通常起こり得ない(link.hrefはスキーム付きURLになるはず)。
