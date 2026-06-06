@@ -312,7 +312,6 @@ export function useThreads() {
 - バックエンドに`/api/ogp?url=...`エンドポイントが必要
 
 **ユーティリティ：**
-- `shared/lib/extractLinks` - レスからURL抽出
 - `shared/lib/mediaType` - YouTubeやX URLの判定と情報抽出
 
 ### 引用レス機能
