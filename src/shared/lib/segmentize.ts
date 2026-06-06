@@ -33,15 +33,34 @@ export function segmentize(text: string): Segment[] {
   const diceMatches = Array.from(text.matchAll(diceRegex));
 
   // リンクを検出
-  const linkMatches = find(text, "url")
-    // localhostは除外
-    .filter((link) => {
-      try {
-        return new URL(link.href).hostname !== "localhost";
-      } catch {
-        return true;
-      }
-    });
+  const linkMatches = find(text, "url", {
+    validate: {
+      url: (value: string) => {
+        try {
+          // プロトコル(http/https)が付いていないドメイン名はリンク化から除外する(例外が出る)
+          const url = new URL(value);
+
+          const host = url.hostname;
+          // localhostは除外
+          if (host === "localhost" || host.endsWith(".localhost")) {
+            return false;
+          }
+          // IPv4も除外
+          if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) {
+            return false;
+          }
+          // IPv6も除外
+          if (host.includes(":")) {
+            return false;
+          }
+
+          return url.protocol === "http:" || url.protocol === "https:";
+        } catch {
+          return false;
+        }
+      },
+    },
+  });
 
   // マッチ位置の配列を作成
   const allMatches: Array<{
