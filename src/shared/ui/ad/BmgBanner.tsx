@@ -10,6 +10,9 @@ const ADS_BASE_URL = "https://ads.nijiurachan.net";
  */
 function safeAdUrl(raw: string): string | null {
   try {
+    // 空文字・空白のみは new URL("", base) が配信ベース自体（オリジン）に
+    // 解決され有効扱いになってしまうため、先に弾いて非表示にする。
+    if (raw.trim() === "") return null;
     const url = new URL(raw, ADS_BASE_URL);
     return url.protocol === "https:" || url.protocol === "http:"
       ? url.href
