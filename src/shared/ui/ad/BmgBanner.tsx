@@ -3,6 +3,22 @@ import { type FunctionComponent, useEffect, useState } from "react";
 /** ぶるもげちゃん広告サーバの配信ベースURL */
 const ADS_BASE_URL = "https://ads.nijiurachan.net";
 
+/**
+ * 広告サーバ由来のURLを検証して正規化する。相対パスは配信ベースに解決し、
+ * http(s) 以外のスキーム（`javascript:` / `data:` 等）は弾いて null を返す。
+ * サーバが汚染された場合でも DOM の href/src に危険な値を渡さないための防御。
+ */
+function safeAdUrl(raw: string): string | null {
+  try {
+    const url = new URL(raw, ADS_BASE_URL);
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.href
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 /** /ads/serve が返す広告1件 */
 interface Ad {
   id: string;
@@ -85,18 +101,29 @@ export const BmgBanner: FunctionComponent<BmgBannerProps> = ({
 
   if (!ad) return null;
 
+  // サーバ由来のURLは DOM に渡す前に検証する。相対パスは配信ベースに解決し、
+  // http(s) 以外のスキーム（javascript: / data: 等）は弾く。不正なら非表示。
+  const clickUrl = safeAdUrl(ad.click_url);
+  const imageUrl = safeAdUrl(ad.image_url);
+  if (!clickUrl || !imageUrl) return null;
+
   return (
     <div className="flex justify-center border-b border-border bg-background px-2 py-2">
       <a
-        href={ad.click_url}
+        href={clickUrl}
         target="_blank"
-        rel="noopener sponsored"
+        rel="noopener noreferrer sponsored"
         className="block w-full max-w-[468px]"
       >
         <img
-          src={ad.image_url}
+          src={imageUrl}
           alt={ad.title}
           loading="lazy"
+          // 配信元(storage.nijiurachan.net)はリファラ(ホットリンク)保護があり、
+          // 許可ドメイン以外（localhost 等）からの Referer を 403 で弾く。
+          // Referer を送らなければ環境を問わず取得でき、閲覧中スレッドのURLを
+          // 広告CDNへ漏らさないプライバシー面のメリットもある。
+          referrerPolicy="no-referrer"
           className="h-auto w-full"
         />
       </a>
