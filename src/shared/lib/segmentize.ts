@@ -33,7 +33,34 @@ export function segmentize(text: string): Segment[] {
   const diceMatches = Array.from(text.matchAll(diceRegex));
 
   // リンクを検出
-  const linkMatches = find(text, "url");
+  const linkMatches = find(text, "url")
+    // サーバサイド内部へアクセスしうるURLはリンク対象外にする(SSRF予防)
+    .filter((link) => {
+      let shouldExclude: boolean;
+      try {
+        const url = new URL(link.href);
+        const host = url.hostname.replace(/\.$/, "");
+        if (host === "localhost" || host.endsWith(".localhost")) {
+          // localhostは除外
+          shouldExclude = true;
+        } else if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) {
+          // IPv4も除外
+          shouldExclude = true;
+        } else if (host.includes(":")) {
+          // IPv6も除外
+          shouldExclude = true;
+        } else {
+          shouldExclude = !(
+            url.protocol === "http:" || url.protocol === "https:"
+          );
+        }
+      } catch {
+        // このケースは通常起こり得ない(link.hrefはスキーム付きURLになるはず)。
+        // 万が一解析できないなら普通のURLではないはずなので、リンク対象外にする
+        shouldExclude = true;
+      }
+      return !shouldExclude;
+    });
 
   // マッチ位置の配列を作成
   const allMatches: Array<{
