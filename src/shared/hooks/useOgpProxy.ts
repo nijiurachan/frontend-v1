@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { OgpData } from "@/shared/types/ogp";
 
 // OGP情報を取得するフックAPIのURL
-const OGP_PROXY_URL = "https://api.nijiurachan.net/ogp-proxy";
+const OGP_PROXY_URL = "https://ogp-proxy.nijiurachan.net/_";
 
 export type UseOgpResult = {
   data: OgpData | undefined;
@@ -13,7 +13,7 @@ export type UseOgpResult = {
 /**
  * OGP情報を取得するフック
  *
- * 注意: このフックはバックエンドに `/ogp-proxy?url=...` エンドポイントが実装されている必要があります。
+ * 注意: このフックは OGP プロキシが `.../{base64url}` 形式のエンドポイントを提供している必要があります。
  * バックエンドでURL先のHTMLを取得し、OGPメタタグをパースしてJSONで返すAPIを実装してください。
  */
 /**
