@@ -31,7 +31,7 @@ interface BmgBannerProps {
  * 画面遷移（= マウント）が「再読み込みの代わり」になる。タイマーや
  * visibilitychange 監視を使わないので、アイドル時の負荷はゼロ。
  */
-const AD_CACHE_TTL_MS: number = 5 * 60 * 1000;
+const AD_CACHE_TTL_MS: number = 10 * 1000;
 
 interface AdCacheEntry {
   promise: Promise<Ad | null>;
