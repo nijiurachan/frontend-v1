@@ -1,7 +1,7 @@
 import { type FunctionComponent, useEffect, useState } from "react";
 
 /** ぶるもげちゃん広告サーバの配信ベースURL */
-const ADS_BASE_URL = "https://ads.nijiurachan.net";
+const ADS_BASE_URL = "https://nijiurachan.net";
 
 /**
  * 広告サーバ由来のURLを検証して正規化する。相対パスは配信ベースに解決し、
@@ -13,9 +13,11 @@ function safeAdUrl(raw: string): string | null {
     // 空文字・空白のみは new URL("", base) が配信ベース自体（オリジン）に
     // 解決され有効扱いになってしまうため、先に弾いて非表示にする。
     if (raw.trim() === "") return null;
-    const url = new URL(raw, ADS_BASE_URL);
-    return url.protocol === "https:" || url.protocol === "http:"
-      ? url.href
+    const { protocol, port, host, href } = new URL(raw, ADS_BASE_URL);
+    return protocol === "https:" &&
+      port === "" &&
+      (host === "nijiurachan.net" || host.endsWith(".nijiurachan.net"))
+      ? href
       : null;
   } catch {
     return null;
