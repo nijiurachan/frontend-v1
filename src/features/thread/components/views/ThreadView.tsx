@@ -27,6 +27,7 @@ import { useSettingsStore } from "@/features/settings/hooks";
 import type * as modals from "@/features/thread/components/modals";
 import { type ActionButton, BottomActionBar } from "@/features/thread/ui";
 import { useSwipeBack } from "@/shared/hooks/useSwipeBack";
+import { BmgBanner } from "@/shared/ui/ad";
 import {
   BOTTOM_SPACER_HEIGHT,
   LoadingScreen,
@@ -323,6 +324,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     <>
       <title>{`${data.posts?.[0]?.plainBody.slice(0, 20) ?? `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
       <div ref={swipeContentRef}>
+        <BmgBanner />
         <PullRefresh onRefresh={handleRefresh}>
           <div className="pb-14" style={{ fontSize }}>
             {firstPost && (
