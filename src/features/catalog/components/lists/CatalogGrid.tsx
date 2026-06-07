@@ -41,7 +41,7 @@ export const CatalogGrid: React.FunctionComponent = () => {
 
   return (
     <div
-      className="grid gap-2 p-2 pb-2 auto-rows-fr grid-flow-dense"
+      className="grid gap-2 p-2 pb-20 auto-rows-fr grid-flow-dense"
       style={{
         gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
       }}
