@@ -343,6 +343,8 @@ export const ThreadView: React.FunctionComponent<Props> = ({
               allPosts={data.posts}
               onJumpToPost={handleJumpToPost}
             />
+            {/* 最下レスと残り寿命表示の間の広告枠 */}
+            <BmgBanner />
             {isThreadClosed && closureMessage && (
               <div className="px-4 py-4 mt-4 text-destructive text-sm bg-destructive/10 rounded">
                 {closureMessage}
