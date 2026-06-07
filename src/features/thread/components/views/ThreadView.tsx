@@ -324,7 +324,6 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     <>
       <title>{`${data.posts?.[0]?.plainBody.slice(0, 20) ?? `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
       <div ref={swipeContentRef}>
-        <BmgBanner />
         <PullRefresh onRefresh={handleRefresh}>
           <div className="pb-14" style={{ fontSize }}>
             {firstPost && (

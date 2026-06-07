@@ -43,11 +43,6 @@ export const CatalogPage: React.FunctionComponent = () => {
       <BmgBanner />
       <PullRefresh onRefresh={onRefresh}>
         <CatalogGrid />
-        {/* カタログ最下部の広告枠。pb-20 は fixed な SortNav 分の下余白も兼ねる
-            （CatalogGrid から pb-20 をこちらへ移動。広告が無くても余白は確保される） */}
-        <div className="pb-20">
-          <BmgBanner />
-        </div>
       </PullRefresh>
       <SortNav
         primaryAction={{
