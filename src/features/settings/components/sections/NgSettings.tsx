@@ -3,6 +3,7 @@ import { FiX } from "react-icons/fi";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { SettingRow, SettingSection } from "@/features/settings/ui";
 import { Button, HashBitmap, Input, Toggle } from "@/shared/ui/form";
+import { TextLink } from "@/shared/ui/navigation";
 
 type InputChangeEvent = React.ChangeEvent<HTMLInputElement, HTMLInputElement>;
 
@@ -331,10 +332,13 @@ export const NgSettings: React.FunctionComponent = () => {
             {hiddenThreadIds.map((threadId) => (
               <SettingRow key={threadId}>
                 <div className="flex items-center justify-between w-full gap-2">
-                  {/* TODO スレへのリンクにする */}
-                  <span className="text-foreground text-destructive">
+                  <TextLink
+                    to="/thread/$threadId"
+                    params={{ threadId: String(threadId) }}
+                    variant="primary"
+                  >
                     {threadId}
-                  </span>
+                  </TextLink>
                   <Button
                     variant="ghost"
                     onClick={(): void => unhideThread(threadId)}
