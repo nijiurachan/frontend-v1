@@ -21,7 +21,6 @@ export const NgSettings: React.FunctionComponent = () => {
     ngImages,
     setEnabled,
     setShowNgContent,
-    hideThread,
     unhideThread,
     addNgDisplayId,
     removeNgDisplayId,
@@ -40,7 +39,6 @@ export const NgSettings: React.FunctionComponent = () => {
   const [ngWordInput, setNgWordInput] = useState("");
   const [ngRegexInput, setNgRegexInput] = useState("");
   const [ngImageInput, setNgImageInput] = useState("");
-  const [hiddenThreadIdInput, setHiddenThreadIdInput] = useState("");
 
   const handleAddNgDisplayId = (): void => {
     const displayId = ngDisplayIdInput.trim();
@@ -96,22 +94,6 @@ export const NgSettings: React.FunctionComponent = () => {
     }
     addNgImage(hash);
     setNgImageInput("");
-  };
-
-  const handleAddHiddenThreadId = (): void => {
-    const threadIdStr = hiddenThreadIdInput.trim();
-    if (!threadIdStr) {
-      alert("スレIDを入力してください");
-      return;
-    }
-    const threadId = parseInt(threadIdStr);
-    if (isNaN(threadId)) {
-      alert("無効な正規表現パターンです");
-      return;
-    }
-    // TODO 追加のバリデーション？
-    hideThread(threadId);
-    setHiddenThreadIdInput("");
   };
 
   return (
@@ -344,26 +326,6 @@ export const NgSettings: React.FunctionComponent = () => {
       </SettingSection>
 
       <SettingSection title="NGスレID" description="スレIDで非表示">
-        {/* TODO 入力欄は必要だろうか？ */}
-        <SettingRow>
-          <Input
-            type="text"
-            placeholder="表示ID（例: 12345）"
-            className="w-full"
-            value={hiddenThreadIdInput}
-            onChange={(e: InputChangeEvent): void =>
-              setHiddenThreadIdInput(e.target.value)
-            }
-            onKeyDown={(e: React.KeyboardEvent): void => {
-              if (e.key === "Enter") {
-                handleAddHiddenThreadId();
-              }
-            }}
-          />
-          <Button variant="primary" onClick={handleAddHiddenThreadId}>
-            追加
-          </Button>
-        </SettingRow>
         {hiddenThreadIds.length > 0 ? (
           <div className="space-y-2">
             {hiddenThreadIds.map((threadId) => (
