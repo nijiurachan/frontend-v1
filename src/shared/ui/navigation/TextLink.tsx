@@ -21,6 +21,7 @@ export type TextLinkProps = Omit<
          * TanStack Routerの内部リンク先
          */
         to: string;
+        params?: Record<string, unknown>;
       }
     | {
         /**
