@@ -1,6 +1,11 @@
 import { BsImage } from "react-icons/bs";
 import { FiTrash2 } from "react-icons/fi";
-import { MdBlock, MdReport, MdVisibilityOff } from "react-icons/md";
+import {
+  MdBlock,
+  MdReport,
+  MdVisibility,
+  MdVisibilityOff,
+} from "react-icons/md";
 import noImage from "@/assets/img/no-image.svg";
 import type { Thread } from "@/entities/thread";
 import { getImageUrl, getThreadTitle } from "@/entities/thread";
@@ -24,7 +29,8 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
   isOpen,
   onClose,
 }: Props) => {
-  const { hideThread, addNgTitle } = useNgStore();
+  const { hiddenThreadIds, hideThread, unhideThread, addNgTitle } =
+    useNgStore();
   const { removeFromHistory } = useHistoryStore();
   const { mutate: del } = useDelMutation();
 
@@ -37,6 +43,11 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
 
   const handleHide = (): void => {
     hideThread(thread.id);
+    onClose();
+  };
+
+  const handleUnhide = (): void => {
+    unhideThread(thread.id);
     onClose();
   };
 
@@ -92,13 +103,28 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
         >
           del
         </Button>
-        <Button
-          variant="menu"
-          onClick={handleHide}
-          icon={<MdVisibilityOff className="w-5 h-5" />}
-        >
-          非表示
-        </Button>
+        {
+          // スレが「非表示」機能によって非表示になっている場合のみ、「表示」ボタンを代わりに表示する。
+          // つまり、NGワードなど別要因により非表示になっている場合は除く(とりあえずは)。
+          // isThreadHiddenはNGワードを含む全ての要因を考慮するのでここでは使用できない。
+          hiddenThreadIds.includes(thread.id) ? (
+            <Button
+              variant="menu"
+              onClick={handleUnhide}
+              icon={<MdVisibility className="w-5 h-5" />}
+            >
+              表示
+            </Button>
+          ) : (
+            <Button
+              variant="menu"
+              onClick={handleHide}
+              icon={<MdVisibilityOff className="w-5 h-5" />}
+            >
+              非表示
+            </Button>
+          )
+        }
         <Button
           variant="menu"
           onClick={handleNgTitle}
