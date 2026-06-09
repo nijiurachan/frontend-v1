@@ -113,13 +113,13 @@ export const Header: FunctionComponent<HeaderProps> = ({
           </span>
           <div className="flex items-center gap-2 pt-1 pb-1">
             <a
-              href="https://www.patreon.com/cw/u32913910"
+              href="https://vote.nijiurachan.net/"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1 text-sm text-secondary hover:text-primary transition-colors"
             >
               <img src={icon_aimoge} alt="" className="h-6 w-6" />
-              Patreon
+              投票所
             </a>
             <a
               href="https://aimoge.fanbox.cc/"
