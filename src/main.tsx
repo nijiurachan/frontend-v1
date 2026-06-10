@@ -9,7 +9,6 @@ import { createRoot } from "react-dom/client";
 import { routeTree } from "@/routeTree.gen";
 import "@/index.css";
 import { makeUpfileInputFragmentV2 } from "@nijiurachan/js/components/upfile-input-fragment-v2";
-import { OnlineUsersIndicatorElement } from "@nijiurachan/js/elements/online-users-indicator";
 import { makeUpfileInputV2Element } from "@nijiurachan/js/elements/upfile-input-v2";
 import { AxnosPaintPopup } from "@nijiurachan/js/io/axnos-paint-popup";
 import { initCookieStore } from "@nijiurachan/js/util/cookie-store";
@@ -31,8 +30,6 @@ declare module "@tanstack/react-router" {
 if (!window.cookieStore) {
   await initCookieStore();
 }
-
-OnlineUsersIndicatorElement.define();
 
 initUpfileInput();
 
