@@ -39,7 +39,7 @@ export function segmentize(text: string): Segment[] {
       let shouldExclude: boolean;
       try {
         const url = new URL(link.href);
-        const host = url.hostname.replace(/\.$/, "");
+        const host = url.hostname;
         if (host === "localhost" || host.endsWith(".localhost")) {
           // localhostは除外
           shouldExclude = true;
