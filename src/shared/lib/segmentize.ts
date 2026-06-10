@@ -40,7 +40,7 @@ export function segmentize(text: string): Segment[] {
           // プロトコル(http/https)が付いていないドメイン名はリンク化から除外する(例外が出る)
           const url = new URL(value);
 
-          const host = url.hostname;
+          const host = url.hostname.replace(/\.$/, "");
           // localhostは除外
           if (host === "localhost" || host.endsWith(".localhost")) {
             return false;
