@@ -3,8 +3,10 @@ import { cn } from "@/shared/lib";
 
 export type TextLinkVariant = "primary" | "secondary" | "muted" | "destructive";
 
-export interface TextLinkProps
-  extends Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
+export type TextLinkProps = Omit<
+  React.AnchorHTMLAttributes<HTMLAnchorElement>,
+  "href"
+> & {
   /**
    * リンクのバリエーション
    * - primary: メインカラー
@@ -13,15 +15,21 @@ export interface TextLinkProps
    * - destructive: 警告・削除アクション
    */
   variant?: TextLinkVariant;
-  /**
-   * TanStack Routerの内部リンク先
-   */
-  to?: string;
-  /**
-   * 外部リンク先
-   */
-  href?: string;
-}
+} & (
+    | {
+        /**
+         * TanStack Routerの内部リンク先
+         */
+        to: string;
+        params?: Record<string, unknown>;
+      }
+    | {
+        /**
+         * 外部リンク先
+         */
+        href: string;
+      }
+  );
 
 /**
  * テキストリンクコンポーネント
@@ -30,8 +38,6 @@ export interface TextLinkProps
 export const TextLink: React.FunctionComponent<TextLinkProps> = ({
   className,
   variant = "primary",
-  to,
-  href,
   children,
   ...props
 }: TextLinkProps) => {
@@ -49,19 +55,18 @@ export const TextLink: React.FunctionComponent<TextLinkProps> = ({
   );
 
   // TanStack Router Link
-  if (to) {
+  if ("to" in props) {
     return (
-      <Link to={to} className={classes} {...props}>
+      <Link className={classes} {...props}>
         {children}
       </Link>
     );
   }
 
   // 外部リンク
-  if (href) {
+  if ("href" in props) {
     return (
       <a
-        href={href}
         target="_blank"
         rel="noopener noreferrer"
         className={classes}
@@ -72,6 +77,6 @@ export const TextLink: React.FunctionComponent<TextLinkProps> = ({
     );
   }
 
-  // toもhrefも指定されていない場合はエラー
-  throw new Error('TextLink requires either "to" or "href" prop');
+  // ここには到達しえない
+  throw new Error(`Unexpected value: ${props satisfies never}`);
 };

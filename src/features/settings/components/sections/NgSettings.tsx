@@ -3,6 +3,7 @@ import { FiX } from "react-icons/fi";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { SettingRow, SettingSection } from "@/features/settings/ui";
 import { Button, HashBitmap, Input, Toggle } from "@/shared/ui/form";
+import { TextLink } from "@/shared/ui/navigation";
 
 type InputChangeEvent = React.ChangeEvent<HTMLInputElement, HTMLInputElement>;
 
@@ -13,6 +14,7 @@ export const NgSettings: React.FunctionComponent = () => {
   const {
     enabled,
     showNgContent,
+    hiddenThreadIds,
     ngDisplayIds,
     ngTitles,
     ngWords,
@@ -20,6 +22,7 @@ export const NgSettings: React.FunctionComponent = () => {
     ngImages,
     setEnabled,
     setShowNgContent,
+    unhideThread,
     addNgDisplayId,
     removeNgDisplayId,
     addNgTitle,
@@ -31,8 +34,6 @@ export const NgSettings: React.FunctionComponent = () => {
     addNgImage,
     removeNgImage,
   } = useNgStore();
-
-  // TODO スレッドID単位のNGもUIを用意 (NgStateのhideThread/unhideThread)
 
   const [ngDisplayIdInput, setNgDisplayIdInput] = useState("");
   const [ngTitleInput, setNgTitleInput] = useState("");
@@ -310,6 +311,37 @@ export const NgSettings: React.FunctionComponent = () => {
                   <Button
                     variant="ghost"
                     onClick={(): void => removeNgImage(bits)}
+                    icon={<FiX size={16} />}
+                  >
+                    削除
+                  </Button>
+                </div>
+              </SettingRow>
+            ))}
+          </div>
+        ) : (
+          <SettingRow>
+            <span className="text-muted-foreground">なし</span>
+          </SettingRow>
+        )}
+      </SettingSection>
+
+      <SettingSection title="非表示スレ" description="非表示にしたスレの一覧">
+        {hiddenThreadIds.length > 0 ? (
+          <div className="space-y-2">
+            {hiddenThreadIds.map((threadId) => (
+              <SettingRow key={threadId}>
+                <div className="flex items-center justify-between w-full gap-2">
+                  <TextLink
+                    to="/thread/$threadId"
+                    params={{ threadId: String(threadId) }}
+                    variant="primary"
+                  >
+                    {threadId}
+                  </TextLink>
+                  <Button
+                    variant="ghost"
+                    onClick={(): void => unhideThread(threadId)}
                     icon={<FiX size={16} />}
                   >
                     削除
