@@ -326,7 +326,7 @@ export const NgSettings: React.FunctionComponent = () => {
         )}
       </SettingSection>
 
-      <SettingSection title="NGスレID" description="スレIDで非表示">
+      <SettingSection title="非表示スレ" description="非表示にしたスレの一覧">
         {hiddenThreadIds.length > 0 ? (
           <div className="space-y-2">
             {hiddenThreadIds.map((threadId) => (
