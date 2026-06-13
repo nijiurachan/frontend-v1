@@ -20,7 +20,7 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
   const isBuild = command === "build";
   const isProd = mode === "production";
   const isDev = !isProd;
-  const basePath = isProd ? "/ts" : "/ts-dev";
+  const basePath = isProd ? "/ts" : mode === "testing" ? "/ts-test" : "/ts-dev";
 
   return {
     build: {
