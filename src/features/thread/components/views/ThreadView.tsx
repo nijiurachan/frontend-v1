@@ -78,7 +78,7 @@ interface Props {
 export const ThreadView: React.FunctionComponent<Props> = ({
   threadId,
 }: Props) => {
-  const { data, isLoading, error, refetch, isFetching } = useThread(threadId);
+  const { data, isLoading, error, refetch, isFetching, dataUpdatedAt } = useThread(threadId);
   const router = useRouter();
   const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
@@ -252,9 +252,10 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     }
   }, [isLoading, hash, scrollToPost]);
 
-  // Pin "now" to a single value per data update so the render stays pure.
-  // Lifetime is variable server-side, so the snapshot refreshes whenever the
-  // query returns new expires_at (initial fetch, refetch, pull-to-refresh).
+  // Use the query's fetch-success time (dataUpdatedAt) as "now" so the render
+  // stays pure. It refreshes on every successful fetch (initial fetch, refetch,
+  // pull-to-refresh), so the remaining time is recomputed at each update rather
+  // than counting down in real time.
   // Must run before any early return — Rules of Hooks.
   // biome-ignore-start lint/correctness/useExhaustiveDependencies(data?.thread): thread自体はスレ落ち表示に影響しない
   const { isThreadClosed, closureMessage, expireAtMessage, isExpiringSoon } =
@@ -267,10 +268,9 @@ export const ThreadView: React.FunctionComponent<Props> = ({
           isExpiringSoon: false,
         };
       }
-      // Intentionally pin "now" once per data update inside useMemo —
-      // recompute is keyed on expires_at, not on Date.now() itself.
-      // eslint-disable-next-line react-hooks/purity
-      const now = Date.now();
+      // "now" はフェッチ成功時刻。再取得のたびに dataUpdatedAt が更新され、
+      // それを依存配列に含めることで残り時間が再計算される。
+      const now = dataUpdatedAt;
       const rawExpiresAtMs = data.thread.expires_at
         ? new Date(data.thread.expires_at).getTime()
         : null;
@@ -325,6 +325,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
       data?.thread?.is_archived,
       data?.thread?.is_permanent,
       data?.thread?.expires_at,
+      dataUpdatedAt,
     ]);
   // biome-ignore-end lint/correctness/useExhaustiveDependencies(data?.thread): thread自体はスレ落ち表示に影響しない
 
