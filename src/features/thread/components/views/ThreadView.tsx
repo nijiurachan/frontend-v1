@@ -291,9 +291,24 @@ export const ThreadView: React.FunctionComponent<Props> = ({
         closureMessage =
           "このスレッドは期限切れです。新しいレスは投稿できません。";
       } else if (expiresAtMs !== null) {
+        // 期限切れまでの残り時間を計算
         const remainingMs = expiresAtMs - now;
+        // 期限切れまで1時間以内なら「消えるまであとX」の警告を表示
         isExpiringSoon = remainingMs > 0 && remainingMs <= 60 * 60 * 1000;
-        expireAtMessage = `${new Date(expiresAtMs).toLocaleString()} 頃消えます`;
+
+        // 残り時間を「あとX時間Y分Z秒」の形式で表示
+        const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const remainingText =
+          hours >= 1
+            ? `あと${hours}時間${minutes}分${seconds}秒`
+            : minutes >= 1
+              ? `あと${minutes}分${seconds}秒`
+              : `あと${seconds}秒`;
+
+        expireAtMessage = `${remainingText} ${new Date(expiresAtMs).toLocaleString()} 頃消えます`;
       }
 
       return {
