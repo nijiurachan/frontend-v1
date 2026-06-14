@@ -271,11 +271,15 @@ export const ThreadView: React.FunctionComponent<Props> = ({
       // recompute is keyed on expires_at, not on Date.now() itself.
       // eslint-disable-next-line react-hooks/purity
       const now = Date.now();
-      const expiresAtMs = data.thread.expires_at
+      const rawExpiresAtMs = data.thread.expires_at
         ? new Date(data.thread.expires_at).getTime()
         : null;
+      const expiresAtMs =
+        rawExpiresAtMs !== null && Number.isFinite(rawExpiresAtMs)
+          ? rawExpiresAtMs
+          : null;
       const isExpired =
-        !data.thread.is_permanent && expiresAtMs !== null && expiresAtMs < now;
+        !data.thread.is_permanent && expiresAtMs !== null && expiresAtMs <= now;
       const isThreadClosed = data.thread.is_archived || isExpired;
 
       let closureMessage: string | null = null;
