@@ -54,7 +54,6 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
 
     const longPressHandlers = useLongPress({
       onLongPress: (): void => setMenuOpen(true),
-      onPress: (): void => addViewed(thread.id),
     });
 
     const handleNgClick = (e: React.MouseEvent): void => {
