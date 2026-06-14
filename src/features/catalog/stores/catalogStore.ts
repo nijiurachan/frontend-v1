@@ -8,7 +8,14 @@ export type SortType =
   | "replies"
   | "momentum"
   | "soudane";
+
 export type AnimSetting = "always" | "never";
+
+export type ThreadMenuOpenMethod =
+  | "auto"
+  | "long-press"
+  | "menu-button"
+  | "off";
 
 interface CatalogValues {
   currentSort: SortType;
@@ -16,6 +23,7 @@ interface CatalogValues {
   showNew: boolean;
   showCount: boolean;
   catalogAnim: AnimSetting;
+  threadMenuOpenMethod: ThreadMenuOpenMethod;
   lastCatalogIds: number[];
   searchQuery: string;
 }
@@ -26,6 +34,7 @@ interface CatalogActions {
   setShowNew: (show: boolean) => void;
   setShowCount: (show: boolean) => void;
   setCatalogAnim: (anim: AnimSetting) => void;
+  setThreadMenuOpenMethod: (method: ThreadMenuOpenMethod) => void;
   updateLastCatalogIds: (ids: number[]) => void;
   setSearchQuery: (query: string) => void;
   resetCatalogSettings: () => void;
@@ -39,6 +48,7 @@ const DEFAULT_CATALOG_VALUES: CatalogValues = {
   showNew: true,
   showCount: true,
   catalogAnim: "always",
+  threadMenuOpenMethod: "auto",
   lastCatalogIds: [],
   searchQuery: "",
 };
@@ -54,6 +64,8 @@ export const useCatalogStore: UseBoundStore<StoreApi<CatalogState>> =
         setShowNew: (show: boolean) => set({ showNew: show }),
         setShowCount: (show: boolean) => set({ showCount: show }),
         setCatalogAnim: (anim: AnimSetting) => set({ catalogAnim: anim }),
+        setThreadMenuOpenMethod: (method: ThreadMenuOpenMethod) =>
+          set({ threadMenuOpenMethod: method }),
         updateLastCatalogIds: (ids: number[]) => set({ lastCatalogIds: ids }),
         setSearchQuery: (query: string) => set({ searchQuery: query }),
         resetCatalogSettings: () => set({ ...DEFAULT_CATALOG_VALUES }),
@@ -66,6 +78,7 @@ export const useCatalogStore: UseBoundStore<StoreApi<CatalogState>> =
           showNew: state.showNew,
           showCount: state.showCount,
           catalogAnim: state.catalogAnim,
+          threadMenuOpenMethod: state.threadMenuOpenMethod,
           lastCatalogIds: state.lastCatalogIds,
         }),
       },
