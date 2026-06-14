@@ -78,7 +78,8 @@ interface Props {
 export const ThreadView: React.FunctionComponent<Props> = ({
   threadId,
 }: Props) => {
-  const { data, isLoading, error, refetch, isFetching, dataUpdatedAt } = useThread(threadId);
+  const { data, isLoading, error, refetch, isFetching, dataUpdatedAt } =
+    useThread(threadId);
   const router = useRouter();
   const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
@@ -279,7 +280,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
           ? rawExpiresAtMs
           : null;
       const isExpired =
-        !data.thread.is_permanent && expiresAtMs !== null && expiresAtMs <= now;
+        !data.thread.is_permanent && expiresAtMs !== null && expiresAtMs < now;
       const isThreadClosed = data.thread.is_archived || isExpired;
 
       let closureMessage: string | null = null;
