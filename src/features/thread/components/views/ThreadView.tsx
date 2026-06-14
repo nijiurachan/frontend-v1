@@ -78,7 +78,8 @@ interface Props {
 export const ThreadView: React.FunctionComponent<Props> = ({
   threadId,
 }: Props) => {
-  const { data, isLoading, error, refetch, isFetching } = useThread(threadId);
+  const { data, isLoading, error, refetch, isFetching, dataUpdatedAt } =
+    useThread(threadId);
   const router = useRouter();
   const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
@@ -252,9 +253,10 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     }
   }, [isLoading, hash, scrollToPost]);
 
-  // Pin "now" to a single value per data update so the render stays pure.
-  // Lifetime is variable server-side, so the snapshot refreshes whenever the
-  // query returns new expires_at (initial fetch, refetch, pull-to-refresh).
+  // Use the query's fetch-success time (dataUpdatedAt) as "now" so the render
+  // stays pure. It refreshes on every successful fetch (initial fetch, refetch,
+  // pull-to-refresh), so the remaining time is recomputed at each update rather
+  // than counting down in real time.
   // Must run before any early return — Rules of Hooks.
   // biome-ignore-start lint/correctness/useExhaustiveDependencies(data?.thread): thread自体はスレ落ち表示に影響しない
   const { isThreadClosed, closureMessage, expireAtMessage, isExpiringSoon } =
@@ -267,13 +269,16 @@ export const ThreadView: React.FunctionComponent<Props> = ({
           isExpiringSoon: false,
         };
       }
-      // Intentionally pin "now" once per data update inside useMemo —
-      // recompute is keyed on expires_at, not on Date.now() itself.
-      // eslint-disable-next-line react-hooks/purity
-      const now = Date.now();
-      const expiresAtMs = data.thread.expires_at
+      // "now" はフェッチ成功時刻。再取得のたびに dataUpdatedAt が更新され、
+      // それを依存配列に含めることで残り時間が再計算される。
+      const now = dataUpdatedAt;
+      const rawExpiresAtMs = data.thread.expires_at
         ? new Date(data.thread.expires_at).getTime()
         : null;
+      const expiresAtMs =
+        rawExpiresAtMs !== null && Number.isFinite(rawExpiresAtMs)
+          ? rawExpiresAtMs
+          : null;
       const isExpired =
         !data.thread.is_permanent && expiresAtMs !== null && expiresAtMs < now;
       const isThreadClosed = data.thread.is_archived || isExpired;
@@ -291,9 +296,24 @@ export const ThreadView: React.FunctionComponent<Props> = ({
         closureMessage =
           "このスレッドは期限切れです。新しいレスは投稿できません。";
       } else if (expiresAtMs !== null) {
+        // 期限切れまでの残り時間を計算
         const remainingMs = expiresAtMs - now;
+        // 期限切れまで1時間以内なら「消えるまであとX」の警告を表示
         isExpiringSoon = remainingMs > 0 && remainingMs <= 60 * 60 * 1000;
-        expireAtMessage = `${new Date(expiresAtMs).toLocaleString()} 頃消えます`;
+
+        // 残り時間を「あとX時間Y分Z秒」の形式で表示
+        const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+        const remainingText =
+          hours >= 1
+            ? `あと${hours}時間${minutes}分${seconds}秒`
+            : minutes >= 1
+              ? `あと${minutes}分${seconds}秒`
+              : `あと${seconds}秒`;
+
+        expireAtMessage = `${remainingText} ${new Date(expiresAtMs).toLocaleString()} 頃消えます`;
       }
 
       return {
@@ -306,6 +326,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
       data?.thread?.is_archived,
       data?.thread?.is_permanent,
       data?.thread?.expires_at,
+      dataUpdatedAt,
     ]);
   // biome-ignore-end lint/correctness/useExhaustiveDependencies(data?.thread): thread自体はスレ落ち表示に影響しない
 
