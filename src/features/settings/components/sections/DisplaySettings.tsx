@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { FiLock, FiMinus, FiPlus } from "react-icons/fi";
-import { useCatalogStore } from "@/features/catalog/stores";
+import {
+  type ThreadMenuOpenMethod,
+  useCatalogStore,
+} from "@/features/catalog/stores";
 import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
@@ -38,10 +41,12 @@ export const DisplaySettings: React.FunctionComponent = () => {
     showNew,
     showCount,
     catalogAnim,
+    threadMenuOpenMethod,
     setColumns,
     setShowNew,
     setShowCount,
     setCatalogAnim,
+    setThreadMenuOpenMethod,
     resetCatalogSettings,
   } = useCatalogStore();
   const { clearHistory } = useHistoryStore();
@@ -211,6 +216,19 @@ export const DisplaySettings: React.FunctionComponent = () => {
             onChange={setShowCount}
             aria-label="レス数表示切替"
           />
+        </SettingRow>
+        <SettingRow label="メニューの開き方">
+          <Select
+            value={threadMenuOpenMethod}
+            onChange={(value: string): void =>
+              setThreadMenuOpenMethod(value as ThreadMenuOpenMethod)
+            }
+          >
+            <option value="auto">自動</option>
+            <option value="long-press">長押し</option>
+            <option value="menu-button">メニューボタン</option>
+            <option value="off">オフ</option>
+          </Select>
         </SettingRow>
       </SettingSection>
       <SettingSection title="投稿設定">
