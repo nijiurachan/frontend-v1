@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
 import { memo, useState } from "react";
+import { HiOutlineDotsVertical } from "react-icons/hi";
 import { MdBlock } from "react-icons/md";
 import fireWebp from "@/assets/img/fire.webp";
 import noImage from "@/assets/img/no-image.svg";
@@ -64,23 +65,25 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
       }
     };
 
+    const handleThreadClick = (e: React.MouseEvent): void => {
+      if (isNg) {
+        handleNgClick(e);
+      } else {
+        addViewed(thread.id);
+      }
+    };
+
+    const handleMenuClick = (): void => {
+      setMenuOpen(true);
+    };
+
     return (
       <>
-        <Link
-          to="/thread/$threadId"
-          params={{ threadId: String(thread.id) }}
+        <div
           className={clsx(
-            "group relative block bg-card/50 rounded-lg overflow-hidden hover:bg-card transition-colors",
+            "group relative bg-card/50 rounded-lg overflow-hidden hover:bg-card transition-colors",
             borderClass,
           )}
-          {...longPressHandlers}
-          onClick={(e: React.MouseEvent): void => {
-            if (isNg) {
-              handleNgClick(e);
-            } else {
-              addViewed(thread.id);
-            }
-          }}
         >
           {thread.is_admin ? (
             <img
@@ -90,64 +93,86 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
               className="admin-flame"
             />
           ) : null}
-          <div className="relative aspect-square bg-muted flex items-center justify-center">
-            <img
-              src={imageUrl}
-              alt={displayTitle}
-              loading="lazy"
-              className={clsx(
-                "w-full h-full object-contain",
-                isNg && !ngRevealed && "blur-xl opacity-20",
-              )}
-              onError={(e: React.SyntheticEvent<HTMLImageElement>): void => {
-                (e.target as HTMLImageElement).src = noImage;
-              }}
-            />
+          <Link
+            to="/thread/$threadId"
+            params={{ threadId: String(thread.id) }}
+            className="block"
+            {...longPressHandlers}
+            onClick={handleThreadClick}
+          >
+            <div className="relative aspect-square bg-muted flex items-center justify-center">
+              <img
+                src={imageUrl}
+                alt={displayTitle}
+                loading="lazy"
+                className={clsx(
+                  "w-full h-full object-contain",
+                  isNg && !ngRevealed && "blur-xl opacity-20",
+                )}
+                onError={(e: React.SyntheticEvent<HTMLImageElement>): void => {
+                  (e.target as HTMLImageElement).src = noImage;
+                }}
+              />
 
-            {isVideo && (!isNg || ngRevealed) && <VideoBadge />}
-            {showCount && (!isNg || ngRevealed) && (
-              <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
-                {totalCount}
-              </span>
-            )}
-            {showNew && isNew && (!isNg || ngRevealed) && (
-              <span className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
-                NEW
-              </span>
-            )}
-            {isNg && !ngRevealed && (
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/95">
-                <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-1 px-3 py-2 bg-destructive/90 text-destructive-foreground rounded text-sm font-bold">
-                    <MdBlock size={16} />
+              {isVideo && (!isNg || ngRevealed) && <VideoBadge />}
+              {showCount && (!isNg || ngRevealed) && (
+                <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
+                  {totalCount}
+                </span>
+              )}
+              {showNew && isNew && (!isNg || ngRevealed) && (
+                <span className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
+                  NEW
+                </span>
+              )}
+              {isNg && !ngRevealed && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/95">
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-1 px-3 py-2 bg-destructive/90 text-destructive-foreground rounded text-sm font-bold">
+                      <MdBlock size={16} />
+                      <span>NG</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      タップで表示
+                    </span>
+                  </div>
+                </div>
+              )}
+              {isNg && ngRevealed && (
+                <>
+                  <div className="absolute inset-0 bg-transparent cursor-pointer" />
+                  <div className="absolute top-1 left-1 px-2 py-1 bg-destructive/90 text-destructive-foreground rounded text-xs font-bold flex items-center gap-1 pointer-events-none">
+                    <MdBlock size={12} />
                     <span>NG</span>
                   </div>
-                  <span className="text-xs text-muted-foreground">
-                    タップで表示
-                  </span>
-                </div>
-              </div>
-            )}
-            {isNg && ngRevealed && (
-              <>
-                <div className="absolute inset-0 bg-transparent cursor-pointer" />
-                <div className="absolute top-1 left-1 px-2 py-1 bg-destructive/90 text-destructive-foreground rounded text-xs font-bold flex items-center gap-1 pointer-events-none">
-                  <MdBlock size={12} />
-                  <span>NG</span>
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
+          </Link>
+          <div className="flex items-start pt-2 px-2 mb-2">
+            <Link
+              to="/thread/$threadId"
+              params={{ threadId: String(thread.id) }}
+              className={clsx(
+                "min-w-0 flex-1 text-xs text-muted-foreground line-clamp-2 leading-tight",
+                "group-hover:text-foreground transition-colors",
+                isNg && !ngRevealed && "blur-sm",
+              )}
+              {...longPressHandlers}
+              onClick={handleThreadClick}
+            >
+              {displayTitle}
+            </Link>
+            <button
+              type="button"
+              onClick={handleMenuClick}
+              className="flex-shrink-0 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              aria-label="スレッドメニュー"
+            >
+              <HiOutlineDotsVertical className="w-5 h-5" />
+            </button>
           </div>
-          <div
-            className={clsx(
-              "pt-2 px-2 mb-2 text-xs text-muted-foreground line-clamp-2 leading-tight",
-              "group-hover:text-foreground transition-colors",
-              isNg && !ngRevealed && "blur-sm",
-            )}
-          >
-            {displayTitle}
-          </div>
-        </Link>
+        </div>
 
         <ThreadContextMenu
           thread={thread}
