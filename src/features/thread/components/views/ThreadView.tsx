@@ -71,6 +71,57 @@ const QuoteSearchModal: LazyExoticComponent<typeof modals.QuoteSearchModal> =
     })),
   );
 
+/**
+ * 既読レス数の記録関連処理をまとめたフック。
+ *
+ * 開いたことのあるスレに対し、スレページを離れるタイミングでどこまでレスを読んだかを記録し、
+ * カタログに未読レス数を表示できるようにすることを意図する。
+ * (「カタログの前回更新時からの増分」ではない)
+ */
+function useReadReplyNumber(threadId: number): (postIndex: number) => void {
+  const recordReadReplyNumber = useHistoryStore((s) => s.recordReadReplyNumber);
+  const fullyVisibleReplyNumberRef = useRef(0);
+  const router = useRouter();
+
+  const handlePostFullyVisible = (replyNumberInThread: number): void => {
+    // ここでは最大値ではなく直近に見たレス番号を保持する。「チラ見」を既読カウントに入れないため
+    fullyVisibleReplyNumberRef.current = replyNumberInThread;
+  };
+
+  // スレを離れる際に既読レス数を記憶する
+  // 離れる瞬間に映り込んでいたレス番が対象
+  useEffect(() => {
+    // スレページを離れる"可能性のある"操作が行われた場合、既読レスを記憶する
+    // 実際には離れていないタイミングで呼び出される可能性もある(実害はない)
+    function handlePageLeave(): void {
+      recordReadReplyNumber(threadId, fullyVisibleReplyNumberRef.current);
+    }
+
+    document.addEventListener("visibilitychange", handlePageLeave);
+    window.addEventListener("pagehide", handlePageLeave);
+
+    const routerUnsubscribe = router.subscribe("onBeforeNavigate", (event) => {
+      if (!event.hrefChanged) {
+        return;
+      }
+
+      handlePageLeave();
+    });
+
+    // TODO スレを開いた時に最初の未読レスへスクロールする仕組みを何処かに作る(TanStackのonRenderedで？)。
+    // 注: 他の自動スクロールギミックと被らないよう
+    // TODO window.scrollYも記録して正確なスクロール量を再現する？
+
+    return (): void => {
+      routerUnsubscribe();
+      window.removeEventListener("pagehide", handlePageLeave);
+      document.removeEventListener("visibilitychange", handlePageLeave);
+    };
+  }, [recordReadReplyNumber, router, threadId]);
+
+  return handlePostFullyVisible;
+}
+
 interface Props {
   threadId: number;
 }
@@ -330,6 +381,8 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     ]);
   // biome-ignore-end lint/correctness/useExhaustiveDependencies(data?.thread): thread自体はスレ落ち表示に影響しない
 
+  const handlePostFullyVisible = useReadReplyNumber(threadId);
+
   if (isLoading) return <LoadingScreen />;
 
   if (error) {
@@ -362,6 +415,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
               quoteReferencesMap={quoteReferencesMap}
               allPosts={data.posts}
               onJumpToPost={handleJumpToPost}
+              onPostFullyVisible={handlePostFullyVisible}
             />
             {/* 最下レスと残り寿命表示の間の広告枠 */}
             <BmgBanner />
