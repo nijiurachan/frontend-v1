@@ -125,6 +125,9 @@ select option {
    padding 分の縁だけをマスクで残して枠線リングを描く。 */
 .viewed-oekaki-border {
   position: relative;
+  /* border-3 系の枠（内側コンテンツが3px分インセット）と幾何を揃えるため、
+     枠幅分の余白を確保する。::after のリングはこの余白帯に描画される。 */
+  padding: 3px;
 }
 .viewed-oekaki-border::after {
   content: "";
@@ -137,10 +140,12 @@ select option {
     var(--color-primary),
     var(--color-otegaki)
   );
-  -webkit-mask:
+  /* padding 分の縁だけを残すマスクで枠線リングにする。標準プロパティのみ書き、
+     -webkit- プレフィックスはビルド時の Lightning CSS に任せる（手動併記すると
+     重複扱いで標準 mask-composite が脱落し、Firefox で全面グラデになるため）。 */
+  mask:
     linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
   z-index: 1;
