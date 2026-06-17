@@ -313,7 +313,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
               ? `あと${minutes}分${seconds}秒`
               : `あと${seconds}秒`;
 
-        expireAtMessage = `${remainingText} ${new Date(expiresAtMs).toLocaleString()} 頃消えます`;
+        expireAtMessage = `${new Date(expiresAtMs).toLocaleString()} 頃落ちます(${remainingText})`;
       }
 
       return {
