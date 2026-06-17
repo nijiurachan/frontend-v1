@@ -53,6 +53,7 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
     // 上から順に最初に一致したものだけを適用する（条件追加は1行で済む）
     const borderClass = ((): string => {
       if (thread.is_admin) return "border-3 border-accent";
+      if (isViewed && isOekaki) return "viewed-oekaki-border";
       if (isViewed) return "border-3 border-primary";
       if (isOekaki) return "border-3 border-otegaki";
       return "";
