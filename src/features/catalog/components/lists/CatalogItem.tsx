@@ -46,12 +46,17 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
     const viewedIds = getViewedIds();
     const isViewed = viewedIds.includes(thread.id);
 
-    // 枠線スタイル決定（管理者権限が優先）
-    const borderClass = thread.is_admin
-      ? "border-3 border-accent"
-      : isViewed
-        ? "border-3 border-primary"
-        : "";
+    // お絵描き判定
+    const isOekaki = thread.attachment?.is_oekaki ?? false;
+
+    // 枠線スタイル決定（優先順位: 運営 > 既読 > お絵描き）
+    // 上から順に最初に一致したものだけを適用する（条件追加は1行で済む）
+    const borderClass = ((): string => {
+      if (thread.is_admin) return "border-3 border-accent";
+      if (isViewed) return "border-3 border-primary";
+      if (isOekaki) return "border-3 border-otegaki";
+      return "";
+    })();
 
     // スレメニュー表示方法を判別する
     const [longPressOpensMenu, isMenuButtonDisplayed] = useMemo(() => {
