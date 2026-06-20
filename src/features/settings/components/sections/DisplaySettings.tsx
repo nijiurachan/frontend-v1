@@ -40,11 +40,13 @@ export const DisplaySettings: React.FunctionComponent = () => {
     columns,
     showNew,
     showCount,
+    showUnreadCount,
     catalogAnim,
     threadMenuOpenMethod,
     setColumns,
     setShowNew,
     setShowCount,
+    setShowUnreadCount,
     setCatalogAnim,
     setThreadMenuOpenMethod,
     resetCatalogSettings,
@@ -215,6 +217,13 @@ export const DisplaySettings: React.FunctionComponent = () => {
             checked={showCount}
             onChange={setShowCount}
             aria-label="レス数表示切替"
+          />
+        </SettingRow>
+        <SettingRow label="未読レス数表示">
+          <Toggle
+            checked={showUnreadCount}
+            onChange={setShowUnreadCount}
+            aria-label="未読レス数表示切替"
           />
         </SettingRow>
         <SettingRow label="メニューの開き方">

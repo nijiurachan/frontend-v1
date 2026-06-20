@@ -22,6 +22,7 @@ interface CatalogValues {
   columns: number;
   showNew: boolean;
   showCount: boolean;
+  showUnreadCount: boolean;
   catalogAnim: AnimSetting;
   threadMenuOpenMethod: ThreadMenuOpenMethod;
   lastCatalogIds: number[];
@@ -33,6 +34,7 @@ interface CatalogActions {
   setColumns: (columns: number) => void;
   setShowNew: (show: boolean) => void;
   setShowCount: (show: boolean) => void;
+  setShowUnreadCount: (show: boolean) => void;
   setCatalogAnim: (anim: AnimSetting) => void;
   setThreadMenuOpenMethod: (method: ThreadMenuOpenMethod) => void;
   updateLastCatalogIds: (ids: number[]) => void;
@@ -47,6 +49,7 @@ const DEFAULT_CATALOG_VALUES: CatalogValues = {
   columns: 4,
   showNew: true,
   showCount: true,
+  showUnreadCount: true,
   catalogAnim: "always",
   threadMenuOpenMethod: "auto",
   lastCatalogIds: [],
@@ -63,6 +66,7 @@ export const useCatalogStore: UseBoundStore<StoreApi<CatalogState>> =
         setColumns: (columns: number) => set({ columns }),
         setShowNew: (show: boolean) => set({ showNew: show }),
         setShowCount: (show: boolean) => set({ showCount: show }),
+        setShowUnreadCount: (show: boolean) => set({ showUnreadCount: show }),
         setCatalogAnim: (anim: AnimSetting) => set({ catalogAnim: anim }),
         setThreadMenuOpenMethod: (method: ThreadMenuOpenMethod) =>
           set({ threadMenuOpenMethod: method }),
@@ -77,6 +81,7 @@ export const useCatalogStore: UseBoundStore<StoreApi<CatalogState>> =
           columns: state.columns,
           showNew: state.showNew,
           showCount: state.showCount,
+          showUnreadCount: state.showUnreadCount,
           catalogAnim: state.catalogAnim,
           threadMenuOpenMethod: state.threadMenuOpenMethod,
           lastCatalogIds: state.lastCatalogIds,
