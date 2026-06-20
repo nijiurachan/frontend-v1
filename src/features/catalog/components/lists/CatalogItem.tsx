@@ -168,7 +168,9 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
                   <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
                     {showCount && totalCount}
                     {showUnreadCount && unreadCount && (
-                      <span className="text-red-400">+{unreadCount}</span>
+                      <span className="text-primary text-2xs ml-0.5">
+                        +{unreadCount}
+                      </span>
                     )}
                   </span>
                 )}
