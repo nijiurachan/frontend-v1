@@ -163,19 +163,18 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
               />
 
               {isVideo && (!isNg || ngRevealed) && <VideoBadge />}
-              {showCount && (!isNg || ngRevealed) && (
-                <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
-                  {totalCount}
-                </span>
-              )}
+              {(showCount || (showUnreadCount && unreadCount)) &&
+                (!isNg || ngRevealed) && (
+                  <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
+                    {showCount && totalCount}
+                    {showUnreadCount && unreadCount && (
+                      <span className="text-red-400">+{unreadCount}</span>
+                    )}
+                  </span>
+                )}
               {showNew && isNew && (!isNg || ngRevealed) && (
                 <span className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
                   NEW
-                </span>
-              )}
-              {showUnreadCount && unreadCount && (!isNg || ngRevealed) && (
-                <span className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
-                  {unreadCount}
                 </span>
               )}
               {isNg && !ngRevealed && (
