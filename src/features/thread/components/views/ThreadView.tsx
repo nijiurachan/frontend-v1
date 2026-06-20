@@ -74,11 +74,14 @@ const QuoteSearchModal: LazyExoticComponent<typeof modals.QuoteSearchModal> =
 /**
  * 既読レス数の記録関連処理をまとめたフック。
  *
- * 開いたことのあるスレに対し、スレページを離れるタイミングでどこまでレスを読んだかを記録し、
- * カタログに未読レス数を表示できるようにすることを意図する。
+ * 開いたことのあるスレに対し、スレページを離れるタイミング、または、スレを更新したタイミングで
+ * どこまでレスを読んだかを記録し、カタログに未読レス数を表示できるようにすることを意図する。
  * (「カタログの前回更新時からの増分」ではない)
  */
-function useReadReplyNumber(threadId: number): (postIndex: number) => void {
+function useReadReplyNumber(threadId: number): {
+  handlePostFullyVisible: (postIndex: number) => void;
+  handleRefresh: () => void;
+} {
   const recordReadReplyNumber = useHistoryStore((s) => s.recordReadReplyNumber);
   const fullyVisibleReplyNumberRef = useRef(0);
   const router = useRouter();
@@ -86,6 +89,11 @@ function useReadReplyNumber(threadId: number): (postIndex: number) => void {
   const handlePostFullyVisible = (replyNumberInThread: number): void => {
     // ここでは最大値ではなく直近に見たレス番号を保持する。「チラ見」を既読カウントに入れないため
     fullyVisibleReplyNumberRef.current = replyNumberInThread;
+  };
+
+  // スレを更新する際も既読レス数を記憶する
+  const handleRefresh = (): void => {
+    recordReadReplyNumber(threadId, fullyVisibleReplyNumberRef.current);
   };
 
   // スレを離れる際に既読レス数を記憶する
@@ -119,7 +127,10 @@ function useReadReplyNumber(threadId: number): (postIndex: number) => void {
     };
   }, [recordReadReplyNumber, router, threadId]);
 
-  return handlePostFullyVisible;
+  return {
+    handlePostFullyVisible,
+    handleRefresh,
+  };
 }
 
 interface Props {
@@ -187,6 +198,10 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     return extractQuoteReferences(data.posts);
   }, [data]);
 
+  // 既読レス記録処理
+  const { handlePostFullyVisible, handleRefresh: handleRefreshForReplyNumber } =
+    useReadReplyNumber(threadId);
+
   // 検索処理（1レス目を含む全レスから検索）
   const handleSearch = useCallback(
     (query: string) => {
@@ -208,8 +223,9 @@ export const ThreadView: React.FunctionComponent<Props> = ({
 
   // PullRefresh の refetch コールバック
   const handleRefresh = useCallback(async () => {
+    handleRefreshForReplyNumber();
     await refetch();
-  }, [refetch]);
+  }, [handleRefreshForReplyNumber, refetch]);
 
   // ページトップへスクロール（PTR ゾーンの下端 = 見かけ上の上端）
   const scrollToTop = useCallback(() => {
@@ -380,8 +396,6 @@ export const ThreadView: React.FunctionComponent<Props> = ({
       dataUpdatedAt,
     ]);
   // biome-ignore-end lint/correctness/useExhaustiveDependencies(data?.thread): thread自体はスレ落ち表示に影響しない
-
-  const handlePostFullyVisible = useReadReplyNumber(threadId);
 
   if (isLoading) return <LoadingScreen />;
 
