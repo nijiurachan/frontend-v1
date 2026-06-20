@@ -22,9 +22,14 @@ interface CatalogItemProps {
 
 export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
   function CatalogItem({ thread, isNew }: CatalogItemProps) {
-    const { showNew, showCount, catalogAnim, threadMenuOpenMethod } =
-      useCatalogStore();
-    const { addViewed, getViewedIds } = useHistoryStore();
+    const {
+      showNew,
+      showCount,
+      showUnreadCount,
+      catalogAnim,
+      threadMenuOpenMethod,
+    } = useCatalogStore();
+    const { addViewed, getViewedIds, getReadReplyNumber } = useHistoryStore();
     const { isThreadHidden, showNgContent } = useNgStore();
     const [menuOpen, setMenuOpen] = useState(false);
     const [ngRevealed, setNgRevealed] = useState(false);
@@ -111,6 +116,15 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
       setMenuOpen(true);
     };
 
+    const unreadCount = useMemo(() => {
+      const readReplyNumber = getReadReplyNumber(thread.id);
+      // 記録されているreadReplyNumberの値はPost.number_in_threadの値そのままなので、それを踏まえて調整する
+      // 0はundefinedにする
+      return (
+        (readReplyNumber && totalCount - (readReplyNumber - 1)) || undefined
+      );
+    }, [getReadReplyNumber, thread.id, totalCount]);
+
     return (
       <>
         <div
@@ -157,6 +171,11 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
               {showNew && isNew && (!isNg || ngRevealed) && (
                 <span className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
                   NEW
+                </span>
+              )}
+              {showUnreadCount && unreadCount && (!isNg || ngRevealed) && (
+                <span className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
+                  {unreadCount}
                 </span>
               )}
               {isNg && !ngRevealed && (
