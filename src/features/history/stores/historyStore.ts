@@ -15,6 +15,10 @@ interface HistoryState {
   getViewedIds: () => number[];
   getReadReplyNumber: (threadId: number) => number | undefined;
   recordReadReplyNumber: (threadId: number, readReplyNumber: number) => void;
+  getUnreadCount: (
+    threadId: number,
+    repliesCount: number,
+  ) => number | undefined;
 }
 
 const MAX_VIEWED = 100;
@@ -75,6 +79,20 @@ export const useHistoryStore: UseBoundStore<StoreApi<HistoryState>> =
                 : item,
             ),
           }));
+        },
+
+        getUnreadCount(
+          threadId: number,
+          repliesCount: number,
+        ): number | undefined {
+          const readReplyNumber = get().getReadReplyNumber(threadId);
+          // 記録されているreadReplyNumberの値はPost.number_in_threadの値そのままなので、それを踏まえて調整する
+          // 0はundefinedにする
+          return (
+            (readReplyNumber &&
+              repliesCount - (readReplyNumber - INITIAL_READ_REPLY_NUMBER)) ||
+            undefined
+          );
         },
       }),
       {

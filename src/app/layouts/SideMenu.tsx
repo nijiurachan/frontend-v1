@@ -26,7 +26,7 @@ export const SideMenu: React.FunctionComponent<Props> = ({
   isOpen,
   onClose,
 }: Props) => {
-  const { getViewedIds, getReadReplyNumber } = useHistoryStore();
+  const { getViewedIds, getUnreadCount } = useHistoryStore();
   const viewedIds = getViewedIds().slice(0, 10);
   const params = useParams({ strict: false });
 
@@ -142,12 +142,10 @@ export const SideMenu: React.FunctionComponent<Props> = ({
               ) : (
                 <div className="px-2 pb-4 space-y-1">
                   {historyThreads.map((thread) => {
-                    // TODO CatalogItemとコードが重複しているのでまとめる。「1」は例の定数にする
-                    const readReplyNumber = getReadReplyNumber(thread.id);
-                    const unreadCount =
-                      (readReplyNumber &&
-                        thread.replies_count - (readReplyNumber - 1)) ||
-                      undefined;
+                    const unreadCount = getUnreadCount(
+                      thread.id,
+                      thread.replies_count,
+                    );
                     return (
                       <Link
                         key={thread.id}

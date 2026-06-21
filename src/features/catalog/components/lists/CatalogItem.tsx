@@ -29,7 +29,7 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
       catalogAnim,
       threadMenuOpenMethod,
     } = useCatalogStore();
-    const { addViewed, getViewedIds, getReadReplyNumber } = useHistoryStore();
+    const { addViewed, getViewedIds, getUnreadCount } = useHistoryStore();
     const { isThreadHidden, showNgContent } = useNgStore();
     const [menuOpen, setMenuOpen] = useState(false);
     const [ngRevealed, setNgRevealed] = useState(false);
@@ -116,14 +116,7 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
       setMenuOpen(true);
     };
 
-    const unreadCount = useMemo(() => {
-      const readReplyNumber = getReadReplyNumber(thread.id);
-      // 記録されているreadReplyNumberの値はPost.number_in_threadの値そのままなので、それを踏まえて調整する
-      // 0はundefinedにする
-      return (
-        (readReplyNumber && totalCount - (readReplyNumber - 1)) || undefined
-      );
-    }, [getReadReplyNumber, thread.id, totalCount]);
+    const unreadCount = getUnreadCount(thread.id, totalCount);
 
     return (
       <>
