@@ -86,13 +86,15 @@ export const useHistoryStore: UseBoundStore<StoreApi<HistoryState>> =
           repliesCount: number,
         ): number | undefined {
           const readReplyNumber = get().getReadReplyNumber(threadId);
-          // 記録されているreadReplyNumberの値はPost.number_in_threadの値そのままなので、それを踏まえて調整する
-          // 0はundefinedにする
-          return (
-            (readReplyNumber &&
-              repliesCount - (readReplyNumber - INITIAL_READ_REPLY_NUMBER)) ||
-            undefined
-          );
+          if (readReplyNumber == null) {
+            return undefined;
+          } else {
+            // 記録されているreadReplyNumberの値はPost.number_in_threadの値そのままなので、それを踏まえて調整する
+            // 0以下はundefinedにする
+            const unreadCount =
+              repliesCount - (readReplyNumber - INITIAL_READ_REPLY_NUMBER);
+            return unreadCount <= 0 ? undefined : unreadCount;
+          }
         },
       }),
       {
