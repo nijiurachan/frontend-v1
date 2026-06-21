@@ -23,6 +23,9 @@
   --color-otegaki: #33ff33;
   --color-act: #9aa0e3;
   --color-soudane: #22c55e;
+  /* 極々小フォントサイズ */
+  --text-2xs: 0.625rem;
+  --text-2xs--line-height: 0.875rem;
 }
 
 /* ライトモード（クラスベースの切り替え） */

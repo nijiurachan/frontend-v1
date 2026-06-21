@@ -22,9 +22,14 @@ interface CatalogItemProps {
 
 export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
   function CatalogItem({ thread, isNew }: CatalogItemProps) {
-    const { showNew, showCount, catalogAnim, threadMenuOpenMethod } =
-      useCatalogStore();
-    const { addViewed, getViewedIds } = useHistoryStore();
+    const {
+      showNew,
+      showCount,
+      showUnreadCount,
+      catalogAnim,
+      threadMenuOpenMethod,
+    } = useCatalogStore();
+    const { addViewed, getViewedIds, getUnreadCount } = useHistoryStore();
     const { isThreadHidden, showNgContent } = useNgStore();
     const [menuOpen, setMenuOpen] = useState(false);
     const [ngRevealed, setNgRevealed] = useState(false);
@@ -111,6 +116,8 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
       setMenuOpen(true);
     };
 
+    const unreadCount = getUnreadCount(thread.id, totalCount);
+
     return (
       <>
         <div
@@ -149,11 +156,17 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
               />
 
               {isVideo && (!isNg || ngRevealed) && <VideoBadge />}
-              {showCount && (!isNg || ngRevealed) && (
-                <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
-                  {totalCount}
-                </span>
-              )}
+              {(showCount || (showUnreadCount && unreadCount)) &&
+                (!isNg || ngRevealed) && (
+                  <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
+                    {showCount && totalCount}
+                    {showUnreadCount && unreadCount && (
+                      <span className="text-primary text-2xs ml-0.5">
+                        +{unreadCount}
+                      </span>
+                    )}
+                  </span>
+                )}
               {showNew && isNew && (!isNg || ngRevealed) && (
                 <span className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
                   NEW

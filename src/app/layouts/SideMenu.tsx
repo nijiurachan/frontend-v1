@@ -26,7 +26,7 @@ export const SideMenu: React.FunctionComponent<Props> = ({
   isOpen,
   onClose,
 }: Props) => {
-  const { getViewedIds } = useHistoryStore();
+  const { getViewedIds, getUnreadCount } = useHistoryStore();
   const viewedIds = getViewedIds().slice(0, 10);
   const params = useParams({ strict: false });
 
@@ -141,32 +141,43 @@ export const SideMenu: React.FunctionComponent<Props> = ({
                 </div>
               ) : (
                 <div className="px-2 pb-4 space-y-1">
-                  {historyThreads.map((thread) => (
-                    <Link
-                      key={thread.id}
-                      to="/thread/$threadId"
-                      params={{ threadId: String(thread.id) }}
-                      onClick={onClose}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
-                    >
-                      <img
-                        src={getImageUrl(thread.attachment, false)}
-                        alt=""
-                        className="w-12 h-12 rounded object-cover bg-muted"
-                        onError={(e: SyntheticEvent): void => {
-                          (e.target as HTMLImageElement).src = noImage;
-                        }}
-                      />
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm text-foreground truncate">
-                          {getThreadTitle(thread)}
+                  {historyThreads.map((thread) => {
+                    const unreadCount = getUnreadCount(
+                      thread.id,
+                      thread.replies_count,
+                    );
+                    return (
+                      <Link
+                        key={thread.id}
+                        to="/thread/$threadId"
+                        params={{ threadId: String(thread.id) }}
+                        onClick={onClose}
+                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
+                      >
+                        <img
+                          src={getImageUrl(thread.attachment, false)}
+                          alt=""
+                          className="w-12 h-12 rounded object-cover bg-muted"
+                          onError={(e: SyntheticEvent): void => {
+                            (e.target as HTMLImageElement).src = noImage;
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm text-foreground truncate">
+                            {getThreadTitle(thread)}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {thread.replies_count}レス
+                            {unreadCount && (
+                              <span className="mx-1 text-primary">
+                                未読{unreadCount}レス
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <div className="text-xs text-muted-foreground">
-                          {thread.replies_count}レス
-                        </div>
-                      </div>
-                    </Link>
-                  ))}
+                      </Link>
+                    );
+                  })}
                 </div>
               )}
             </div>
