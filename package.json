@@ -57,7 +57,7 @@
     "@types/youtube": "^0.2.0",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-react": "^6.0.1",
-    "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#8a2a82b49677d1a077b52c7be074d07c101a7c2f",
+    "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#beb6d2f9d52391c83cc8f12197163df9398e4c60",
     "dompurify": "3.4.5",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
