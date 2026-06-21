@@ -61,7 +61,7 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
 
   // 返信モーダルを開く共通処理
   const handleReply = (type: QuoteType): void => {
-    openReplyModal(getQuoteText(type) + "\n");
+    openReplyModal(`${getQuoteText(type)}\n`);
     onClose();
   };
 
