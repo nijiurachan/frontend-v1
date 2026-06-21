@@ -109,7 +109,7 @@ function useReadReplyNumber(threadId: number): {
     window.addEventListener("pagehide", handlePageLeave);
 
     const routerUnsubscribe = router.subscribe("onBeforeNavigate", (event) => {
-      if (!event.hrefChanged) {
+      if (!event.pathChanged) {
         return;
       }
 
