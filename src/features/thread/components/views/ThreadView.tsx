@@ -86,15 +86,18 @@ function useReadReplyNumber(threadId: number): {
   const fullyVisibleReplyNumberRef = useRef(0);
   const router = useRouter();
 
-  const handlePostFullyVisible = (replyNumberInThread: number): void => {
-    // ここでは最大値ではなく直近に見たレス番号を保持する。「チラ見」を既読カウントに入れないため
-    fullyVisibleReplyNumberRef.current = replyNumberInThread;
-  };
+  const handlePostFullyVisible = useCallback(
+    (replyNumberInThread: number): void => {
+      // ここでは最大値ではなく直近に見たレス番号を保持する。「チラ見」を既読カウントに入れないため
+      fullyVisibleReplyNumberRef.current = replyNumberInThread;
+    },
+    [],
+  );
 
   // スレを更新する際も既読レス数を記憶する
-  const handleRefresh = (): void => {
+  const handleRefresh = useCallback((): void => {
     recordReadReplyNumber(threadId, fullyVisibleReplyNumberRef.current);
-  };
+  }, [recordReadReplyNumber, threadId]);
 
   // スレを離れる際に既読レス数を記憶する
   // 離れる瞬間に映り込んでいたレス番が対象
