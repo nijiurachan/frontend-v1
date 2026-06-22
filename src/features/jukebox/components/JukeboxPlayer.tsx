@@ -1,5 +1,4 @@
 // src/features/jukebox/components/JukeboxPlayer.tsx
-import { useRef } from "react";
 import { YouTubeEmbed } from "@/features/player/adapters/YouTubeEmbed";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
 import { useCancelMine } from "../hooks/useCancelMine";
@@ -15,7 +14,6 @@ import { QueueList } from "../ui/QueueList";
 import { SkipButton } from "../ui/SkipButton";
 
 export const JukeboxPlayer: React.FunctionComponent = () => {
-  const fetchedAtRef = useRef<number>(Date.now());
   const { data: state, isLoading, error } = useJukeboxState();
   const enqueueMutation = useEnqueue();
   const cancelMineMutation = useCancelMine();
@@ -27,16 +25,10 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
   // presence heartbeat: このコンポーネントがマウントされている間だけ送信
   usePresenceHeartbeat();
 
-  // fetchedAt 更新: data が変わるたびに記録
-  if (state) {
-    fetchedAtRef.current = Date.now();
-  }
-
   // jukebox 再生・seek・ドリフト補正
   useJukeboxPlayer({
     nowPlaying: state?.nowPlaying ?? null,
-    serverNowMs: state?.serverNowMs ?? Date.now(),
-    fetchedAtClientMs: fetchedAtRef.current,
+    serverNowMs: state?.serverNowMs ?? 0,
   });
 
   if (isLoading) {

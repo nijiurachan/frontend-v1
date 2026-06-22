@@ -17,16 +17,23 @@ const SLOT_ID = "primary" as const;
 interface UseJukeboxPlayerOptions {
   nowPlaying: JukeboxNowPlaying | null;
   serverNowMs: number;
-  fetchedAtClientMs: number;
 }
 
 export function useJukeboxPlayer({
   nowPlaying,
   serverNowMs,
-  fetchedAtClientMs,
 }: UseJukeboxPlayerOptions): void {
   // nowPlaying の mediaId が変わったタイミングを検知するため ref で保持
   const prevMediaIdRef = useRef<string | null>(null);
+  // serverNowMs を受け取った時刻を ref で保持（effect 内のみ参照）
+  const serverNowReceivedAtRef = useRef<number>(0);
+  const serverNowMsRef = useRef<number>(serverNowMs);
+
+  // serverNowMs が変わったら受信時刻を記録（effect なので render 外）
+  useEffect(() => {
+    serverNowMsRef.current = serverNowMs;
+    serverNowReceivedAtRef.current = Date.now();
+  }, [serverNowMs]);
 
   // loadTrack: nowPlaying が切り替わったとき（または初回）に実行
   useEffect((): (() => void) | void => {
@@ -40,8 +47,8 @@ export function useJukeboxPlayer({
     if (nowPlaying.source !== "youtube") return; // YouTube のみ対応
 
     const expectedOffset =
-      playbackOffsetSec(nowPlaying.startedAtMs, serverNowMs) +
-      (Date.now() - fetchedAtClientMs) / 1000;
+      playbackOffsetSec(nowPlaying.startedAtMs, serverNowMsRef.current) +
+      (Date.now() - serverNowReceivedAtRef.current) / 1000;
 
     usePlayerStore.getState().loadTrack(SLOT_ID, {
       id: `youtube:${nowPlaying.mediaId}`,
@@ -59,8 +66,7 @@ export function useJukeboxPlayer({
     }, 800);
 
     return (): void => clearTimeout(tid);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nowPlaying?.mediaId, nowPlaying?.startedAtMs, serverNowMs, fetchedAtClientMs, nowPlaying]);
+  }, [nowPlaying]);
 
   // ドリフト補正: 1 s インターバルで現在位置と expected を比較
   useEffect((): (() => void) => {
@@ -71,8 +77,8 @@ export function useJukeboxPlayer({
       const localPos =
         usePlayerStore.getState().players[SLOT_ID].currentTime ?? 0;
       const expectedOffset =
-        playbackOffsetSec(nowPlaying.startedAtMs, serverNowMs) +
-        (Date.now() - fetchedAtClientMs) / 1000;
+        playbackOffsetSec(nowPlaying.startedAtMs, serverNowMsRef.current) +
+        (Date.now() - serverNowReceivedAtRef.current) / 1000;
 
       if (Math.abs(localPos - expectedOffset) > DRIFT_THRESHOLD_SEC) {
         usePlayerStore
@@ -82,5 +88,5 @@ export function useJukeboxPlayer({
     }, 1_000);
 
     return (): void => clearInterval(id);
-  }, [nowPlaying, serverNowMs, fetchedAtClientMs]);
+  }, [nowPlaying]);
 }

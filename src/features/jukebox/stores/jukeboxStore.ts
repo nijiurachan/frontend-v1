@@ -25,13 +25,15 @@ export const useJukeboxStore: UseBoundStore<StoreApi<JukeboxLocalState>> =
     persist(
       (set): JukeboxLocalState => ({
         ...DEFAULT_VALUES,
-        setVolume: (volume: number): void =>
-          set({ volume: Math.max(0, Math.min(1, volume)) }),
-        setMuted: (muted: boolean): void => set({ muted }),
-        toggleMuted: (): void =>
-          set(
-            (s): Pick<JukeboxLocalState, "muted"> => ({ muted: !s.muted }),
-          ),
+        setVolume: (volume: number): void => {
+          set({ volume: Math.max(0, Math.min(1, volume)) });
+        },
+        setMuted: (muted: boolean): void => {
+          set({ muted });
+        },
+        toggleMuted: (): void => {
+          set((s) => ({ muted: !s.muted }));
+        },
       }),
       {
         name: "aimg-jukebox-player",
