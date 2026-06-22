@@ -17,16 +17,16 @@ jobs:
       js: ${{ steps.filter.outputs.js }}
     runs-on: ubuntu-latest
     steps:
-    - uses: dorny/paths-filter@v3
-      id: filter
-      with:
-        filters: |
-          js:
-            - '**.ts'
-            - '**.tsx'
-            - '**.json'
-            - '*.yaml'
-            - '*.lock'
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            js:
+              - '**.ts'
+              - '**.tsx'
+              - '**.json'
+              - '*.yaml'
+              - '*.lock'
 
   check-js:
     name: TS(フォーマット+型チェック)
@@ -44,7 +44,7 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: TSリント＆フォーマット
-        run: bun run --bun biome ci
+        run: bun run --bun biome ci --error-on-warnings
 
       - name: TSビルド
         run: bun run --bun build
