@@ -21,7 +21,7 @@
       "devDependencies": {
         "@biomejs/biome": "2.3.1",
         "@eslint/js": "^9.39.4",
-        "@nijiurachan/js": "github:nijiurachan/nijiurachan-js#4269645de577f162773ecc69268783e9d2aac10a",
+        "@nijiurachan/js": "github:nijiurachan/nijiurachan-js#8b30c935579482b02c797c6e72d43135cfb98ab0",
         "@tanstack/router-cli": "^1.166.16",
         "@tanstack/router-plugin": "^1.167.2",
         "@types/cloudflare-turnstile": "^0.2.2",
@@ -31,7 +31,7 @@
         "@types/youtube": "^0.2.0",
         "@vitejs/plugin-basic-ssl": "^2.3.0",
         "@vitejs/plugin-react": "^6.0.1",
-        "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#497ce2f43ef9b7ffaafae1393c9db3427c455ec4",
+        "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#f5cf9caf993a070f5ce0048c08ad023fd9abf826",
         "dompurify": "3.4.11",
         "eslint": "^9.39.4",
         "eslint-plugin-react-hooks": "^7.0.1",
@@ -270,7 +270,7 @@
 
     "@napi-rs/wasm-runtime": ["@napi-rs/wasm-runtime@1.1.4", "", { "dependencies": { "@tybys/wasm-util": "^0.10.1" }, "peerDependencies": { "@emnapi/core": "^1.7.1", "@emnapi/runtime": "^1.7.1" } }, "sha512-3NQNNgA1YSlJb/kMH1ildASP9HW7/7kYnRI2szWJaofaS1hWmbGI4H+d3+22aGzXXN9IJ+n+GiFVcGipJP18ow=="],
 
-    "@nijiurachan/js": ["@nijiurachan/js@github:nijiurachan/nijiurachan-js#4269645", { "dependencies": { "cookie-store": "4.0.0-next.4" }, "peerDependencies": { "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#1f7a92ac63a8034987392ec615f736581bba1cbc", "lodash-es": "4.18.1", "preact": "^10.28.3", "react": "^19.0.0", "zustand": "^5.0.12" }, "optionalPeers": ["react"] }, "nijiurachan-nijiurachan-js-4269645", "sha512-zcN10WvKQ1EpMQ5+dPhnX1ldas4xdw2/dssBxcrgtcSBbe7c67TXvkgXH8HMhprWvbUD6xLYhDSppcVf+kUNdA=="],
+    "@nijiurachan/js": ["@nijiurachan/js@github:nijiurachan/nijiurachan-js#8b30c93", { "dependencies": { "cookie-store": "4.0.0-next.4" }, "peerDependencies": { "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#1f7a92ac63a8034987392ec615f736581bba1cbc", "lodash-es": "4.18.1", "preact": "^10.28.3", "react": "^19.0.0", "zustand": "^5.0.12" }, "optionalPeers": ["react"] }, "nijiurachan-nijiurachan-js-8b30c93", "sha512-YumEn9ine5zZSZDozvdGOaAjfrB9MaANjzJWPKF1c4YB3TJesc9EewrcoBZ47M5fLZVyP0Kgi2CjblI/Kw2VwQ=="],
 
     "@oxc-project/types": ["@oxc-project/types@0.128.0", "", {}, "sha512-huv1Y/LzBJkBVHt3OlC7u0zHBW9qXf1FdD7sGmc1rXc2P1mTwHssYv7jyGx5KAACSCH+9B3Bhn6Z9luHRvf7pQ=="],
 
@@ -430,7 +430,7 @@
 
     "ast-types": ["ast-types@0.16.1", "", { "dependencies": { "tslib": "^2.0.1" } }, "sha512-6t10qk83GOG8p0vKmaCr8eiilZwO171AvbROMtvvNiwrTly62t+7XkA8RdIIVbpMhCASAsxgAzdRSwh6nw/5Dg=="],
 
-    "axnospaint-for-aimg": ["axnospaint-for-aimg@github:nijiurachan/axnospaint-for-aimg#497ce2f", {}, "nijiurachan-axnospaint-for-aimg-497ce2f", "sha512-bHEyyYcul20oeXXGdlwse93U46IZtD+mRNch2xzkGS+95NMClVq1C3zGdDKwQwLQfafSgWImZeWINDqxBgdhqA=="],
+    "axnospaint-for-aimg": ["axnospaint-for-aimg@github:nijiurachan/axnospaint-for-aimg#f5cf9ca", {}, "nijiurachan-axnospaint-for-aimg-f5cf9ca", "sha512-bopE9Rbil2ztqH/EtD1ccwY5+lpMAuVhj807zuH2AqksfwkGK018aX4jh8bpjcpyUh2LnA0JVV7UawSs95edZA=="],
 
     "babel-dead-code-elimination": ["babel-dead-code-elimination@1.0.12", "", { "dependencies": { "@babel/core": "^7.23.7", "@babel/parser": "^7.23.6", "@babel/traverse": "^7.23.7", "@babel/types": "^7.23.6" } }, "sha512-GERT7L2TiYcYDtYk1IpD+ASAYXjKbLTDPhBtYj7X1NuRMDTMtAx9kyBenub1Ev41lo91OHCKdmP+egTDmfQ7Ig=="],
 
