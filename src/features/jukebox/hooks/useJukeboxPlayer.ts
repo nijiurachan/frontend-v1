@@ -88,5 +88,5 @@ export function useJukeboxPlayer({
     }, 1_000);
 
     return (): void => clearInterval(id);
-  }, [nowPlaying]);
+  }, [nowPlaying?.mediaId, nowPlaying?.startedAtMs]);
 }
