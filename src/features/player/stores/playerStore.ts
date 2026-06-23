@@ -268,6 +268,8 @@ export interface PlayerStore {
   setMiniPlayerPosition: (position: MiniPlayerPosition) => void;
   /** MiniPlayer のサイズを巡回切り替え（sm → md → lg → xs「豆」→ sm） */
   cycleMiniPlayerSize: () => void;
+  /** MiniPlayer のサイズを直接指定（0=sm, 1=md, 2=lg, 3=xs「豆」。範囲外は 0..3 に丸める） */
+  setMiniPlayerSize: (index: number) => void;
   /** MiniPlayer の画面外スタッシュ状態を設定 */
   setMiniPlayerStashed: (stashed: boolean) => void;
 }
@@ -750,6 +752,15 @@ export const usePlayerStore = create<PlayerStore>()(
             miniPlayer: {
               ...state.miniPlayer,
               sizeIndex: (state.miniPlayer.sizeIndex + 1) % 4,
+            },
+          })),
+
+        setMiniPlayerSize: (index: number) =>
+          set((state) => ({
+            miniPlayer: {
+              ...state.miniPlayer,
+              // 0..3 にクランプ（負数も剰余で正規化）
+              sizeIndex: ((Math.trunc(index) % 4) + 4) % 4,
             },
           })),
 

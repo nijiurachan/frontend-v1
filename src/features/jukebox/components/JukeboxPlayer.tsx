@@ -13,6 +13,7 @@ import { useSkipVote } from "@/features/jukebox/hooks/useSkipVote";
 import { AddSongForm } from "@/features/jukebox/ui/AddSongForm";
 import { ListenerCount } from "@/features/jukebox/ui/ListenerCount";
 import { NowPlaying } from "@/features/jukebox/ui/NowPlaying";
+import { PlayPauseButton } from "@/features/jukebox/ui/PlayPauseButton";
 import { QueueList } from "@/features/jukebox/ui/QueueList";
 import { SkipButton } from "@/features/jukebox/ui/SkipButton";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
@@ -60,17 +61,20 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
         <NowPlaying nowPlaying={nowPlaying} currentTimeSec={currentTimeSec} />
       </div>
 
-      {/* リスナー数 + スキップボタン */}
+      {/* リスナー数 + 再生/一時停止 + スキップボタン */}
       <div className="flex items-center justify-between px-4 py-2">
         <ListenerCount count={state?.listeners ?? 0} />
-        <SkipButton
-          mySkipVoted={state?.mySkipVoted ?? false}
-          onVote={(): void => {
-            void skipVoteMutation.mutate();
-          }}
-          isPending={skipVoteMutation.isPending}
-          disabled={!nowPlaying}
-        />
+        <div className="flex items-center gap-2">
+          <PlayPauseButton disabled={!nowPlaying} />
+          <SkipButton
+            mySkipVoted={state?.mySkipVoted ?? false}
+            onVote={(): void => {
+              void skipVoteMutation.mutate();
+            }}
+            isPending={skipVoteMutation.isPending}
+            disabled={!nowPlaying}
+          />
+        </div>
       </div>
 
       {/* 曲追加フォーム */}
