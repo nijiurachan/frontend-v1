@@ -55,10 +55,11 @@ export const QueueList: React.FunctionComponent<QueueListProps> = ({
             }}
             disabled={isVoting}
             className={cn(
-              "shrink-0 flex items-center gap-1 rounded px-2 py-1 text-xs font-medium",
+              // border 常時付与・状態で色だけ切替（トグル時のレイアウトシフト防止）
+              "shrink-0 flex items-center gap-1 rounded border px-2 py-1 text-xs font-medium",
               item.myVoted
-                ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                : "border border-border text-foreground hover:bg-muted",
+                ? "border-destructive bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                : "border-border text-foreground hover:bg-muted",
               "disabled:opacity-40",
             )}
             aria-pressed={item.myVoted}
