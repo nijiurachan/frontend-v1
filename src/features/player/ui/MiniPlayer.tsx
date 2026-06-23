@@ -210,7 +210,9 @@ export const MiniPlayer: React.FunctionComponent = () => {
                 type="button"
                 onClick={handleClose}
                 aria-label="プレイヤーを閉じる"
-                className="absolute bottom-1 left-1 z-20 flex h-6 w-6 items-center justify-center rounded bg-black/70 text-white hover:bg-black/90"
+                className={`absolute left-1 z-20 flex h-6 w-6 items-center justify-center rounded bg-black/70 text-white hover:bg-black/90 ${
+                  showControls ? "bottom-[42px]" : "bottom-1"
+                } before:absolute before:left-1/2 before:top-1/2 before:min-h-[44px] before:min-w-[44px] before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']`}
               >
                 <FiX className="h-4 w-4" aria-hidden="true" />
               </button>
