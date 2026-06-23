@@ -1,93 +1,94 @@
 // src/features/jukebox/hooks/useJukeboxPlayer.ts
 //
 // 設計方針:
-//   - nowPlaying が変わったら playerStore.loadTrack("primary", track) で差し替える
-//   - 1 s ごとにドリフトをチェックし |localPos - expected| > 2 s なら requestSeek
-//   - expected = playbackOffsetSec(startedAtMs, serverNowMs) + ライブ補外
-//   - ライブ補外 = (Date.now() - fetchedAtClientMs) / 1000
+//   グローバルプレイヤー（MiniPlayer + useSyncController）を再利用する。
+//   nowPlaying が来たら Track.syncStartTime に startedAtMs を設定して
+//   subMode="sync" で primary スロットにロードする。
+//   サーバー時刻との同期追従は useSyncController（MiniPlayer 内）に完全委譲する。
+//
+// nowPlaying が null になった場合:
+//   MiniPlayer を強制停止せず、最後のトラックをそのままにしておく。
+//   （キューが空になった後もユーザーが手動で閉じるまでは再生を継続できる。
+//     次の曲が始まれば自動的に上書きされる。）
 
 import type { JukeboxNowPlaying } from "@nijiurachan/js/pure/jukebox";
-import { playbackOffsetSec } from "@nijiurachan/js/pure/jukebox";
 import { useEffect, useRef } from "react";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
-
-const DRIFT_THRESHOLD_SEC = 2;
-const SLOT_ID = "primary" as const;
+import { useSettingsStore } from "@/features/settings/hooks";
 
 interface UseJukeboxPlayerOptions {
   nowPlaying: JukeboxNowPlaying | null;
-  serverNowMs: number;
 }
 
 export function useJukeboxPlayer({
   nowPlaying,
-  serverNowMs,
 }: UseJukeboxPlayerOptions): void {
-  // nowPlaying の mediaId が変わったタイミングを検知するため ref で保持
-  const prevMediaIdRef = useRef<string | null>(null);
-  // serverNowMs を受け取った時刻を ref で保持（effect 内のみ参照）
-  const serverNowReceivedAtRef = useRef<number>(0);
-  const serverNowMsRef = useRef<number>(serverNowMs);
+  // 前回ロード済みのトラック識別子を ref で保持
+  // mediaId と startedAtMs の組み合わせで一意に識別する
+  const prevTrackKeyRef = useRef<string | null>(null);
+  const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
 
-  // serverNowMs が変わったら受信時刻を記録（effect なので render 外）
-  useEffect(() => {
-    serverNowMsRef.current = serverNowMs;
-    serverNowReceivedAtRef.current = Date.now();
-  }, [serverNowMs]);
-
-  // loadTrack: nowPlaying が切り替わったとき（または初回）に実行
-  useEffect((): (() => void) | undefined => {
+  useEffect((): void => {
+    // 設定でジュークボックスが無効なら駆動しない（MiniPlayer を自動表示/再生しない）
+    if (!jukeboxEnabled) return;
     if (!nowPlaying) {
-      prevMediaIdRef.current = null;
+      // nowPlaying が null になっても強制停止しない
+      // 次の曲が来たら上書きされる
       return;
     }
-    if (nowPlaying.mediaId === prevMediaIdRef.current) return;
-    prevMediaIdRef.current = nowPlaying.mediaId;
 
-    if (nowPlaying.source !== "youtube") return; // YouTube のみ対応
+    // YouTube のみ対応（useSyncController が youtube のみ駆動するため）
+    if (nowPlaying.source !== "youtube") return;
 
-    const expectedOffset =
-      playbackOffsetSec(nowPlaying.startedAtMs, serverNowMsRef.current) +
-      (Date.now() - serverNowReceivedAtRef.current) / 1000;
+    // mediaId + startedAtMs で同一曲・同一上映かを判定
+    // startedAtMs が変わる（再起動など）場合も再ロードする
+    const trackKey = `${nowPlaying.mediaId}:${nowPlaying.startedAtMs}`;
+    if (trackKey === prevTrackKeyRef.current) return;
+    prevTrackKeyRef.current = trackKey;
 
-    usePlayerStore.getState().loadTrack(SLOT_ID, {
+    const s = usePlayerStore.getState();
+
+    // 1) 先に currentTrack を新トラックへ差し替える。
+    //    subMode を "sync" にした瞬間 useSyncController が駆動を始めるため、
+    //    sync 有効化より前に currentTrack を更新しておくことで、古い
+    //    currentTrack に対して同期制御（seek/再生速度/pause）が走るのを防ぐ。
+    s.loadTrack("primary", {
       id: `youtube:${nowPlaying.mediaId}`,
       provider: "youtube",
       providerId: nowPlaying.mediaId,
       title: nowPlaying.title ?? undefined,
       duration: nowPlaying.durationSec,
+      syncStartTime: nowPlaying.startedAtMs,
     });
 
-    // 少し遅延してから seek（YouTubeEmbed が ready になるのを待つ）
-    const tid = setTimeout((): void => {
-      usePlayerStore
-        .getState()
-        .requestSeek(SLOT_ID, Math.max(0, expectedOffset));
-    }, 800);
+    // 2) subMode を "sync" に設定 → useSyncController が起動条件を満たす。
+    s.initFromQuery({
+      queryKey: `jukebox:${trackKey}`,
+      raw: `https://www.youtube.com/watch?v=${nowPlaying.mediaId}`,
+      mode: "single",
+      subMode: "sync",
+      origin: {
+        threadId: "jukebox",
+        path: "/jukebox",
+        label: "ジュークボックス",
+      },
+      tracks: [
+        {
+          id: `youtube:${nowPlaying.mediaId}`,
+          provider: "youtube",
+          providerId: nowPlaying.mediaId,
+          title: nowPlaying.title ?? undefined,
+          duration: nowPlaying.durationSec,
+          syncStartTime: nowPlaying.startedAtMs,
+        },
+      ],
+    });
 
-    return (): void => clearTimeout(tid);
-  }, [nowPlaying]);
-
-  // ドリフト補正: 1 s インターバルで現在位置と expected を比較
-  // biome-ignore lint/correctness/useExhaustiveDependencies: nowPlaying?.source/mediaId/startedAtMs で十分。nowPlaying 全体を依存にするとドリフト interval が毎ポーリング張り直される
-  useEffect((): (() => void) => {
-    if (!nowPlaying) return (): void => {};
-    if (nowPlaying.source !== "youtube") return (): void => {};
-
-    const id = setInterval((): void => {
-      const localPos =
-        usePlayerStore.getState().players[SLOT_ID].currentTime ?? 0;
-      const expectedOffset =
-        playbackOffsetSec(nowPlaying.startedAtMs, serverNowMsRef.current) +
-        (Date.now() - serverNowReceivedAtRef.current) / 1000;
-
-      if (Math.abs(localPos - expectedOffset) > DRIFT_THRESHOLD_SEC) {
-        usePlayerStore
-          .getState()
-          .requestSeek(SLOT_ID, Math.max(0, expectedOffset));
-      }
-    }, 1_000);
-
-    return (): void => clearInterval(id);
-  }, [nowPlaying?.mediaId, nowPlaying?.startedAtMs, nowPlaying?.source]);
+    // 3) MiniPlayer を表示する。programmatic な play() は呼ばない。
+    //    play() で status を "playing" にすると useSyncController が iOS の
+    //    「初回タップ済み(unlock)」と誤判定し、上映前 pause や 0 秒シークが
+    //    早期に走って自動再生が拒否される。再生開始はユーザー操作に委ね、
+    //    開始時刻到達後の追従は useSyncController が担う（status は loading のまま）。
+    s.setMiniPlayerVisible(true);
+  }, [nowPlaying, jukeboxEnabled]);
 }

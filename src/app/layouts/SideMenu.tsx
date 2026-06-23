@@ -5,6 +5,7 @@ import type { SyntheticEvent } from "react";
 import {
   FiGrid,
   FiMonitor,
+  FiMusic,
   FiSettings,
   FiShieldOff,
   FiWatch,
@@ -14,6 +15,7 @@ import noImage from "@/assets/img/no-image.svg";
 import type { ThreadsResponse } from "@/entities/thread";
 import { getImageUrl, getThreadTitle } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
+import { useSettingsStore } from "@/features/settings/hooks";
 import { apiGet } from "@/shared/api";
 import { MenuItem } from "./MenuItem";
 
@@ -28,6 +30,7 @@ export const SideMenu: React.FunctionComponent<Props> = ({
 }: Props) => {
   const { getViewedIds, getUnreadCount } = useHistoryStore();
   const viewedIds = getViewedIds().slice(0, 10);
+  const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
   const params = useParams({ strict: false });
 
   const makePcVersionUrl = (): string =>
@@ -99,6 +102,16 @@ export const SideMenu: React.FunctionComponent<Props> = ({
               >
                 カタログに戻る
               </MenuItem>
+              {jukeboxEnabled && (
+                <MenuItem
+                  icon={<FiMusic className="w-5 h-5" />}
+                  to="/jukebox"
+                  onClick={onClose}
+                  isInternal
+                >
+                  ジュークボックス
+                </MenuItem>
+              )}
               <MenuItem
                 icon={<FiSettings className="w-5 h-5" />}
                 to="/settings"
