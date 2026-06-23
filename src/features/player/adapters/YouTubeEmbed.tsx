@@ -13,6 +13,11 @@ import type {} from "youtube";
 import type { SlotId } from "../stores/playerStore";
 import { usePlayerStore } from "../stores/playerStore";
 
+/** ストア音量(0-1) を YouTube の音量(0-100 の整数)へ変換。
+ *  永続化データの破損や将来の呼び出し元変更で範囲外になっても安全なようクランプ＋丸めする。 */
+const toYtVolume = (v: number): number =>
+  Math.round(Math.min(100, Math.max(0, v * 100)));
+
 // ----------------------------------------------------------
 // YouTube IFrame API ローダー（モジュールレベル・シングルトン）
 // ----------------------------------------------------------
@@ -171,8 +176,10 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
             const rate = getStore().players[slotId].playbackRate;
             if (rate !== 1) player?.setPlaybackRate(rate);
             // 保存/設定済みの音量(0-1)を反映（YouTube は 0-100）
-            player?.setVolume(getStore().players[slotId].volume * 100);
+            player?.setVolume(toYtVolume(getStore().players[slotId].volume));
+            // 自動再生ポリシーで YT 側が初期ミュートになっていてもストア状態に揃える
             if (getStore().players[slotId].muted) player?.mute();
+            else player?.unMute();
           },
           onStateChange: (event: YT.OnStateChangeEvent): void => {
             if (!mountedRef.current) return;
@@ -299,7 +306,7 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
       (s) => s.players[slotId].volume,
       (volume) => {
         if (!playerRef.current) return;
-        playerRef.current.setVolume(volume * 100);
+        playerRef.current.setVolume(toYtVolume(volume));
       },
     );
 
