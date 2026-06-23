@@ -3,6 +3,12 @@ import type { JukeboxQueueItem } from "@nijiurachan/js/pure/jukebox";
 import { FiSlash, FiTrash2 } from "react-icons/fi";
 import { cn } from "@/shared/lib/cn";
 
+/** YouTube の mediaId から watch URL を組み立てる（href 用に encode）。
+ *  YouTube 以外は対応しないため、リンクは youtube のときだけ描画する。 */
+function youtubeWatchUrl(mediaId: string): string {
+  return `https://youtu.be/${encodeURIComponent(mediaId)}`;
+}
+
 interface QueueListProps {
   queue: JukeboxQueueItem[];
   onCancelMine: () => void;
@@ -43,10 +49,19 @@ export const QueueList: React.FunctionComponent<QueueListProps> = ({
             <span className="text-sm text-foreground truncate">
               {item.title ?? item.mediaId}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {item.source === "youtube" ? "YouTube" : "SoundCloud"}
-              {item.mine && " · あなたの曲"}
-            </span>
+            {item.source === "youtube" && (
+              <a
+                href={youtubeWatchUrl(item.mediaId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary truncate hover:underline"
+              >
+                {youtubeWatchUrl(item.mediaId)}
+              </a>
+            )}
+            {item.mine && (
+              <span className="text-xs text-muted-foreground">あなたの曲</span>
+            )}
           </div>
           <button
             type="button"

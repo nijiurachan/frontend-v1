@@ -61,9 +61,7 @@ export const NowPlaying: React.FunctionComponent<NowPlayingProps> = ({
               </span>
             )}
           </div>
-          <span className="text-xs text-muted-foreground">
-            {nowPlaying.source === "youtube" ? "YouTube" : "SoundCloud"}
-          </span>
+          <span className="text-xs text-muted-foreground">YouTube</span>
         </div>
       </div>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
