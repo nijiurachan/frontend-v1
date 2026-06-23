@@ -67,9 +67,9 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
         <div className="flex items-center gap-2">
           <PlayPauseButton disabled={!nowPlaying} />
           <SkipButton
-            mySkipVoted={state?.mySkipVoted ?? false}
+            myVoted={nowPlaying?.myVoted ?? false}
             onVote={(): void => {
-              void skipVoteMutation.mutate();
+              if (nowPlaying) skipVoteMutation.mutate(nowPlaying.id);
             }}
             isPending={skipVoteMutation.isPending}
             disabled={!nowPlaying}
@@ -98,6 +98,10 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
             void cancelMineMutation.mutate();
           }}
           isCancelling={cancelMineMutation.isPending}
+          onVote={(trackId: number): void => {
+            skipVoteMutation.mutate(trackId);
+          }}
+          isVoting={skipVoteMutation.isPending}
         />
       </div>
     </div>
