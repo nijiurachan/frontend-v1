@@ -44,9 +44,17 @@ export function useJukeboxPlayer({
     // startedAtMs が変わる（再起動など）場合も再ロードする
     const trackKey = `${nowPlaying.mediaId}:${nowPlaying.startedAtMs}`;
     if (trackKey === prevTrackKeyRef.current) return;
+    // 初回ロードか、曲の切り替わりか（prev が null なら初回）
+    const isTransition = prevTrackKeyRef.current !== null;
     prevTrackKeyRef.current = trackKey;
 
     const s = usePlayerStore.getState();
+    // 直前のトラックが再生中 or 再生し終えた(ended)状態なら、ユーザーは既に
+    // 再生開始済み（= iOS の初回タップで unlock 済み）と判断できる。
+    // この場合だけ、曲が切り替わったときに自動で次の曲へ続ける（自動送り）。
+    const wasPlaying =
+      s.players.primary.status === "playing" ||
+      s.players.primary.status === "ended";
 
     // 1) 先に currentTrack を新トラックへ差し替える。
     //    subMode を "sync" にした瞬間 useSyncController が駆動を始めるため、
@@ -84,12 +92,14 @@ export function useJukeboxPlayer({
       ],
     });
 
-    // 3) MiniPlayer は自動表示しない。programmatic な play() も呼ばない。
-    //    play() で status を "playing" にすると useSyncController が iOS の
-    //    「初回タップ済み(unlock)」と誤判定し、上映前 pause や 0 秒シークが
-    //    早期に走って自動再生が拒否される（review #42）。
-    //    再生開始・プレイヤー表示はユーザー操作（再生ボタン）に委ねる。
-    //    ここではトラックを sync モードでロードして準備するのみ。開始時刻
-    //    到達後の追従は useSyncController が担う（status は loading のまま）。
+    // 3) 自動送り: ユーザーが既に再生中だった曲からの切り替わり(isTransition)なら、
+    //    新しい曲も続けて再生する（status を "playing" に）。
+    //    初回ロード時(!isTransition)や手動 pause 中(!wasPlaying)は play() を呼ばない。
+    //    → ユーザー操作前に play() すると useSyncController が iOS unlock を誤判定し
+    //      上映前 pause / 0 秒シークで自動再生が拒否される（review #42）ため、
+    //      その不変条件は「初回はユーザー操作待ち」で保ったまま、曲送りだけ自動化する。
+    if (isTransition && wasPlaying) {
+      s.play("primary");
+    }
   }, [nowPlaying, jukeboxEnabled]);
 }
