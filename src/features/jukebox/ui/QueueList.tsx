@@ -3,11 +3,10 @@ import type { JukeboxQueueItem } from "@nijiurachan/js/pure/jukebox";
 import { FiSlash, FiTrash2 } from "react-icons/fi";
 import { cn } from "@/shared/lib/cn";
 
-/** source + mediaId から元動画の URL を組み立てる */
-function mediaUrl(source: string, mediaId: string): string {
-  if (source === "youtube") return `https://youtu.be/${mediaId}`;
-  if (source === "soundcloud") return `https://soundcloud.com/${mediaId}`;
-  return mediaId;
+/** YouTube の mediaId から watch URL を組み立てる（href 用に encode）。
+ *  YouTube 以外は対応しないため、リンクは youtube のときだけ描画する。 */
+function youtubeWatchUrl(mediaId: string): string {
+  return `https://youtu.be/${encodeURIComponent(mediaId)}`;
 }
 
 interface QueueListProps {
@@ -50,14 +49,16 @@ export const QueueList: React.FunctionComponent<QueueListProps> = ({
             <span className="text-sm text-foreground truncate">
               {item.title ?? item.mediaId}
             </span>
-            <a
-              href={mediaUrl(item.source, item.mediaId)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-primary truncate hover:underline"
-            >
-              {mediaUrl(item.source, item.mediaId)}
-            </a>
+            {item.source === "youtube" && (
+              <a
+                href={youtubeWatchUrl(item.mediaId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary truncate hover:underline"
+              >
+                {youtubeWatchUrl(item.mediaId)}
+              </a>
+            )}
             {item.mine && (
               <span className="text-xs text-muted-foreground">あなたの曲</span>
             )}

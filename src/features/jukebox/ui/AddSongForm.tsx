@@ -50,7 +50,7 @@ export const AddSongForm: React.FunctionComponent<AddSongFormProps> = ({
     const trimmed = url.trim();
     if (!trimmed || onCooldown) return;
     if (!parseJukeboxUrl(trimmed)) {
-      setLocalError("YouTube または SoundCloud の URL を入力してください");
+      setLocalError("YouTube の URL を入力してください");
       return;
     }
     setLocalError(null);
@@ -71,7 +71,7 @@ export const AddSongForm: React.FunctionComponent<AddSongFormProps> = ({
             setUrl(e.target.value);
             setLocalError(null);
           }}
-          placeholder="(YouTube/SoundCloud URL 10分未満)"
+          placeholder="(YouTube URL 10分未満)"
           className={cn(
             "flex-1 rounded-lg border px-3 py-2 text-sm",
             "bg-background text-foreground placeholder:text-muted-foreground",
@@ -100,7 +100,7 @@ export const AddSongForm: React.FunctionComponent<AddSongFormProps> = ({
       )}
       {url.trim() && !isValid && !onCooldown && (
         <p className="text-xs text-muted-foreground">
-          対応 URL: YouTube (watch?v=, youtu.be/, shorts/) または SoundCloud
+          対応 URL: YouTube (watch?v=, youtu.be/, shorts/)
         </p>
       )}
       {errorMessage && (
