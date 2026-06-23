@@ -25,7 +25,7 @@ interface PersistentModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode | ((props: PersistentModalRenderProps) => ReactNode);
-  title?: string;
+  title?: ReactNode;
   position?: "center" | "bottom" | "right";
   headerActions?: ReactNode;
   flickToClose?: boolean;
@@ -220,9 +220,13 @@ export const PersistentModal: React.FunctionComponent<PersistentModalProps> = ({
           </div>
         )}
         {title && (
-          <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-            <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-            <div className="flex items-center gap-1">
+          <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border min-w-0">
+            {typeof title === "string" ? (
+              <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+            ) : (
+              <div className="min-w-0 flex-1">{title}</div>
+            )}
+            <div className="flex items-center gap-1 shrink-0">
               {headerActions}
               <button
                 type="button"
