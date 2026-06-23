@@ -3,6 +3,13 @@ import type { JukeboxQueueItem } from "@nijiurachan/js/pure/jukebox";
 import { FiSlash, FiTrash2 } from "react-icons/fi";
 import { cn } from "@/shared/lib/cn";
 
+/** source + mediaId から元動画の URL を組み立てる */
+function mediaUrl(source: string, mediaId: string): string {
+  if (source === "youtube") return `https://youtu.be/${mediaId}`;
+  if (source === "soundcloud") return `https://soundcloud.com/${mediaId}`;
+  return mediaId;
+}
+
 interface QueueListProps {
   queue: JukeboxQueueItem[];
   onCancelMine: () => void;
@@ -43,10 +50,17 @@ export const QueueList: React.FunctionComponent<QueueListProps> = ({
             <span className="text-sm text-foreground truncate">
               {item.title ?? item.mediaId}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {item.source === "youtube" ? "YouTube" : "SoundCloud"}
-              {item.mine && " · あなたの曲"}
-            </span>
+            <a
+              href={mediaUrl(item.source, item.mediaId)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-primary truncate hover:underline"
+            >
+              {mediaUrl(item.source, item.mediaId)}
+            </a>
+            {item.mine && (
+              <span className="text-xs text-muted-foreground">あなたの曲</span>
+            )}
           </div>
           <button
             type="button"
