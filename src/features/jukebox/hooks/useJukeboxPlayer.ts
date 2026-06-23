@@ -84,11 +84,12 @@ export function useJukeboxPlayer({
       ],
     });
 
-    // 3) MiniPlayer を表示する。programmatic な play() は呼ばない。
+    // 3) MiniPlayer は自動表示しない。programmatic な play() も呼ばない。
     //    play() で status を "playing" にすると useSyncController が iOS の
     //    「初回タップ済み(unlock)」と誤判定し、上映前 pause や 0 秒シークが
-    //    早期に走って自動再生が拒否される。再生開始はユーザー操作に委ね、
-    //    開始時刻到達後の追従は useSyncController が担う（status は loading のまま）。
-    s.setMiniPlayerVisible(true);
+    //    早期に走って自動再生が拒否される（review #42）。
+    //    再生開始・プレイヤー表示はユーザー操作（再生ボタン）に委ねる。
+    //    ここではトラックを sync モードでロードして準備するのみ。開始時刻
+    //    到達後の追従は useSyncController が担う（status は loading のまま）。
   }, [nowPlaying, jukeboxEnabled]);
 }
