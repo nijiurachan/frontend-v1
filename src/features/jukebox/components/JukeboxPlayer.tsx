@@ -1,4 +1,8 @@
 // src/features/jukebox/components/JukeboxPlayer.tsx
+//
+// キュー管理 UI。動画再生はグローバル MiniPlayer に委譲する。
+// useJukeboxPlayer が nowPlaying を監視し、変化があれば playerStore 経由で
+// MiniPlayer をドライブする。同期追従は MiniPlayer 内の useSyncController に委譲。
 
 import { useCancelMine } from "@/features/jukebox/hooks/useCancelMine";
 import { useEnqueue } from "@/features/jukebox/hooks/useEnqueue";
@@ -11,7 +15,6 @@ import { ListenerCount } from "@/features/jukebox/ui/ListenerCount";
 import { NowPlaying } from "@/features/jukebox/ui/NowPlaying";
 import { QueueList } from "@/features/jukebox/ui/QueueList";
 import { SkipButton } from "@/features/jukebox/ui/SkipButton";
-import { YouTubeEmbed } from "@/features/player/adapters/YouTubeEmbed";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
 
 export const JukeboxPlayer: React.FunctionComponent = () => {
@@ -26,10 +29,10 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
   // presence heartbeat: このコンポーネントがマウントされている間だけ送信
   usePresenceHeartbeat();
 
-  // jukebox 再生・seek・ドリフト補正
+  // nowPlaying を監視してグローバルプレイヤーをドライブする
+  // 再生・同期追従は MiniPlayer + useSyncController に委譲
   useJukeboxPlayer({
     nowPlaying: state?.nowPlaying ?? null,
-    serverNowMs: state?.serverNowMs ?? 0,
   });
 
   if (isLoading) {
@@ -49,17 +52,9 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
   }
 
   const nowPlaying = state?.nowPlaying ?? null;
-  const isYouTube = nowPlaying?.source === "youtube";
 
   return (
     <div className="flex flex-col gap-0 pb-safe">
-      {/* 動画エリア: YouTube のみ表示 */}
-      {isYouTube && nowPlaying && (
-        <div className="w-full aspect-video bg-black">
-          <YouTubeEmbed providerId={nowPlaying.mediaId} slotId="primary" />
-        </div>
-      )}
-
       {/* 再生中情報 */}
       <div className="px-4 pt-3">
         <NowPlaying nowPlaying={nowPlaying} currentTimeSec={currentTimeSec} />
