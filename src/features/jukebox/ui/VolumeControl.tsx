@@ -10,17 +10,25 @@ import { usePlayerStore } from "@/features/player/stores/playerStore";
 export const VolumeControl: React.FunctionComponent = () => {
   const volume = usePlayerStore((s) => s.players.primary.volume);
   const setVolume = usePlayerStore((s) => s.setVolume);
+  const muted = usePlayerStore((s) => s.players.primary.muted);
+  const setMuted = usePlayerStore((s) => s.setMuted);
   const pct = Math.round(volume * 100);
 
-  const Icon = pct === 0 ? FiVolumeX : pct < 50 ? FiVolume1 : FiVolume2;
+  // ミュート中・音量0 は × アイコン。それ以外は音量で 1/2 を切替。
+  const Icon =
+    muted || pct === 0 ? FiVolumeX : pct < 50 ? FiVolume1 : FiVolume2;
 
   return (
     <div className="flex items-center gap-2 px-4 py-2">
-      <Icon
-        aria-hidden="true"
-        size={18}
-        className="shrink-0 text-muted-foreground"
-      />
+      <button
+        type="button"
+        onClick={(): void => setMuted("primary", !muted)}
+        aria-label={muted ? "ミュート解除" : "ミュート"}
+        aria-pressed={muted}
+        className="shrink-0 text-muted-foreground hover:text-foreground"
+      >
+        <Icon aria-hidden="true" size={18} />
+      </button>
       <input
         type="range"
         min={0}
