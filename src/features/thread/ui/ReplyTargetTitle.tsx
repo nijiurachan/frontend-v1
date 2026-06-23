@@ -1,6 +1,6 @@
 import noImage from "@/assets/img/no-image.svg";
 import { getImageUrl, getThreadTitle, type Thread } from "@/entities/thread";
-import { decorateTitle, isVideoAttachment } from "@/shared/lib";
+import { decorateTitle } from "@/shared/lib";
 
 interface Props {
   thread: Thread;
