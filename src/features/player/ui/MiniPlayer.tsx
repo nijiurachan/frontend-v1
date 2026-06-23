@@ -106,6 +106,7 @@ export const MiniPlayer: React.FunctionComponent = () => {
   const setMiniPlayerStashed = usePlayerStore((s) => s.setMiniPlayerStashed);
   const setMiniPlayerVisible = usePlayerStore((s) => s.setMiniPlayerVisible);
   const pause = usePlayerStore((s) => s.pause);
+  const setBeforeStart = usePlayerStore((s) => s.setBeforeStart);
   const setMuted = usePlayerStore((s) => s.setMuted);
 
   // 表示用トラック位置（1始まり）。シャッフル時は再生順（shuffleOrder）での位置。
@@ -137,10 +138,13 @@ export const MiniPlayer: React.FunctionComponent = () => {
   // バックグラウンドで再生し続けないよう pause してから隠す。
   // （旧来の stop による完全テアダウン: resetSlot + clearMode はジュークボックスの
   //   ロード済みトラックを破棄してしまうため、ここでは行わない。）
+  // sync モードで上映開始前(beforeStart)に閉じた場合、フラグが残ると次回の
+  // 同期制御が beforeStart 状態のまま走ってしまうのでクリアしておく。
   const handleClose = useCallback((): void => {
     pause("primary");
+    setBeforeStart(false);
     setMiniPlayerVisible(false);
-  }, [pause, setMiniPlayerVisible]);
+  }, [pause, setBeforeStart, setMiniPlayerVisible]);
 
   // 画面外スタッシュ時の退避量（自幅基準。右隅は右へ、左隅は左へ全幅＋余白分）。
   const stashX = isRightCorner(position) ? "110%" : "-110%";

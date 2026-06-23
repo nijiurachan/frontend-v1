@@ -759,8 +759,9 @@ export const usePlayerStore = create<PlayerStore>()(
           set((state) => ({
             miniPlayer: {
               ...state.miniPlayer,
-              // 0..3 にクランプ（負数も剰余で正規化）
-              sizeIndex: ((Math.trunc(index) % 4) + 4) % 4,
+              // 0..3 にクランプ（範囲外は端に丸める。剰余ラップだと 4→0 のように
+              // 別サイズへ飛ぶため、Math.max/min で端に固定する）
+              sizeIndex: Math.max(0, Math.min(3, Math.trunc(index))),
             },
           })),
 

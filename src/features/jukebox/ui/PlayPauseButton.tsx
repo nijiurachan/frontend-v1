@@ -24,7 +24,8 @@ export const PlayPauseButton: React.FunctionComponent<PlayPauseButtonProps> = ({
 
   const handleClick = (): void => {
     const s = usePlayerStore.getState();
-    if (isPlaying) {
+    // クリック時点の最新 status で分岐する（render 時の isPlaying は古い場合がある）
+    if (s.players.primary.status === "playing") {
       // 再生中 → 一時停止
       s.pause("primary");
       return;
