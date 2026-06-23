@@ -29,7 +29,8 @@ export const VolumeControl: React.FunctionComponent = () => {
       <button
         type="button"
         onClick={(): void => setMuted("primary", !muted)}
-        aria-label={muted ? "ミュート解除" : "ミュート"}
+        // aria-pressed で ON/OFF を伝えるため aria-label は固定にする
+        aria-label="ミュート"
         aria-pressed={muted}
         // 見た目は 18px のままタップ領域を 44px 相当へ拡張（モバイル a11y）
         className="relative shrink-0 text-muted-foreground hover:text-foreground after:absolute after:-inset-[13px] after:content-['']"
