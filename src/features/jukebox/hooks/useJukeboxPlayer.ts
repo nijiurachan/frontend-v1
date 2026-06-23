@@ -36,7 +36,7 @@ export function useJukeboxPlayer({
   }, [serverNowMs]);
 
   // loadTrack: nowPlaying が切り替わったとき（または初回）に実行
-  useEffect((): (() => void) | void => {
+  useEffect((): (() => void) | undefined => {
     if (!nowPlaying) {
       prevMediaIdRef.current = null;
       return;
@@ -69,6 +69,7 @@ export function useJukeboxPlayer({
   }, [nowPlaying]);
 
   // ドリフト補正: 1 s インターバルで現在位置と expected を比較
+  // biome-ignore lint/correctness/useExhaustiveDependencies: nowPlaying?.source/mediaId/startedAtMs で十分。nowPlaying 全体を依存にするとドリフト interval が毎ポーリング張り直される
   useEffect((): (() => void) => {
     if (!nowPlaying) return (): void => {};
     if (nowPlaying.source !== "youtube") return (): void => {};
@@ -88,5 +89,5 @@ export function useJukeboxPlayer({
     }, 1_000);
 
     return (): void => clearInterval(id);
-  }, [nowPlaying?.mediaId, nowPlaying?.startedAtMs]);
+  }, [nowPlaying?.mediaId, nowPlaying?.startedAtMs, nowPlaying?.source]);
 }

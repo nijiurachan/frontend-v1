@@ -16,16 +16,13 @@ export const QueueList: React.FunctionComponent<QueueListProps> = ({
 }: QueueListProps) => {
   if (queue.length === 0) {
     return (
-      <p className="text-sm text-muted-foreground px-4 py-2">
-        キューは空です
-      </p>
+      <p className="text-sm text-muted-foreground px-4 py-2">キューは空です</p>
     );
   }
 
   return (
     <ol className="flex flex-col divide-y divide-border">
       {queue.map((item, idx) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: mediaId+idx で一意
         <li
           key={`${item.mediaId}-${idx}`}
           className={cn(

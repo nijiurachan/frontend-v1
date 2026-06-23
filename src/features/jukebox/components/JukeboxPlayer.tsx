@@ -1,17 +1,18 @@
 // src/features/jukebox/components/JukeboxPlayer.tsx
+
+import { useCancelMine } from "@/features/jukebox/hooks/useCancelMine";
+import { useEnqueue } from "@/features/jukebox/hooks/useEnqueue";
+import { useJukeboxPlayer } from "@/features/jukebox/hooks/useJukeboxPlayer";
+import { useJukeboxState } from "@/features/jukebox/hooks/useJukeboxState";
+import { usePresenceHeartbeat } from "@/features/jukebox/hooks/usePresenceHeartbeat";
+import { useSkipVote } from "@/features/jukebox/hooks/useSkipVote";
+import { AddSongForm } from "@/features/jukebox/ui/AddSongForm";
+import { ListenerCount } from "@/features/jukebox/ui/ListenerCount";
+import { NowPlaying } from "@/features/jukebox/ui/NowPlaying";
+import { QueueList } from "@/features/jukebox/ui/QueueList";
+import { SkipButton } from "@/features/jukebox/ui/SkipButton";
 import { YouTubeEmbed } from "@/features/player/adapters/YouTubeEmbed";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
-import { useCancelMine } from "../hooks/useCancelMine";
-import { useEnqueue } from "../hooks/useEnqueue";
-import { useJukeboxPlayer } from "../hooks/useJukeboxPlayer";
-import { useJukeboxState } from "../hooks/useJukeboxState";
-import { usePresenceHeartbeat } from "../hooks/usePresenceHeartbeat";
-import { useSkipVote } from "../hooks/useSkipVote";
-import { AddSongForm } from "../ui/AddSongForm";
-import { ListenerCount } from "../ui/ListenerCount";
-import { NowPlaying } from "../ui/NowPlaying";
-import { QueueList } from "../ui/QueueList";
-import { SkipButton } from "../ui/SkipButton";
 
 export const JukeboxPlayer: React.FunctionComponent = () => {
   const { data: state, isLoading, error } = useJukeboxState();
@@ -19,7 +20,7 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
   const cancelMineMutation = useCancelMine();
   const skipVoteMutation = useSkipVote();
   const currentTimeSec = usePlayerStore(
-    (s) => s.players["primary"].currentTime ?? 0,
+    (s) => s.players.primary.currentTime ?? 0,
   );
 
   // presence heartbeat: このコンポーネントがマウントされている間だけ送信
@@ -55,19 +56,13 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
       {/* 動画エリア: YouTube のみ表示 */}
       {isYouTube && nowPlaying && (
         <div className="w-full aspect-video bg-black">
-          <YouTubeEmbed
-            providerId={nowPlaying.mediaId}
-            slotId="primary"
-          />
+          <YouTubeEmbed providerId={nowPlaying.mediaId} slotId="primary" />
         </div>
       )}
 
       {/* 再生中情報 */}
       <div className="px-4 pt-3">
-        <NowPlaying
-          nowPlaying={nowPlaying}
-          currentTimeSec={currentTimeSec}
-        />
+        <NowPlaying nowPlaying={nowPlaying} currentTimeSec={currentTimeSec} />
       </div>
 
       {/* リスナー数 + スキップボタン */}
@@ -85,8 +80,8 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
 
       {/* 曲追加フォーム */}
       <AddSongForm
-        onSubmit={(url: string): void => {
-          void enqueueMutation.mutate(url);
+        onSubmit={(url: string, onSuccess: () => void): void => {
+          void enqueueMutation.mutate(url, { onSuccess });
         }}
         isPending={enqueueMutation.isPending}
         error={enqueueMutation.error}

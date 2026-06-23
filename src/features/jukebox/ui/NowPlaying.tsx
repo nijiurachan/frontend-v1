@@ -53,6 +53,7 @@ export const NowPlaying: React.FunctionComponent<NowPlayingProps> = ({
             </span>
             {nowPlaying.isReplay && (
               <span
+                role="note"
                 className="text-xs text-muted-foreground border border-border rounded px-1 py-0.5 shrink-0"
                 aria-label="ラジオ自動再生"
               >

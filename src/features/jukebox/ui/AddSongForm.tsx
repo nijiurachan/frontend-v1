@@ -1,11 +1,11 @@
 // src/features/jukebox/ui/AddSongForm.tsx
 import { parseJukeboxUrl } from "@nijiurachan/js/pure/jukebox";
-import { type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
 import { FiPlus } from "react-icons/fi";
 import { cn } from "@/shared/lib/cn";
 
 interface AddSongFormProps {
-  onSubmit: (url: string) => void;
+  onSubmit: (url: string, onSuccess: () => void) => void;
   isPending: boolean;
   error: Error | null;
   /** state.enqueueCooldownRemainingSec — 0 = 追加可能。>0 = ボタン disable + カウントダウン表示 */
@@ -51,12 +51,12 @@ export const AddSongForm: React.FunctionComponent<AddSongFormProps> = ({
       return;
     }
     setLocalError(null);
-    onSubmit(trimmed);
-    setUrl("");
+    onSubmit(trimmed, () => {
+      setUrl("");
+    });
   };
 
-  const errorMessage =
-    localError ?? (error ? httpErrorMessage(error) : null);
+  const errorMessage = localError ?? (error ? httpErrorMessage(error) : null);
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2 px-4 py-3">
@@ -64,7 +64,7 @@ export const AddSongForm: React.FunctionComponent<AddSongFormProps> = ({
         <input
           type="url"
           value={url}
-          onChange={(e) => {
+          onChange={(e: ChangeEvent<HTMLInputElement>): void => {
             setUrl(e.target.value);
             setLocalError(null);
           }}

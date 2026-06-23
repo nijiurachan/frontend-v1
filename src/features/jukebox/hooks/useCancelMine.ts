@@ -4,7 +4,10 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { JUKEBOX_STATE_KEY, jukeboxClient } from "../api/jukeboxClient";
+import {
+  JUKEBOX_STATE_KEY,
+  jukeboxClient,
+} from "@/features/jukebox/api/jukeboxClient";
 
 export function useCancelMine(): UseMutationResult<void, Error, void> {
   const queryClient = useQueryClient();

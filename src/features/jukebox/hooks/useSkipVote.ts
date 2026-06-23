@@ -4,7 +4,10 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { JUKEBOX_STATE_KEY, jukeboxClient } from "../api/jukeboxClient";
+import {
+  JUKEBOX_STATE_KEY,
+  jukeboxClient,
+} from "@/features/jukebox/api/jukeboxClient";
 
 export function useSkipVote(): UseMutationResult<
   { skipped: boolean },
@@ -13,8 +16,7 @@ export function useSkipVote(): UseMutationResult<
 > {
   const queryClient = useQueryClient();
   return useMutation<{ skipped: boolean }, Error, void>({
-    mutationFn: (): Promise<{ skipped: boolean }> =>
-      jukeboxClient.skipVote(),
+    mutationFn: (): Promise<{ skipped: boolean }> => jukeboxClient.skipVote(),
     onSuccess: (): void => {
       void queryClient.invalidateQueries({ queryKey: JUKEBOX_STATE_KEY });
     },
