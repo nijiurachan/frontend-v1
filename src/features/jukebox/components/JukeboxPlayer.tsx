@@ -16,6 +16,7 @@ import { NowPlaying } from "@/features/jukebox/ui/NowPlaying";
 import { PlayPauseButton } from "@/features/jukebox/ui/PlayPauseButton";
 import { QueueList } from "@/features/jukebox/ui/QueueList";
 import { SkipButton } from "@/features/jukebox/ui/SkipButton";
+import { VolumeControl } from "@/features/jukebox/ui/VolumeControl";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
 
 export const JukeboxPlayer: React.FunctionComponent = () => {
@@ -76,6 +77,9 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
           />
         </div>
       </div>
+
+      {/* 音量調節 */}
+      <VolumeControl />
 
       {/* 曲追加フォーム */}
       <AddSongForm

@@ -283,7 +283,7 @@ const createInitialPlayerInstance = (slotId: SlotId): PlayerInstance => ({
   status: "idle",
   currentTrack: null,
   currentTime: 0,
-  volume: 1,
+  volume: 0.5, // 既定は真ん中（不意の爆音を避ける）
   playbackRate: 1,
   seekTarget: null,
   muted: false,
@@ -772,11 +772,43 @@ export const usePlayerStore = create<PlayerStore>()(
       }),
       {
         name: "player-store",
-        // 永続化対象を履歴のみに限定
+        // 履歴に加え、各スロットの音量・ミュートを永続化する（既定 volume=0.5）。
         partialize: (state: PlayerStore) => ({
           history: state.history,
           maxHistorySize: state.maxHistorySize,
+          players: {
+            primary: {
+              volume: state.players.primary.volume,
+              muted: state.players.primary.muted,
+            },
+            secondary: {
+              volume: state.players.secondary.volume,
+              muted: state.players.secondary.muted,
+            },
+          },
         }),
+        // 既定の浅いマージでは players が部分オブジェクトで丸ごと置換され status 等が
+        // 失われるため、volume/muted のみを各スロットへ深くマージする。
+        merge: (persisted: unknown, current: PlayerStore): PlayerStore => {
+          const p = (persisted ?? {}) as Partial<PlayerStore>;
+          const pp = p.players as
+            | {
+                primary?: Partial<PlayerInstance>;
+                secondary?: Partial<PlayerInstance>;
+              }
+            | undefined;
+          return {
+            ...current,
+            ...p,
+            players: {
+              primary: { ...current.players.primary, ...(pp?.primary ?? {}) },
+              secondary: {
+                ...current.players.secondary,
+                ...(pp?.secondary ?? {}),
+              },
+            },
+          };
+        },
       },
     ),
   ),

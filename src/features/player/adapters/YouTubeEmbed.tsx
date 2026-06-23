@@ -13,6 +13,11 @@ import type {} from "youtube";
 import type { SlotId } from "../stores/playerStore";
 import { usePlayerStore } from "../stores/playerStore";
 
+/** ストア音量(0-1) を YouTube の音量(0-100 の整数)へ変換。
+ *  永続化データの破損や将来の呼び出し元変更で範囲外になっても安全なようクランプ＋丸めする。 */
+const toYtVolume = (v: number): number =>
+  Math.round(Math.min(100, Math.max(0, v * 100)));
+
 // ----------------------------------------------------------
 // YouTube IFrame API ローダー（モジュールレベル・シングルトン）
 // ----------------------------------------------------------
@@ -170,6 +175,11 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
             // 同時視聴の追従で設定済みの再生速度を反映（既定は等倍）
             const rate = getStore().players[slotId].playbackRate;
             if (rate !== 1) player?.setPlaybackRate(rate);
+            // 保存/設定済みの音量(0-1)を反映（YouTube は 0-100）
+            player?.setVolume(toYtVolume(getStore().players[slotId].volume));
+            // 自動再生ポリシーで YT 側が初期ミュートになっていてもストア状態に揃える
+            if (getStore().players[slotId].muted) player?.mute();
+            else player?.unMute();
           },
           onStateChange: (event: YT.OnStateChangeEvent): void => {
             if (!mountedRef.current) return;
@@ -291,6 +301,25 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
       },
     );
 
+    // ストア購読: 音量(0-1)変化を YouTube(0-100)へ反映
+    const unsubVolume = usePlayerStore.subscribe(
+      (s) => s.players[slotId].volume,
+      (volume) => {
+        if (!playerRef.current) return;
+        playerRef.current.setVolume(toYtVolume(volume));
+      },
+    );
+
+    // ストア購読: ミュート変化を反映
+    const unsubMuted = usePlayerStore.subscribe(
+      (s) => s.players[slotId].muted,
+      (muted) => {
+        if (!playerRef.current) return;
+        if (muted) playerRef.current.mute();
+        else playerRef.current.unMute();
+      },
+    );
+
     return (): void => {
       mountedRef.current = false;
       isReadyRef.current = false;
@@ -299,6 +328,8 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
       unsubStatus();
       unsubSeek();
       unsubRate();
+      unsubVolume();
+      unsubMuted();
       // playerRef.current（onReady 後）または local player（onReady 前）を破棄。
       // どちらか一方しか有効でないため ?? で fallback する。
       const p = playerRef.current ?? player;

@@ -20,7 +20,10 @@ function formatCooldown(sec: number): string {
 }
 
 function httpErrorMessage(err: Error): string {
-  const status = (err as Error & { status?: number }).status;
+  const e = err as Error & { status?: number; code?: string | null };
+  // body の error コード優先（status だけでは 400 を区別できないため）
+  if (e.code === "duration_too_long") return "10分未満の動画のみ追加できます";
+  const status = e.status;
   if (status === 403) return "追加は書き込んだユーザーのみ可能です";
   if (status === 409) return "既に1曲追加済みです（再生後にまた追加できます）";
   if (status === 415) return "対応していない URL です";
@@ -68,7 +71,7 @@ export const AddSongForm: React.FunctionComponent<AddSongFormProps> = ({
             setUrl(e.target.value);
             setLocalError(null);
           }}
-          placeholder="YouTube / SoundCloud URL"
+          placeholder="(YouTube/SoundCloud URL 10分未満)"
           className={cn(
             "flex-1 rounded-lg border px-3 py-2 text-sm",
             "bg-background text-foreground placeholder:text-muted-foreground",
