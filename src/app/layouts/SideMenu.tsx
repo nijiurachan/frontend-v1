@@ -5,6 +5,7 @@ import type { SyntheticEvent } from "react";
 import {
   FiGrid,
   FiMonitor,
+  FiMusic,
   FiSettings,
   FiShieldOff,
   FiWatch,
@@ -98,6 +99,14 @@ export const SideMenu: React.FunctionComponent<Props> = ({
                 isInternal
               >
                 カタログに戻る
+              </MenuItem>
+              <MenuItem
+                icon={<FiMusic className="w-5 h-5" />}
+                to="/jukebox"
+                onClick={onClose}
+                isInternal
+              >
+                ジュークボックス
               </MenuItem>
               <MenuItem
                 icon={<FiSettings className="w-5 h-5" />}
