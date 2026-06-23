@@ -21,7 +21,7 @@ export const QueueList: React.FunctionComponent<QueueListProps> = ({
   }
 
   return (
-    <ol className="flex flex-col divide-y divide-border">
+    <ol className="flex flex-col divide-y divide-border max-h-[50vh] overflow-y-auto overscroll-contain">
       {queue.map((item, idx) => (
         <li
           key={`${item.mediaId}-${idx}`}
