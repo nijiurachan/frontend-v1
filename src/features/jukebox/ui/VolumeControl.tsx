@@ -25,15 +25,17 @@ export const VolumeControl: React.FunctionComponent = () => {
         : FiVolume2;
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2">
+    <div className="flex items-center gap-2 px-4 py-1">
       <button
         type="button"
         onClick={(): void => setMuted("primary", !muted)}
         // aria-pressed で ON/OFF を伝えるため aria-label は固定にする
         aria-label="ミュート"
         aria-pressed={muted}
-        // 見た目は 18px のままタップ領域を 44px 相当へ拡張（モバイル a11y）
-        className="relative shrink-0 text-muted-foreground hover:text-foreground after:absolute after:-inset-[13px] after:content-['']"
+        // 実寸 44px の円形ボタンでタップ領域を確保する。疑似要素で広げると
+        // gap(8px) を超えて隣の range input に被るため、要素自身のサイズで確保。
+        // キーボード操作用に focus-visible のリングも付ける。
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
       >
         <Icon aria-hidden="true" size={18} />
       </button>
