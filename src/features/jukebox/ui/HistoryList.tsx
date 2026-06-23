@@ -9,16 +9,25 @@ function youtubeWatchUrl(mediaId: string): string {
 interface HistoryListProps {
   history: JukeboxHistoryItem[];
   isLoading: boolean;
+  error: Error | null;
 }
 
 /** 直近24hの再生履歴リスト（新しい順）。曲名の下に元動画 URL リンク。 */
 export const HistoryList: React.FunctionComponent<HistoryListProps> = ({
   history,
   isLoading,
+  error,
 }: HistoryListProps) => {
   if (isLoading) {
     return (
       <p className="text-xs text-muted-foreground px-4 py-2">読み込み中…</p>
+    );
+  }
+  if (error) {
+    return (
+      <p className="text-xs text-destructive px-4 py-2">
+        履歴の取得に失敗しました
+      </p>
     );
   }
   if (history.length === 0) {
@@ -28,9 +37,11 @@ export const HistoryList: React.FunctionComponent<HistoryListProps> = ({
       </p>
     );
   }
+  // サーバー順に依存せず UI 側で新しい順を担保する（24h 分なので十分軽量）
+  const sorted = [...history].sort((a, b) => b.endedAtMs - a.endedAtMs);
   return (
     <ol className="flex flex-col divide-y divide-border max-h-[40vh] overflow-y-auto overscroll-contain">
-      {history.map((item, idx) => (
+      {sorted.map((item, idx) => (
         <li
           key={`${item.id}-${item.mediaId}`}
           className="flex items-center gap-2 px-4 py-2"

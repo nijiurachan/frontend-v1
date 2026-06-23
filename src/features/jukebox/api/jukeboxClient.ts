@@ -19,10 +19,10 @@ export function vote(trackId: number): Promise<JukeboxVoteResult> {
   return jukeboxClient.vote(trackId);
 }
 
-/** 再生履歴の1曲（直近24h）。 */
+/** 再生履歴の1曲（直近24h）。source は既存 provider と揃えてリテラルユニオン。 */
 export interface JukeboxHistoryItem {
   id: number;
-  source: string;
+  source: "youtube" | "soundcloud";
   mediaId: string;
   title: string | null;
   durationSec: number;
@@ -36,8 +36,12 @@ export async function fetchHistory(): Promise<JukeboxHistoryItem[]> {
     credentials: "omit",
   });
   if (!res.ok) throw new Error(`history HTTP ${res.status}`);
-  const data = (await res.json()) as { history: JukeboxHistoryItem[] };
-  return data.history;
+  const data = (await res.json()) as { history?: unknown };
+  // 不正な payload（history が配列でない）は UI の map で落ちる前にここで弾く
+  if (!Array.isArray(data?.history)) {
+    throw new Error("history: unexpected response shape");
+  }
+  return data.history as JukeboxHistoryItem[];
 }
 
 export const JUKEBOX_STATE_KEY = ["jukebox", "state"] as const;

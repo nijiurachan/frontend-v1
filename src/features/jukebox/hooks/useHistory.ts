@@ -15,5 +15,6 @@ export function useHistory(
     queryFn: fetchHistory,
     enabled,
     staleTime: 30_000,
+    retry: 1,
   });
 }

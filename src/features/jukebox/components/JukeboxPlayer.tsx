@@ -28,7 +28,11 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
   const cancelMineMutation = useCancelMine();
   const skipVoteMutation = useSkipVote();
   const [showHistory, setShowHistory] = useState(false);
-  const { data: history, isLoading: historyLoading } = useHistory(showHistory);
+  const {
+    data: history,
+    isLoading: historyLoading,
+    error: historyError,
+  } = useHistory(showHistory);
   const currentTimeSec = usePlayerStore(
     (s) => s.players.primary.currentTime ?? 0,
   );
@@ -125,7 +129,11 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
           {showHistory ? "▼ 再生履歴（24時間）" : "▶ 再生履歴（24時間）"}
         </button>
         {showHistory && (
-          <HistoryList history={history ?? []} isLoading={historyLoading} />
+          <HistoryList
+            history={history ?? []}
+            isLoading={historyLoading}
+            error={historyError}
+          />
         )}
       </div>
     </div>
