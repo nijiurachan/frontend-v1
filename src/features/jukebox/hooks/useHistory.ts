@@ -12,7 +12,11 @@ export function useHistory(
 ): UseQueryResult<JukeboxHistoryItem[], Error> {
   return useQuery<JukeboxHistoryItem[], Error>({
     queryKey: JUKEBOX_HISTORY_KEY,
-    queryFn: fetchHistory,
+    queryFn: ({
+      signal,
+    }: {
+      signal: AbortSignal;
+    }): Promise<JukeboxHistoryItem[]> => fetchHistory(signal),
     enabled,
     staleTime: 30_000,
     retry: 1,

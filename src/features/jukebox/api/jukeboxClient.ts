@@ -30,10 +30,15 @@ export interface JukeboxHistoryItem {
 }
 
 /** 直近24hの再生履歴を取得する（GET /api/history）。
- *  共有ライブラリの再ピンに依存しないよう、ここで直接 fetch する。 */
-export async function fetchHistory(): Promise<JukeboxHistoryItem[]> {
+ *  共有ライブラリの再ピンに依存しないよう、ここで直接 fetch する。
+ *  signal は React Query の queryFn コンテキストから受け取り、アンマウント等の
+ *  クエリキャンセル時にネットワークリクエストも中断できるようにする。 */
+export async function fetchHistory(
+  signal?: AbortSignal,
+): Promise<JukeboxHistoryItem[]> {
   const res = await fetch(`${JUKEBOX_BASE_URL}/api/history`, {
     credentials: "omit",
+    signal,
   });
   if (!res.ok) throw new Error(`history HTTP ${res.status}`);
   const data = (await res.json()) as { history?: unknown };

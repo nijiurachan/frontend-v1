@@ -25,7 +25,7 @@ export const HistoryList: React.FunctionComponent<HistoryListProps> = ({
   }
   if (error) {
     return (
-      <p className="text-xs text-destructive px-4 py-2">
+      <p className="text-xs text-destructive px-4 py-2" role="alert">
         履歴の取得に失敗しました
       </p>
     );
