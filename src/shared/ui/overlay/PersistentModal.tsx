@@ -219,7 +219,7 @@ export const PersistentModal: React.FunctionComponent<PersistentModalProps> = ({
             <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
           </div>
         )}
-        {title && (
+        {title != null && (
           <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border min-w-0">
             {typeof title === "string" ? (
               <h2 className="text-lg font-semibold text-foreground">{title}</h2>
