@@ -19,4 +19,26 @@ export function vote(trackId: number): Promise<JukeboxVoteResult> {
   return jukeboxClient.vote(trackId);
 }
 
+/** 再生履歴の1曲（直近24h）。 */
+export interface JukeboxHistoryItem {
+  id: number;
+  source: string;
+  mediaId: string;
+  title: string | null;
+  durationSec: number;
+  endedAtMs: number;
+}
+
+/** 直近24hの再生履歴を取得する（GET /api/history）。
+ *  共有ライブラリの再ピンに依存しないよう、ここで直接 fetch する。 */
+export async function fetchHistory(): Promise<JukeboxHistoryItem[]> {
+  const res = await fetch(`${JUKEBOX_BASE_URL}/api/history`, {
+    credentials: "omit",
+  });
+  if (!res.ok) throw new Error(`history HTTP ${res.status}`);
+  const data = (await res.json()) as { history: JukeboxHistoryItem[] };
+  return data.history;
+}
+
 export const JUKEBOX_STATE_KEY = ["jukebox", "state"] as const;
+export const JUKEBOX_HISTORY_KEY = ["jukebox", "history"] as const;

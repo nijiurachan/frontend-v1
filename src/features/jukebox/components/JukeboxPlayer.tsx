@@ -4,13 +4,16 @@
 // useJukeboxPlayer が nowPlaying を監視し、変化があれば playerStore 経由で
 // MiniPlayer をドライブする。同期追従は MiniPlayer 内の useSyncController に委譲。
 
+import { useState } from "react";
 import { useCancelMine } from "@/features/jukebox/hooks/useCancelMine";
 import { useEnqueue } from "@/features/jukebox/hooks/useEnqueue";
+import { useHistory } from "@/features/jukebox/hooks/useHistory";
 import { useJukeboxPlayer } from "@/features/jukebox/hooks/useJukeboxPlayer";
 import { useJukeboxState } from "@/features/jukebox/hooks/useJukeboxState";
 import { usePresenceHeartbeat } from "@/features/jukebox/hooks/usePresenceHeartbeat";
 import { useSkipVote } from "@/features/jukebox/hooks/useSkipVote";
 import { AddSongForm } from "@/features/jukebox/ui/AddSongForm";
+import { HistoryList } from "@/features/jukebox/ui/HistoryList";
 import { ListenerCount } from "@/features/jukebox/ui/ListenerCount";
 import { NowPlaying } from "@/features/jukebox/ui/NowPlaying";
 import { PlayPauseButton } from "@/features/jukebox/ui/PlayPauseButton";
@@ -24,6 +27,8 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
   const enqueueMutation = useEnqueue();
   const cancelMineMutation = useCancelMine();
   const skipVoteMutation = useSkipVote();
+  const [showHistory, setShowHistory] = useState(false);
+  const { data: history, isLoading: historyLoading } = useHistory(showHistory);
   const currentTimeSec = usePlayerStore(
     (s) => s.players.primary.currentTime ?? 0,
   );
@@ -107,6 +112,21 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
           }}
           isVoting={skipVoteMutation.isPending}
         />
+      </div>
+
+      {/* 再生履歴（直近24時間） */}
+      <div className="flex flex-col">
+        <button
+          type="button"
+          onClick={(): void => setShowHistory((v) => !v)}
+          aria-expanded={showHistory}
+          className="px-4 py-2 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground"
+        >
+          {showHistory ? "▼ 再生履歴（24時間）" : "▶ 再生履歴（24時間）"}
+        </button>
+        {showHistory && (
+          <HistoryList history={history ?? []} isLoading={historyLoading} />
+        )}
       </div>
     </div>
   );
