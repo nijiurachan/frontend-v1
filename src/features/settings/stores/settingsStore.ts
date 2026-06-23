@@ -56,6 +56,10 @@ export type SettingsStore = SettingsStoreBase & {
   spaceMode: boolean;
   /** 宇宙モードを設定 */
   setSpaceMode(value: boolean): void;
+  /** ジュークボックス（共有音楽プレイヤー）を有効にする */
+  jukeboxEnabled: boolean;
+  /** ジュークボックスの有効/無効を設定 */
+  setJukeboxEnabled(value: boolean): void;
 };
 
 /** 表示設定のストアを作る */
@@ -73,12 +77,15 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
           set({ fontScalePosts: clampFontScale(value) }),
         spaceMode: false,
         setSpaceMode: (spaceMode: boolean) => set({ spaceMode }),
+        jukeboxEnabled: true,
+        setJukeboxEnabled: (jukeboxEnabled: boolean) => set({ jukeboxEnabled }),
         resetSettings(): void {
           base.resetSettings();
           set({
             fontSize: FONT_SIZE_DEFAULT,
             fontScalePosts: FONT_SCALE_DEFAULT,
             spaceMode: false,
+            jukeboxEnabled: true,
           });
         },
       };

@@ -32,6 +32,8 @@ export const DisplaySettings: React.FunctionComponent = () => {
     setFontSize,
     spaceMode,
     setSpaceMode,
+    jukeboxEnabled,
+    setJukeboxEnabled,
     resetSettings,
     fontScalePosts,
     setFontScalePosts,
@@ -189,6 +191,16 @@ export const DisplaySettings: React.FunctionComponent = () => {
             checked={spaceMode}
             onChange={setSpaceMode}
             aria-label="宇宙モード切替"
+          />
+        </SettingRow>
+        <SettingRow
+          label="ジュークボックス"
+          description="メニューにジュークボックスを表示し、みんなで共有する音楽を再生できるようにします。"
+        >
+          <Toggle
+            checked={jukeboxEnabled}
+            onChange={setJukeboxEnabled}
+            aria-label="ジュークボックス切替"
           />
         </SettingRow>
       </SettingSection>
