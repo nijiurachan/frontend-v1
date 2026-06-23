@@ -789,7 +789,7 @@ export const usePlayerStore = create<PlayerStore>()(
         }),
         // 既定の浅いマージでは players が部分オブジェクトで丸ごと置換され status 等が
         // 失われるため、volume/muted のみを各スロットへ深くマージする。
-        merge: (persisted, current) => {
+        merge: (persisted: unknown, current: PlayerStore): PlayerStore => {
           const p = (persisted ?? {}) as Partial<PlayerStore>;
           const pp = p.players as
             | {

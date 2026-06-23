@@ -3,6 +3,7 @@
 // ジュークボックスの音量スライダー。表示は 0-100、ストアは 0-1 で保持する。
 // 共有 MiniPlayer の primary スロット音量を操作し、YouTubeEmbed 側の購読が
 // 実プレイヤーへ反映する（初期値は 0.5 = 真ん中）。
+import type { ChangeEvent } from "react";
 import { FiVolume1, FiVolume2, FiVolumeX } from "react-icons/fi";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
 
@@ -27,7 +28,7 @@ export const VolumeControl: React.FunctionComponent = () => {
         step={1}
         value={pct}
         aria-label="音量"
-        onChange={(e): void =>
+        onChange={(e: ChangeEvent<HTMLInputElement>): void =>
           setVolume("primary", Number(e.target.value) / 100)
         }
         className="h-1 flex-1 cursor-pointer accent-primary"
