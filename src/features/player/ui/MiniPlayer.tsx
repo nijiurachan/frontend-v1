@@ -8,6 +8,7 @@
 
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useState } from "react";
+import { FiX } from "react-icons/fi";
 import { usePlayerAPI } from "../hooks/usePlayerAPI";
 import { usePlaylistController } from "../hooks/usePlaylistController";
 import { useSyncController } from "../hooks/useSyncController";
@@ -38,6 +39,9 @@ const MINI_SIZES = [
   "w-[min(500px,calc(100vw-16px))]", // lg（大）
   "w-[min(125px,calc(100vw-16px))]", // xs（豆）
 ] as const;
+
+// 豆（xs）サイズのインデックス。この時だけヘッダーの×が窮屈なので左下にも×を出す
+const BEAN_SIZE_INDEX = 3;
 
 // 動画本体の幅。コントロール表示で親が最小幅まで広がっても、動画はこの幅まで縮める
 // （→ aspect-video で縦も縮み、プレイヤ全体が低くなる。音楽プレイリスト向け）。
@@ -197,6 +201,21 @@ export const MiniPlayer: React.FunctionComponent = () => {
                 onToggleShuffle={toggleShuffle}
                 onCycleRepeat={cycleRepeat}
               />
+            )}
+
+            {/* 豆サイズ時はヘッダーの×が窮屈で見づらいので、左下に小さな閉じる×を重ねる。
+                ヘッダー自体は残す（フリック移動/サイズ切替に必要）。 */}
+            {sizeIndex === BEAN_SIZE_INDEX && (
+              <button
+                type="button"
+                onClick={handleClose}
+                aria-label="プレイヤーを閉じる"
+                className={`absolute left-1 z-20 flex h-6 w-6 items-center justify-center rounded bg-black/70 text-white hover:bg-black/90 ${
+                  showControls ? "bottom-[42px]" : "bottom-1"
+                } before:absolute before:left-1/2 before:top-1/2 before:min-h-[44px] before:min-w-[44px] before:-translate-x-1/2 before:-translate-y-1/2 before:content-['']`}
+              >
+                <FiX className="h-4 w-4" aria-hidden="true" />
+              </button>
             )}
           </motion.div>
         )}
