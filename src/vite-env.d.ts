@@ -6,6 +6,7 @@ interface ImportMetaEnv {
   readonly BASE_PATH: string;
   readonly APP_NAME: string;
   readonly VITE_FORCE_MAY10?: string;
+  readonly VITE_MUSIC_BASE_URL?: string;
 }
 
 interface ImportMeta {
