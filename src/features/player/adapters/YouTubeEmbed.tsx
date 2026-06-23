@@ -170,6 +170,9 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
             // 同時視聴の追従で設定済みの再生速度を反映（既定は等倍）
             const rate = getStore().players[slotId].playbackRate;
             if (rate !== 1) player?.setPlaybackRate(rate);
+            // 保存/設定済みの音量(0-1)を反映（YouTube は 0-100）
+            player?.setVolume(getStore().players[slotId].volume * 100);
+            if (getStore().players[slotId].muted) player?.mute();
           },
           onStateChange: (event: YT.OnStateChangeEvent): void => {
             if (!mountedRef.current) return;
@@ -291,6 +294,25 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
       },
     );
 
+    // ストア購読: 音量(0-1)変化を YouTube(0-100)へ反映
+    const unsubVolume = usePlayerStore.subscribe(
+      (s) => s.players[slotId].volume,
+      (volume) => {
+        if (!playerRef.current) return;
+        playerRef.current.setVolume(volume * 100);
+      },
+    );
+
+    // ストア購読: ミュート変化を反映
+    const unsubMuted = usePlayerStore.subscribe(
+      (s) => s.players[slotId].muted,
+      (muted) => {
+        if (!playerRef.current) return;
+        if (muted) playerRef.current.mute();
+        else playerRef.current.unMute();
+      },
+    );
+
     return (): void => {
       mountedRef.current = false;
       isReadyRef.current = false;
@@ -299,6 +321,8 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
       unsubStatus();
       unsubSeek();
       unsubRate();
+      unsubVolume();
+      unsubMuted();
       // playerRef.current（onReady 後）または local player（onReady 前）を破棄。
       // どちらか一方しか有効でないため ?? で fallback する。
       const p = playerRef.current ?? player;
