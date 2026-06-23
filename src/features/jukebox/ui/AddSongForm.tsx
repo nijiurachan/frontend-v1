@@ -71,7 +71,7 @@ export const AddSongForm: React.FunctionComponent<AddSongFormProps> = ({
             setUrl(e.target.value);
             setLocalError(null);
           }}
-          placeholder="YouTube / SoundCloud URL"
+          placeholder="(Youtube/SoundCloud URL ≦10分)"
           className={cn(
             "flex-1 rounded-lg border px-3 py-2 text-sm",
             "bg-background text-foreground placeholder:text-muted-foreground",
