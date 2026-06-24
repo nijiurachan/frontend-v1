@@ -28,6 +28,25 @@ export function useJukeboxPlayer({
   const prevTrackKeyRef = useRef<string | null>(null);
   const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
 
+  // このページセッションで一度でも実際に再生された（status="playing" を観測した）か。
+  // iOS のジェスチャ解錠はページ単位で持続するので、一度再生したら以後の曲送りは
+  // バッファ中(status="loading")でも継続してよい。トラックをまたいで保持する必要があるため
+  // ここで ref + subscribe で持つ（useSyncController の playbackUnlocked はトラック毎に
+  // リセットされ使えない）。play() は実ジェスチャの後にしか呼ばれない（手動タップ／既に
+  // 再生済みからの自動送り）ので、最初の "playing" 観測は実ジェスチャ＝解錠を意味する。
+  const hasPlayedRef = useRef(false);
+  useEffect(() => {
+    if (usePlayerStore.getState().players.primary.status === "playing") {
+      hasPlayedRef.current = true;
+    }
+    return usePlayerStore.subscribe(
+      (st) => st.players.primary.status,
+      (status) => {
+        if (status === "playing") hasPlayedRef.current = true;
+      },
+    );
+  }, []);
+
   useEffect((): void => {
     // 設定でジュークボックスが無効なら駆動しない（MiniPlayer を自動表示/再生しない）
     if (!jukeboxEnabled) return;
@@ -49,12 +68,15 @@ export function useJukeboxPlayer({
     prevTrackKeyRef.current = trackKey;
 
     const s = usePlayerStore.getState();
-    // 直前のトラックが再生中 or 再生し終えた(ended)状態なら、ユーザーは既に
-    // 再生開始済み（= iOS の初回タップで unlock 済み）と判断できる。
+    // 直前のトラックが再生中 / 再生し終えた(ended) / もしくは「一度再生済み(hasPlayedRef)で
+    // いまバッファ中(loading)」なら、ユーザーは既に再生開始済み（iOS unlock 済み）と判断できる。
     // この場合だけ、曲が切り替わったときに自動で次の曲へ続ける（自動送り）。
+    // ※ 初回ロードでまだ一度も再生していない loading は hasPlayedRef=false なので含まれず、
+    //   タップ前の自動再生は起きない（iOS ジェスチャ不変条件を維持）。手動 pause は "paused"。
     const wasPlaying =
       s.players.primary.status === "playing" ||
-      s.players.primary.status === "ended";
+      s.players.primary.status === "ended" ||
+      (s.players.primary.status === "loading" && hasPlayedRef.current);
 
     // 1) 先に currentTrack を新トラックへ差し替える。
     //    subMode を "sync" にした瞬間 useSyncController が駆動を始めるため、

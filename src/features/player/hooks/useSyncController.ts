@@ -131,9 +131,13 @@ export function useSyncController(): void {
 
       const raw = (getSyncedNow() - track.syncStartTime) / 1000;
 
-      // 大きく未来（&douji の予約上映など分単位先）はこれまで通り上映時刻まで待つ:
+      // 大きく未来（&douji の予約上映など分単位先）は上映時刻(0)まで待つ:
       // beforeStart を立てて pause を維持し、オーバーレイで残り時間を見せる。
-      if (raw < -PRESTART_GRACE_SEC) {
+      // 一度待ちに入った（beforeStart）トラックは、raw が -PRESTART_GRACE_SEC を上回っても
+      // 0 に達するまで待ち続ける＝&douji は予約時刻ちょうどに開始する（最大3秒の先行ズレを防ぐ）。
+      // ジュークボックスの僅かな未来（曲送りのロードラグ吸収ぶん）は beforeStart が立たないので
+      // この分岐に入らず、下のフォールスルーで即再生する。
+      if (raw < -PRESTART_GRACE_SEC || (store.beforeStart && raw < 0)) {
         if (!playbackUnlocked) return;
         if (!store.beforeStart) store.setBeforeStart(true);
         if (p.status === "playing") store.pause("primary");
