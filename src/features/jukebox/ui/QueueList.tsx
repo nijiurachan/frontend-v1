@@ -22,8 +22,8 @@ interface QueueListProps {
   serverNowMs: number;
   /** 指定トラック(自分の曲)だけをキューから削除する */
   onCancelMine: (trackId: number) => void;
-  /** 削除リクエスト中のトラックID（その曲の削除ボタンだけ無効化する）。なければ null */
-  cancellingId: number | null;
+  /** 削除リクエスト飛行中のトラックID集合（その曲の削除ボタンのみ無効化。並行削除に対応） */
+  cancellingIds: ReadonlySet<number>;
   /** 指定トラックの除外投票をトグルする（誰でも押せる） */
   onVote: (trackId: number) => void;
   /** 投票ミューテーション実行中か（全項目で共有） */
@@ -35,7 +35,7 @@ export const QueueList: React.FunctionComponent<QueueListProps> = ({
   nowPlaying,
   serverNowMs,
   onCancelMine,
-  cancellingId,
+  cancellingIds,
   onVote,
   isVoting,
 }: QueueListProps) => {
@@ -115,7 +115,7 @@ export const QueueList: React.FunctionComponent<QueueListProps> = ({
                 onClick={(): void => {
                   onCancelMine(item.id);
                 }}
-                disabled={cancellingId === item.id}
+                disabled={cancellingIds.has(item.id)}
                 className={cn(
                   "shrink-0 p-1 rounded text-destructive",
                   "hover:bg-destructive/10 disabled:opacity-40",

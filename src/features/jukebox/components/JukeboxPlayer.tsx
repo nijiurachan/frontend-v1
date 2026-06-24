@@ -4,6 +4,7 @@
 // useJukeboxPlayer が nowPlaying を監視し、変化があれば playerStore 経由で
 // MiniPlayer をドライブする。同期追従は MiniPlayer 内の useSyncController に委譲。
 
+import { useState } from "react";
 import { useCancelMine } from "@/features/jukebox/hooks/useCancelMine";
 import { useEnqueue } from "@/features/jukebox/hooks/useEnqueue";
 import { useJukeboxPlayer } from "@/features/jukebox/hooks/useJukeboxPlayer";
@@ -24,6 +25,11 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
   const enqueueMutation = useEnqueue();
   const cancelMineMutation = useCancelMine();
   const skipVoteMutation = useSkipVote();
+  // 飛行中のキャンセル trackId 集合。単一 mutation の variables は直近の呼び出ししか
+  // 保持しないため、並行キャンセル時に各ボタンを正しく無効化できるよう自前で追跡する。
+  const [cancellingIds, setCancellingIds] = useState<ReadonlySet<number>>(
+    () => new Set<number>(),
+  );
   const currentTimeSec = usePlayerStore(
     (s) => s.players.primary.currentTime ?? 0,
   );
@@ -99,15 +105,20 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
         <QueueList
           queue={state?.queue ?? []}
           nowPlaying={nowPlaying}
-          serverNowMs={state?.serverNowMs ?? 0}
+          serverNowMs={state?.serverNowMs ?? Date.now()}
           onCancelMine={(trackId: number): void => {
-            void cancelMineMutation.mutate(trackId);
+            setCancellingIds((prev) => new Set(prev).add(trackId));
+            cancelMineMutation.mutate(trackId, {
+              onSettled: (): void => {
+                setCancellingIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(trackId);
+                  return next;
+                });
+              },
+            });
           }}
-          cancellingId={
-            cancelMineMutation.isPending
-              ? (cancelMineMutation.variables ?? null)
-              : null
-          }
+          cancellingIds={cancellingIds}
           onVote={(trackId: number): void => {
             skipVoteMutation.mutate(trackId);
           }}
