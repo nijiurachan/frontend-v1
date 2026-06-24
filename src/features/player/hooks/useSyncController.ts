@@ -50,6 +50,12 @@ const SEEK_BEHIND = 8;
 const SLOW_THRESHOLD = 5;
 /** これ以上「遅れ」なら加速（④の下限） */
 const FAST_THRESHOLD = 5;
+/** 基準時刻が「これ以内の僅かな未来」なら上映前待ちをせず 0 から即再生する（秒）。
+ *  ジュークボックスの曲送りは started_at をロードラグ吸収ぶん（~1.5s, サーバーの
+ *  NEW_TRACK_START_LAG_MS）だけ未来へ打刻するので、その窓は待たず PC と同じく即再生する。
+ *  これより大きい未来（&douji の予約上映など分単位先）はこれまで通り上映時刻まで待つ。
+ *  値はジュークボックスの前倒し(<2s)より大きく、&douji の最小粒度(分)より十分小さく取る。 */
+const PRESTART_GRACE_SEC = 3;
 
 type SyncMode = "none" | "slow" | "fast";
 
@@ -88,10 +94,9 @@ export function useSyncController(): void {
     let mode: SyncMode = "none";
     let appliedRate = 1;
     let lastSeekAt = 0;
-    // iOS は最初のユーザー操作による再生が来るまで programmatic な play() を
-    // 拒否する。上映開始前に先回りで pause すると、0 秒到達時の自動 play が
-    // 拒否され「自動で始まらない」体験になる。そのため、一度でも playing 状態を
-    // 観測する（= ユーザーが初回タップ済み）までは pause もオーバーレイも行わない。
+    // iOS は最初のユーザー操作による再生が来るまで programmatic な play() を拒否する。
+    // &douji 予約上映の開始前に先回りで pause すると 0 秒到達時の自動 play が拒否されるため、
+    // 一度でも playing を観測する（= 初回タップ済み）までは pause もオーバーレイも行わない。
     let playbackUnlocked = false;
 
     const applyRate = (next: SyncMode): void => {
@@ -124,27 +129,29 @@ export function useSyncController(): void {
       // 通ったとみなす。以降は programmatic な play() が iOS でも通る。
       if (p.status === "playing") playbackUnlocked = true;
 
-      const expected = (getSyncedNow() - track.syncStartTime) / 1000;
+      const raw = (getSyncedNow() - track.syncStartTime) / 1000;
 
-      // 基準時刻がまだ未来 → 上映開始前。
-      // ユーザー初回タップ前は何もしない（先回り pause で 0 秒到達時の
-      // 自動再生が iOS に拒否される事故を避ける）。タップ後は beforeStart を
-      // 立てて pause を維持し、オーバーレイで残り時間を見せる。
-      if (expected < 0) {
+      // 大きく未来（&douji の予約上映など分単位先）はこれまで通り上映時刻まで待つ:
+      // beforeStart を立てて pause を維持し、オーバーレイで残り時間を見せる。
+      if (raw < -PRESTART_GRACE_SEC) {
         if (!playbackUnlocked) return;
         if (!store.beforeStart) store.setBeforeStart(true);
         if (p.status === "playing") store.pause("primary");
-        // オーバーレイ中に再生位置が先頭でなければ 0 へ戻す。
-        // 0 秒到達時にちょうど先頭から始まる体験を保証する。
+        // オーバーレイ中に再生位置が先頭でなければ 0 へ戻す（上映開始でちょうど先頭から）。
         if (p.currentTime > 0.2) doSeek(0);
         return;
       }
 
-      // 上映開始時刻に達した初回フレーム: 再生を開始しつつフラグを下ろす。
+      // ここから下は「即再生してよい」。僅かな未来（曲送りのロードラグ吸収ぶん）は
+      // 待たず 0 にクランプして即再生し、PC(aimoge-jukebox) と開始タイミングを揃える。
+      // 上映待ち(beforeStart)が立っていれば（&douji が上映時刻に到達）下ろして再生開始する。
+      // 曲送りの自動再生自体は useJukeboxPlayer（isTransition && wasPlaying → play）が担うため、
+      // ここで止まっている間は何もしない＝初回タップ前 / ユーザーの一時停止意図を尊重する。
       if (store.beforeStart) {
         store.setBeforeStart(false);
         store.play("primary");
       }
+      const expected = Math.max(0, raw);
 
       if (p.status !== "playing") return;
       // 既に終了範囲なら補正しない（自然終了に委ねる）
