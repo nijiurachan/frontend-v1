@@ -28,21 +28,26 @@ export function useJukeboxPlayer({
   const prevTrackKeyRef = useRef<string | null>(null);
   const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
 
-  // このページセッションで一度でも実際に再生された（status="playing" を観測した）か。
+  // このページセッションで一度でも「実際に再生が進んだ(currentTime>0)」か。
   // iOS のジェスチャ解錠はページ単位で持続するので、一度再生したら以後の曲送りは
   // バッファ中(status="loading")でも継続してよい。トラックをまたいで保持する必要があるため
   // ここで ref + subscribe で持つ（useSyncController の playbackUnlocked はトラック毎に
-  // リセットされ使えない）。play() は実ジェスチャの後にしか呼ばれない（手動タップ／既に
-  // 再生済みからの自動送り）ので、最初の "playing" 観測は実ジェスチャ＝解錠を意味する。
+  // リセットされ使えない）。
+  // ※ 判定根拠に status="playing" ではなく currentTime>0 を使う理由: play() は status を
+  //   楽観的に "playing" にするため、自動再生が拒否されたケースでも status だけだと true に
+  //   なり得る。一方 currentTime は YT の getCurrentTime ポーリング由来で、実際に再生が
+  //   進まないと増えない＝確実な解錠の根拠（拒否された再生では 0 のまま）。ジュークボックスは
+  //   loadTrack で currentTime=0、sync の seek も再生中(playing)か 0 へのみなので、再生前に
+  //   currentTime>0 にはならない。
   const hasPlayedRef = useRef(false);
   useEffect(() => {
-    if (usePlayerStore.getState().players.primary.status === "playing") {
+    if (usePlayerStore.getState().players.primary.currentTime > 0) {
       hasPlayedRef.current = true;
     }
     return usePlayerStore.subscribe(
-      (st) => st.players.primary.status,
-      (status) => {
-        if (status === "playing") hasPlayedRef.current = true;
+      (st) => st.players.primary.currentTime > 0,
+      (hasAdvanced) => {
+        if (hasAdvanced) hasPlayedRef.current = true;
       },
     );
   }, []);
