@@ -1,12 +1,12 @@
+import type { Thread } from "@/entities/thread";
 import { PostForm } from "@/features/post/components/forms";
+import { ReplyTargetTitle } from "@/features/thread/ui";
 import { PersistentModal } from "@/shared/ui/overlay";
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  threadId: number;
-  allowImage: boolean;
-  isArchived?: boolean;
+  thread: Thread;
   initialComment?: string;
   openCount?: number;
   contentKey?: string | number;
@@ -15,9 +15,7 @@ interface Props {
 export const ReplyModal: React.FunctionComponent<Props> = ({
   isOpen,
   onClose,
-  threadId,
-  allowImage,
-  isArchived,
+  thread,
   initialComment,
   openCount,
   contentKey,
@@ -26,16 +24,16 @@ export const ReplyModal: React.FunctionComponent<Props> = ({
     <PersistentModal
       isOpen={isOpen}
       onClose={onClose}
-      title="返信"
+      title={<ReplyTargetTitle thread={thread} />}
       position="bottom"
       contentKey={contentKey}
     >
       {({ destroy }: { destroy: () => void }): React.ReactNode => (
         <div className="p-4">
           <PostForm
-            threadId={threadId}
-            allowImage={allowImage}
-            isArchived={isArchived}
+            threadId={thread.id}
+            allowImage={thread.allow_image_replies}
+            isArchived={thread.is_archived}
             initialComment={initialComment}
             openCount={openCount}
             onSuccess={destroy}

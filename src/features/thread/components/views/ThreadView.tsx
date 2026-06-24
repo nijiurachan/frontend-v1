@@ -459,9 +459,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
         <ReplyModal
           isOpen={isReplyOpen}
           onClose={closeReplyModal}
-          threadId={threadId}
-          allowImage={data.thread.allow_image_replies}
-          isArchived={data.thread.is_archived}
+          thread={data.thread}
           initialComment={replyInitialComment}
           openCount={replyOpenCount}
           contentKey={threadId}
