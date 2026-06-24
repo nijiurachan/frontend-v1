@@ -1,5 +1,6 @@
 // src/pages/JukeboxPage.tsx
 import { JukeboxPlayer } from "@/features/jukebox/components/JukeboxPlayer";
+import { BmgBanner } from "@/shared/ui/ad";
 
 export const JukeboxPage: React.FunctionComponent = () => {
   return (
@@ -9,6 +10,7 @@ export const JukeboxPage: React.FunctionComponent = () => {
           ジュークボックス
         </h1>
       </header>
+      <BmgBanner />
       <JukeboxPlayer />
     </main>
   );

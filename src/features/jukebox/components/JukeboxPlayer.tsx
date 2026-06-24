@@ -98,10 +98,16 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
         </h2>
         <QueueList
           queue={state?.queue ?? []}
-          onCancelMine={(): void => {
-            void cancelMineMutation.mutate();
+          nowPlaying={nowPlaying}
+          serverNowMs={state?.serverNowMs ?? 0}
+          onCancelMine={(trackId: number): void => {
+            void cancelMineMutation.mutate(trackId);
           }}
-          isCancelling={cancelMineMutation.isPending}
+          cancellingId={
+            cancelMineMutation.isPending
+              ? (cancelMineMutation.variables ?? null)
+              : null
+          }
           onVote={(trackId: number): void => {
             skipVoteMutation.mutate(trackId);
           }}

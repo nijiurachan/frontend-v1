@@ -9,10 +9,11 @@ import {
   jukeboxClient,
 } from "@/features/jukebox/api/jukeboxClient";
 
-export function useCancelMine(): UseMutationResult<void, Error, void> {
+export function useCancelMine(): UseMutationResult<void, Error, number> {
   const queryClient = useQueryClient();
-  return useMutation<void, Error, void>({
-    mutationFn: (): Promise<void> => jukeboxClient.cancelMine(),
+  return useMutation<void, Error, number>({
+    mutationFn: (trackId: number): Promise<void> =>
+      jukeboxClient.cancelMine(trackId),
     onSuccess: (): void => {
       void queryClient.invalidateQueries({ queryKey: JUKEBOX_STATE_KEY });
     },
