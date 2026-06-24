@@ -27,6 +27,11 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
   const enqueueMutation = useEnqueue();
   const cancelMineMutation = useCancelMine();
   const skipVoteMutation = useSkipVote();
+  // 飛行中のキャンセル trackId 集合。単一 mutation の variables は直近の呼び出ししか
+  // 保持しないため、並行キャンセル時に各ボタンを正しく無効化できるよう自前で追跡する。
+  const [cancellingIds, setCancellingIds] = useState<ReadonlySet<number>>(
+    () => new Set<number>(),
+  );
   const [showHistory, setShowHistory] = useState(false);
   const {
     data: history,
@@ -107,10 +112,21 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
         </h2>
         <QueueList
           queue={state?.queue ?? []}
-          onCancelMine={(): void => {
-            void cancelMineMutation.mutate();
+          nowPlaying={nowPlaying}
+          serverNowMs={state?.serverNowMs ?? Date.now()}
+          onCancelMine={(trackId: number): void => {
+            setCancellingIds((prev) => new Set(prev).add(trackId));
+            cancelMineMutation.mutate(trackId, {
+              onSettled: (): void => {
+                setCancellingIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(trackId);
+                  return next;
+                });
+              },
+            });
           }}
-          isCancelling={cancelMineMutation.isPending}
+          cancellingIds={cancellingIds}
           onVote={(trackId: number): void => {
             skipVoteMutation.mutate(trackId);
           }}
