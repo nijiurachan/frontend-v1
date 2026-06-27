@@ -19,8 +19,10 @@ export function decorateLineEnd(text: string): string {
   return `${text}なんですよ...！`;
 }
 
+const JST_OFFSET_MS: number = 9 * 60 * 60 * 1000;
+
 /**
- * Returns true on May 10 in JST (Asia/Tokyo).
+ * Returns true on May 10 in JST (UTC+09:00).
  *
  * Dev-only override: setting VITE_FORCE_MAY10=1 (or "true") in .env.local
  * forces a true return for local QA. Production builds leave the env var
@@ -30,14 +32,8 @@ export function isMay10JST(now: Date = new Date()): boolean {
   const forced = import.meta.env.VITE_FORCE_MAY10;
   if (forced === "1" || forced === "true") return true;
 
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Tokyo",
-    month: "numeric",
-    day: "numeric",
-  }).formatToParts(now);
-  const month = Number(parts.find((p) => p.type === "month")?.value);
-  const day = Number(parts.find((p) => p.type === "day")?.value);
-  return month === 5 && day === 10;
+  const jst = new Date(now.getTime() + JST_OFFSET_MS);
+  return jst.getUTCMonth() === 4 && jst.getUTCDate() === 10;
 }
 
 const KITA_INPUT = "ｷﾀ━━━━(ﾟ∀ﾟ)━━━━!!";
