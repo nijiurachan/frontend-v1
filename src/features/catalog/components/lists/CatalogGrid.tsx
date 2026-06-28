@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
 import { useFavoriteThreads } from "../../hooks/useFavoriteThreads";
 import { useFilteredThreads } from "../../hooks/useFilteredThreads";
+import { useOekakiFloor } from "../../hooks/useOekakiFloor";
 import { useThreads } from "../../hooks/useThreads";
 import { useCatalogStore } from "../../stores/catalogStore";
 import { CatalogItem } from "./CatalogItem";
@@ -11,7 +12,9 @@ export const CatalogGrid: React.FunctionComponent = () => {
   const { columns, lastCatalogIds } = useCatalogStore();
 
   const filteredThreads = useFilteredThreads(data?.threads);
-  const visibleThreads = useFavoriteThreads(filteredThreads);
+  // お絵描きスレを中間ラインより下に沈ませない(お気に入りは最上位を維持するため後段で適用)
+  const flooredThreads = useOekakiFloor(filteredThreads);
+  const visibleThreads = useFavoriteThreads(flooredThreads);
 
   const newThreadIds = useMemo(() => {
     if (lastCatalogIds.length === 0) return new Set<number>();
