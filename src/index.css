@@ -123,37 +123,6 @@ select option {
   opacity: 0.3;
 }
 
-/* 既読 × お絵描きスレの枠: シアン(既読)→グリーン(お絵描き)の青緑グラデーション。
-   border-image だと角丸に追従しないため、擬似要素にグラデを敷き、
-   padding 分の縁だけをマスクで残して枠線リングを描く。 */
-.viewed-oekaki-border {
-  position: relative;
-  /* border-3 系の枠（内側コンテンツが3px分インセット）と幾何を揃えるため、
-     枠幅分の余白を確保する。::after のリングはこの余白帯に描画される。 */
-  padding: 3px;
-}
-.viewed-oekaki-border::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 3px;
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-otegaki)
-  );
-  /* padding 分の縁だけを残すマスクで枠線リングにする。標準プロパティのみ書き、
-     -webkit- プレフィックスはビルド時の Lightning CSS に任せる（手動併記すると
-     重複扱いで標準 mask-composite が脱落し、Firefox で全面グラデになるため）。 */
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: 1;
-}
-
 /* 特定文字列の光輝エフェクト */
 @keyframes text-glow-pulse {
   0%,
