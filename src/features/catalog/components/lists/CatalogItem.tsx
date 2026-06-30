@@ -11,7 +11,7 @@ import { useHistoryStore } from "@/features/history/stores/historyStore";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useLongPress } from "@/shared/hooks";
 import { decorateTitle, isVideoAttachment } from "@/shared/lib";
-import { VideoBadge } from "@/shared/ui/media";
+import { OekakiBadge, VideoBadge } from "@/shared/ui/media";
 import { useCatalogStore } from "../../stores/catalogStore";
 import { ThreadContextMenu } from "../actions/ThreadContextMenu";
 
@@ -58,9 +58,7 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
     // 上から順に最初に一致したものだけを適用する（条件追加は1行で済む）
     const borderClass = ((): string => {
       if (thread.is_admin) return "border-3 border-accent";
-      if (isViewed && isOekaki) return "viewed-oekaki-border";
       if (isViewed) return "border-3 border-primary";
-      if (isOekaki) return "border-3 border-otegaki";
       return "";
     })();
 
@@ -156,6 +154,7 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
               />
 
               {isVideo && (!isNg || ngRevealed) && <VideoBadge />}
+              {isOekaki && !isVideo && (!isNg || ngRevealed) && <OekakiBadge />}
               {(showCount || (showUnreadCount && unreadCount)) &&
                 (!isNg || ngRevealed) && (
                   <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
