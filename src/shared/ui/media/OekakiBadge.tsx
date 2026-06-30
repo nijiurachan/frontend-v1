@@ -6,7 +6,7 @@ import iconOekaki from "@/assets/img/icon_oekaki.svg";
  */
 export const OekakiBadge: React.FunctionComponent = () => {
   return (
-    <div className="absolute top-1 right-1 p-1 bg-black/50 rounded">
+    <div className="absolute top-1 right-1 p-1 bg-badge rounded">
       <img src={iconOekaki} alt="" aria-hidden="true" className="w-4 h-4" />
     </div>
   );

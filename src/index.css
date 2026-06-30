@@ -19,6 +19,8 @@
   --color-border: rgba(255, 255, 255, 0.1);
   --color-card: #1f2940;
   --color-card-foreground: #eee;
+  /* バッジ・オーバーレイ背景（サムネイル上に重ねる半透明の暗色。両テーマ共通） */
+  --color-badge: rgba(0, 0, 0, 0.5);
   /* 特別機能色 */
   --color-otegaki: #33ff33;
   --color-act: #9aa0e3;
