@@ -51,7 +51,9 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
     const viewedIds = getViewedIds();
     const isViewed = viewedIds.includes(thread.id);
 
-    // お絵描き判定
+    // お絵描き判定（お絵描きアイコン OekakiBadge 表示用）。全お絵描きに付与し、そうだね数には依存しない。
+    // カタログ順のフロア優遇（useOekakiFloor / floorOekakiThreads）はそうだね閾値でゲートするため
+    // 判定基準が異なるのは意図的（アイコンは付くがフロアされないスレが存在しうる）。
     const isOekaki = thread.attachment?.is_oekaki ?? false;
 
     // 枠線スタイル決定（優先順位: 運営 > 既読×お絵描き > 既読 > お絵描き）

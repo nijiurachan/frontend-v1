@@ -2,10 +2,11 @@ import { describe, expect, test } from "bun:test";
 import type { Thread } from "@/entities/thread";
 import { floorOekakiThreads } from "./floorOekakiThreads";
 
-/** is_oekaki だけを持つ最小の Thread を生成する */
-function mk(id: number, isOekaki: boolean): Thread {
+/** is_oekaki と OP そうだね数を持つ最小の Thread を生成する(そうだねは既定10=フロア対象) */
+function mk(id: number, isOekaki: boolean, soudane: number = 10): Thread {
   return {
     id,
+    soudane_count: soudane,
     attachment: { is_oekaki: isOekaki },
   } as unknown as Thread;
 }
@@ -18,6 +19,11 @@ function mkNoAttachment(id: number): Thread {
 /** 添付はあるが is_oekaki フィールドが欠落している Thread を生成する(?? false の経路検証用) */
 function mkAttachmentNoFlag(id: number): Thread {
   return { id, attachment: {} } as unknown as Thread;
+}
+
+/** お絵描きだが soudane_count が欠落している Thread を生成する(欠損時の防御検証用) */
+function mkOekakiMissingSoudane(id: number): Thread {
+  return { id, attachment: { is_oekaki: true } } as unknown as Thread;
 }
 
 function ids(threads: Thread[]): number[] {
@@ -161,6 +167,59 @@ describe("floorOekakiThreads", () => {
       mk(6, false),
     ];
     expect(ids(floorOekakiThreads(input))).toEqual([1, 2, 4, 5, 3, 6]);
+  });
+
+  test("does not floor an oekaki thread whose soudane is below 10 (treated as normal)", () => {
+    // n=8, topCount=4。O1(そうだね30)は優遇、O2(そうだね5)は優遇対象外＝自然順のまま
+    const input = [
+      mk(1, false),
+      mk(2, true, 30), // 優遇される(≥10)・既に上半分で据え置き
+      mk(3, false),
+      mk(4, false),
+      mk(5, false),
+      mk(6, true, 5), // そうだね<10 → 優遇されず自然順(引き上げない)
+      mk(7, false),
+      mk(8, false),
+    ];
+    expect(ids(floorOekakiThreads(input))).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
+  });
+
+  test("soudane threshold is inclusive at 10 (>=10 floored, <10 not)", () => {
+    // n=4, topCount=2。下半分(index3)のお絵描き
+    // soudane=10 → 優遇(中間ライン直前へ引き上げ)
+    expect(
+      ids(
+        floorOekakiThreads([
+          mk(1, false),
+          mk(2, false),
+          mk(3, false),
+          mk(4, true, 10),
+        ]),
+      ),
+    ).toEqual([1, 4, 2, 3]);
+    // soudane=9 → 優遇されず自然順(引き上げない)
+    expect(
+      ids(
+        floorOekakiThreads([
+          mk(1, false),
+          mk(2, false),
+          mk(3, false),
+          mk(4, true, 9),
+        ]),
+      ),
+    ).toEqual([1, 2, 3, 4]);
+  });
+
+  test("treats an oekaki thread with missing soudane_count as normal (not floored)", () => {
+    // n=4, topCount=2。soudane 欠損のお絵描きを下半分(index3)に置く。
+    // 優遇対象外＝引き上げないので自然順のまま(引き上げるなら [1,4,2,3] になる)。
+    const input = [
+      mk(1, false),
+      mk(2, false),
+      mk(3, false),
+      mkOekakiMissingSoudane(4),
+    ];
+    expect(ids(floorOekakiThreads(input))).toEqual([1, 2, 3, 4]);
   });
 
   test("property: permutation, relative-order, and floor invariant hold for all n=2..8", () => {
