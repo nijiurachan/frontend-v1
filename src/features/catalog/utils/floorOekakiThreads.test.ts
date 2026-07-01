@@ -1,9 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import type { Thread } from "@/entities/thread";
-import { floorOekakiThreads } from "./floorOekakiThreads";
+import {
+  floorOekakiThreads,
+  MIN_SOUDANE_FOR_FLOOR,
+} from "./floorOekakiThreads";
 
-/** is_oekaki と OP そうだね数を持つ最小の Thread を生成する(そうだねは既定10=フロア対象) */
-function mk(id: number, isOekaki: boolean, soudane: number = 10): Thread {
+/** is_oekaki と OP そうだね数を持つ最小の Thread を生成する(そうだねは既定でフロア対象の下限) */
+function mk(
+  id: number,
+  isOekaki: boolean,
+  soudane: number = MIN_SOUDANE_FOR_FLOOR,
+): Thread {
   return {
     id,
     soudane_count: soudane,
@@ -169,42 +176,42 @@ describe("floorOekakiThreads", () => {
     expect(ids(floorOekakiThreads(input))).toEqual([1, 2, 4, 5, 3, 6]);
   });
 
-  test("does not floor an oekaki thread whose soudane is below 10 (treated as normal)", () => {
-    // n=8, topCount=4。O1(そうだね30)は優遇、O2(そうだね5)は優遇対象外＝自然順のまま
+  test("does not floor an oekaki thread whose soudane is below the threshold (treated as normal)", () => {
+    // n=8, topCount=4。O1(閾値ちょうど)は優遇、O2(閾値未満)は優遇対象外＝自然順のまま
     const input = [
       mk(1, false),
-      mk(2, true, 30), // 優遇される(≥10)・既に上半分で据え置き
+      mk(2, true, MIN_SOUDANE_FOR_FLOOR), // 優遇される(>=閾値)・既に上半分で据え置き
       mk(3, false),
       mk(4, false),
       mk(5, false),
-      mk(6, true, 5), // そうだね<10 → 優遇されず自然順(引き上げない)
+      mk(6, true, MIN_SOUDANE_FOR_FLOOR - 1), // 閾値未満 → 優遇されず自然順(引き上げない)
       mk(7, false),
       mk(8, false),
     ];
     expect(ids(floorOekakiThreads(input))).toEqual([1, 2, 3, 4, 5, 6, 7, 8]);
   });
 
-  test("soudane threshold is inclusive at 10 (>=10 floored, <10 not)", () => {
+  test("soudane threshold is inclusive (>=threshold floored, <threshold not)", () => {
     // n=4, topCount=2。下半分(index3)のお絵描き
-    // soudane=10 → 優遇(中間ライン直前へ引き上げ)
+    // そうだね=閾値ちょうど → 優遇(中間ライン直前へ引き上げ)
     expect(
       ids(
         floorOekakiThreads([
           mk(1, false),
           mk(2, false),
           mk(3, false),
-          mk(4, true, 10),
+          mk(4, true, MIN_SOUDANE_FOR_FLOOR),
         ]),
       ),
     ).toEqual([1, 4, 2, 3]);
-    // soudane=9 → 優遇されず自然順(引き上げない)
+    // そうだね=閾値未満(1つ下) → 優遇されず自然順(引き上げない)
     expect(
       ids(
         floorOekakiThreads([
           mk(1, false),
           mk(2, false),
           mk(3, false),
-          mk(4, true, 9),
+          mk(4, true, MIN_SOUDANE_FOR_FLOOR - 1),
         ]),
       ),
     ).toEqual([1, 2, 3, 4]);

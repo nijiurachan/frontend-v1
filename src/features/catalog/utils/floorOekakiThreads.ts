@@ -1,13 +1,13 @@
 import type { Thread } from "@/entities/thread";
 
 /** フロア(優遇)対象とするお絵描きスレの OP そうだね数の下限。これ未満は優遇しない。 */
-const MIN_SOUDANE_FOR_FLOOR = 10;
+export const MIN_SOUDANE_FOR_FLOOR = 10;
 
 /**
  * フロア(下半分に沈ませない優遇)の対象となるお絵描きスレか判定する。
  *
  * 注意: カタログのお絵描きアイコン(CatalogItem の OekakiBadge)は is_oekaki のみで全お絵描きに
- * 付与されそうだね数に依存しない。フロア優遇のみ本関数でそうだね閾値によりゲートする(意図的に基準が異なる)。
+ * 付与され、そうだね数に依存しない。フロア優遇のみ本関数でそうだね閾値によりゲートする(意図的に基準が異なる)。
  * soudane_count は型上必須だが、欠損時は 0 とみなして優遇しない(防御)。
  */
 function isFloorTarget(thread: Thread): boolean {
@@ -18,7 +18,8 @@ function isFloorTarget(thread: Thread): boolean {
 }
 
 /**
- * お絵描きスレ(スレ画の is_oekaki が true)がカタログの下半分に沈まないように並べ替える。
+ * そうだねが下限以上のお絵描きスレ(スレ画の is_oekaki が true)がカタログの下半分に沈まないよう
+ * 並べ替える。優遇の閾値は {@link MIN_SOUDANE_FOR_FLOOR}。
  *
  * 中間ライン(先頭から ceil(n/2) 件)より下に落ちたお絵描きスレだけを中間ライン直前へ
  * 引き上げ、それ以外の並び(サーバーソート順)は可能な限り保持する。お絵描きスレが上半分の
