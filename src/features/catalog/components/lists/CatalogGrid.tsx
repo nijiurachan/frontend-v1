@@ -12,7 +12,7 @@ export const CatalogGrid: React.FunctionComponent = () => {
   const { columns, lastCatalogIds } = useCatalogStore();
 
   const filteredThreads = useFilteredThreads(data?.threads);
-  // お絵描きスレを中間ラインより下に沈ませない(お気に入りは最上位を維持するため後段で適用)
+  // そうだね閾値を満たすお絵描きスレを中間ラインより下に沈ませない(お気に入りは最上位を維持するため後段で適用)
   const flooredThreads = useOekakiFloor(filteredThreads);
   const visibleThreads = useFavoriteThreads(flooredThreads);
 
