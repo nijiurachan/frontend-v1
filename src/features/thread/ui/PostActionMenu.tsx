@@ -33,7 +33,7 @@ interface ActionItem {
   variant?: "default" | "destructive";
 }
 
-type QuoteType = "body" | "no-and-filename";
+type QuoteType = "body" | "no";
 
 export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
   isOpen,
@@ -49,10 +49,8 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
 
   // 引用テキストを生成
   const getQuoteText = (type: QuoteType): string => {
-    if (type === "no-and-filename") {
-      return post.attachment?.path
-        ? `>No.${post.id}\n>${post.attachment.path.replace(/^uploads\//, "")}`
-        : `>No.${post.id}`;
+    if (type === "no") {
+      return `>No.${post.id}`;
     } else {
       // 本文引用の場合
       return post.body.map((line) => `>${line.text}`).join("\n");
@@ -82,8 +80,8 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
     },
     {
       icon: FiHash,
-      label: "No＆添付名返信",
-      onClick: () => handleReply("no-and-filename"),
+      label: "No返信",
+      onClick: () => handleReply("no"),
     },
     {
       icon: FiThumbsUp,
