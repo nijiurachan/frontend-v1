@@ -11,6 +11,7 @@ import "@/index.css";
 import { makeUpfileInputFragmentV2 } from "@nijiurachan/js/components/upfile-input-fragment-v2";
 import { makeUpfileInputV2Element } from "@nijiurachan/js/elements/upfile-input-v2";
 import { AxnosPaintPopup } from "@nijiurachan/js/io/axnos-paint-popup";
+import { KlecksPopup } from "@nijiurachan/js/io/klecks-popup";
 import { initCookieStore } from "@nijiurachan/js/util/cookie-store";
 import { installCanvas98Patch } from "@/features/otegaki-upfile/lib/canvas98Patch";
 import { installIosOffsetPatch } from "@/features/otegaki-upfile/lib/iosOffsetPatch";
@@ -31,12 +32,19 @@ if (!window.cookieStore) {
   await initCookieStore();
 }
 
-initUpfileInput();
+const settingsStore: ReturnType<typeof createSettingsStore> =
+  createSettingsStore();
 
-createRoot(document.getElementById("root") as HTMLElement).render(makeRoot());
+initUpfileInput(settingsStore);
+
+createRoot(document.getElementById("root") as HTMLElement).render(
+  makeRoot(settingsStore),
+);
 
 /** ルート要素を作成 */
-function makeRoot(): React.ReactElement {
+function makeRoot(
+  settingsStore: ReturnType<typeof createSettingsStore>,
+): React.ReactElement {
   const router = createRouter({
     routeTree,
     scrollRestoration: true,
@@ -44,8 +52,6 @@ function makeRoot(): React.ReactElement {
     getScrollRestorationKey: ({ pathname, state }: ParsedLocation) =>
       shouldRestoreScrollAt(pathname) ? pathname : (state.__TSR_key as string),
   });
-
-  const settingsStore = createSettingsStore();
 
   return (
     <StrictMode>
@@ -62,12 +68,22 @@ function shouldRestoreScrollAt(pathname: string): boolean {
 }
 
 /** 添付ファイル欄を初期化 */
-function initUpfileInput(): void {
+function initUpfileInput(
+  settingsStore: ReturnType<typeof createSettingsStore>,
+): void {
   // ポップアップ用のJSパスはimportmapから取得する(Viteの設定参照)
   const paintPopupUrl = import.meta.resolve("#oekaki");
+  const klecksPopupUrl = import.meta.resolve("#klecks");
+  const klecksEmbedUrl =
+    import.meta.env.VITE_KLECKS_EMBED_URL ??
+    import.meta.resolve("#klecks-embed");
 
   makeUpfileInputV2Element(
-    makeUpfileInputFragmentV2(new AxnosPaintPopup(paintPopupUrl)),
+    makeUpfileInputFragmentV2({
+      axnos: new AxnosPaintPopup(paintPopupUrl),
+      klecks: new KlecksPopup(klecksPopupUrl, klecksEmbedUrl),
+      getOekakiTool: () => settingsStore.getState().oekakiTool,
+    }),
   ).define();
 
   // はっちゃんのスマホ向け上書き

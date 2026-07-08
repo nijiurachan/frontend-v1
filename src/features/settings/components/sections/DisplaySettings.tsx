@@ -28,6 +28,8 @@ export const DisplaySettings: React.FunctionComponent = () => {
     privacyMode,
     setDarkMode,
     setPrivacyMode,
+    oekakiTool,
+    setOekakiTool,
     fontSize,
     setFontSize,
     spaceMode,
@@ -95,6 +97,18 @@ export const DisplaySettings: React.FunctionComponent = () => {
             onChange={setPrivacyMode}
             aria-label="プライバシーモード切替"
           />
+        </SettingRow>
+        <SettingRow label="お絵かきツール">
+          <Select
+            value={oekakiTool}
+            onChange={(value: string): void =>
+              setOekakiTool(value === "klecks" ? "klecks" : "axnos")
+            }
+            aria-label="お絵かきツール"
+          >
+            <option value="axnos">AXNOS</option>
+            <option value="klecks">Klecks</option>
+          </Select>
         </SettingRow>
         <SettingRow
           label="アニメ画像を再生"

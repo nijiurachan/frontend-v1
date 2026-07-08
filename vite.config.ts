@@ -10,7 +10,7 @@ import type {
   Plugin,
   UserConfig,
 } from "vite";
-import { defineConfig } from "vite";
+import { defineConfig, loadEnv } from "vite";
 import { generateIndexTsUnplugin } from "./node_modules/@nijiurachan/js/src/build/plugins/generate-index-ts";
 import { tscUnplugin } from "./node_modules/@nijiurachan/js/src/build/plugins/tsc";
 import manifest from "./public/manifest.json" with { type: "json" };
@@ -21,13 +21,15 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
   const isProd = mode === "production";
   const isDev = !isProd;
   const basePath = isProd ? "/ts" : mode === "testing" ? "/ts-test" : "/ts-dev";
+  const env = loadEnv(mode, import.meta.dirname, "");
+  const klecksEmbedUrl = env.VITE_KLECKS_EMBED_URL ?? "/assets/klecks/embed.js";
 
   return {
     build: {
       assetsDir: join(".", basePath, "assets"),
       sourcemap: true,
       rolldownOptions: {
-        input: ["index.html", "src/oekaki.ts"],
+        input: ["index.html", "src/oekaki.ts", "src/klecks.ts"],
         output: {
           externalLiveBindings: false,
         },
@@ -39,7 +41,7 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
       tanstackRouter(),
       react(),
       tailwindcss(),
-      addImportMap(),
+      addImportMap(klecksEmbedUrl),
       generateIndexTsUnplugin.vite({
         dir: "src",
         excludePatterns: [
@@ -56,9 +58,43 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
         }) as Plugin),
     ],
     resolve: {
-      alias: {
-        "@": resolve(import.meta.dirname, "./src"),
-      },
+      alias: [
+        {
+          find: "preact/hooks",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/hooks/dist/hooks.module.js",
+          ),
+        },
+        {
+          find: "preact/jsx-dev-runtime",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
+          ),
+        },
+        {
+          find: "preact/jsx-runtime",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/jsx-runtime/dist/jsxRuntime.module.js",
+          ),
+        },
+        {
+          find: "preact",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/dist/preact.module.js",
+          ),
+        },
+        { find: "@", replacement: resolve(import.meta.dirname, "./src") },
+      ],
+      dedupe: [
+        "preact",
+        "preact/hooks",
+        "preact/jsx-dev-runtime",
+        "preact/jsx-runtime",
+      ],
     },
     define: {
       "import.meta.env.BASE_PATH": JSON.stringify(basePath),
@@ -80,14 +116,14 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
 });
 
 /** index.htmlにお絵描きポップアップに必要なimportmapを足す */
-function addImportMap(): Plugin {
+function addImportMap(klecksEmbedUrl: string): Plugin {
   return {
     name: "import-map-maker",
     transformIndexHtml(
       _src: string,
       cxt: IndexHtmlTransformContext,
     ): HtmlTagDescriptor[] {
-      const importmap = makeImportMap(cxt);
+      const importmap = makeImportMap(cxt, klecksEmbedUrl);
 
       return [
         {
@@ -105,25 +141,34 @@ type ImportMap = {
 };
 
 /** importmapを作る */
-function makeImportMap(cxt: IndexHtmlTransformContext): ImportMap {
+function makeImportMap(
+  cxt: IndexHtmlTransformContext,
+  klecksEmbedUrl: string,
+): ImportMap {
   return {
     imports: {
-      "#oekaki": makeOekakiChunkPath(cxt),
+      "#oekaki": makeEntryChunkPath(cxt, "oekaki", "src/oekaki.ts"),
+      "#klecks": makeEntryChunkPath(cxt, "klecks", "src/klecks.ts"),
+      "#klecks-embed": klecksEmbedUrl,
     },
   };
 }
 
-/** importmapに載せるoekaki.tsの出力先を探す */
-function makeOekakiChunkPath(cxt: IndexHtmlTransformContext): string {
-  const oekakiChunk = Object.values(cxt.bundle ?? {}).find(
-    (c) => c.type === "chunk" && c.isEntry && c.name === "oekaki",
+/** importmapに載せるentryの出力先を探す */
+function makeEntryChunkPath(
+  cxt: IndexHtmlTransformContext,
+  entryName: string,
+  sourcePath: string,
+): string {
+  const chunk = Object.values(cxt.bundle ?? {}).find(
+    (c) => c.type === "chunk" && c.isEntry && c.name === entryName,
   );
 
-  if (cxt.bundle && !oekakiChunk) {
+  if (cxt.bundle && !chunk) {
     throw Error(
-      "oekaki.tsが見つかりませんでした。ファイル名が変わっているようです",
+      `${sourcePath}が見つかりませんでした。ファイル名が変わっているようです`,
     );
   }
 
-  return `/${oekakiChunk?.fileName ?? "src/oekaki.ts"}`;
+  return `/${chunk?.fileName ?? sourcePath}`;
 }
