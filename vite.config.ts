@@ -22,7 +22,8 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
   const isDev = !isProd;
   const basePath = isProd ? "/ts" : mode === "testing" ? "/ts-test" : "/ts-dev";
   const env = loadEnv(mode, import.meta.dirname, "");
-  const klecksEmbedUrl = env.VITE_KLECKS_EMBED_URL ?? "/assets/klecks/embed.js";
+  const klecksEmbedUrl =
+    env.VITE_KLECKS_EMBED_URL?.trim() || "/assets/klecks/embed.js";
 
   return {
     build: {

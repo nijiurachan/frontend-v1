@@ -75,7 +75,7 @@ function initUpfileInput(
   const paintPopupUrl = import.meta.resolve("#oekaki");
   const klecksPopupUrl = import.meta.resolve("#klecks");
   const klecksEmbedUrl =
-    import.meta.env.VITE_KLECKS_EMBED_URL ??
+    import.meta.env.VITE_KLECKS_EMBED_URL?.trim() ||
     import.meta.resolve("#klecks-embed");
 
   makeUpfileInputV2Element(
