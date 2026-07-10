@@ -33,10 +33,8 @@ const SCOPE_NAME = "thread-create";
 const UPFILE_ID = "upfile";
 const UPFILE_FULL_KEY = `${SCOPE_NAME}:${UPFILE_ID}`;
 
-// はっちゃん起動中 (isHacchanOpen) は canvas98 が画面全面を占有していて投稿
-// ボタンには到達できないため、ロック対象から外す。アクノスペイントは別ウィンドウ
-// (popup) なので親ページの投稿ボタンが押せてしまい、ロックが必要。
-const selectIsAxnosOpen = (s: UpfileStateFlags): boolean => s.isAxnosOpen;
+const selectIsPaintPopupOpen = (s: UpfileStateFlags): boolean =>
+  s.isAxnosOpen || s.isKlecksOpen;
 // ライブラリははっちゃん描画完了をほぼ検知できず waiting-hacchan のまま動かない
 // ため hasSelectedFile が立たない。waiting-hacchan の間は !hasSelectedFile に
 // よる disabled をかけずに通す (実画像は input にセットされている前提)。
@@ -135,9 +133,12 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
   });
   const [showSuccess, setShowSuccess] = useState(false);
 
-  const isAxnosOpen =
-    useEventLatest(UPFILE_FULL_KEY, "aimg:upfile-state", selectIsAxnosOpen) ??
-    false;
+  const isPaintPopupOpen =
+    useEventLatest(
+      UPFILE_FULL_KEY,
+      "aimg:upfile-state",
+      selectIsPaintPopupOpen,
+    ) ?? false;
   const isHacchanOpen =
     useEventLatest(UPFILE_FULL_KEY, "aimg:upfile-state", selectIsHacchanOpen) ??
     false;
@@ -192,7 +193,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
 
     // Enter / form.requestSubmit() で disabled を回避されてもガード。
     // 同条件を <Button disabled={...}> 側にもミラーしてある。
-    if (isAxnosOpen) {
+    if (isPaintPopupOpen) {
       return;
     }
 
@@ -382,7 +383,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
         className="w-full"
         disabled={
           isPending ||
-          isAxnosOpen ||
+          isPaintPopupOpen ||
           (!hasSelectedFile && !isHacchanOpen) ||
           Boolean(durationError) ||
           resolvedLimits === null

@@ -34,10 +34,8 @@ const SCOPE_NAME = "post-form";
 const UPFILE_ID = "upfile";
 const UPFILE_FULL_KEY = `${SCOPE_NAME}:${UPFILE_ID}`;
 
-// はっちゃん起動中 (isHacchanOpen) は canvas98 が画面全面を占有していて投稿
-// ボタンには到達できないため、ロック対象から外す。アクノスペイントは別ウィンドウ
-// (popup) なので親ページの投稿ボタンが押せてしまい、ロックが必要。
-const selectIsAxnosOpen = (s: UpfileStateFlags): boolean => s.isAxnosOpen;
+const selectIsPaintPopupOpen = (s: UpfileStateFlags): boolean =>
+  s.isAxnosOpen || s.isKlecksOpen;
 
 export const PostForm: React.FunctionComponent<Props> = ({
   threadId,
@@ -57,9 +55,12 @@ export const PostForm: React.FunctionComponent<Props> = ({
   const [pendingQuote, setPendingQuote] = useState("");
   const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
 
-  const isAxnosOpen =
-    useEventLatest(UPFILE_FULL_KEY, "aimg:upfile-state", selectIsAxnosOpen) ??
-    false;
+  const isPaintPopupOpen =
+    useEventLatest(
+      UPFILE_FULL_KEY,
+      "aimg:upfile-state",
+      selectIsPaintPopupOpen,
+    ) ?? false;
 
   // biome-ignore lint: initialComment取り込みはシートが開いたときに行う
   useEffect(() => {
@@ -128,7 +129,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
     // Enter / form.requestSubmit() で disabled を回避されてもガード。
     // prepare/fingerprint の非同期区間中は isPending がまだ立たないので
     // ローカルフラグで二重起動を防ぐ。同条件を <Button disabled={...}> にもミラー。
-    if (isPreparingSubmit || isPending || isAxnosOpen) {
+    if (isPreparingSubmit || isPending || isPaintPopupOpen) {
       return;
     }
     // submit 前に focus を外して IME 入力を確定させる
@@ -216,7 +217,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
       <Button
         type="submit"
         variant="primary"
-        disabled={isPreparingSubmit || isPending || isAxnosOpen}
+        disabled={isPreparingSubmit || isPending || isPaintPopupOpen}
         className="w-full py-4 text-lg font-medium"
       >
         {isPending ? "書き込み中..." : "返信"}
