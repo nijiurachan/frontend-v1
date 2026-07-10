@@ -22,11 +22,12 @@ jobs:
         with:
           filters: |
             js:
-              - '**.ts'
-              - '**.tsx'
-              - '**.json'
-              - '*.yaml'
-              - '*.lock'
+              - '**/*.ts'
+              - '**/*.tsx'
+              - '**/*.json'
+              - '**/*.jsonc'
+              - '**/*.yaml'
+              - '**/*.lock'
 
   check-js:
     name: TS(フォーマット+型チェック)
@@ -48,3 +49,6 @@ jobs:
 
       - name: TSビルド
         run: bun run --bun build
+
+      - name: テスト
+        run: bun test
