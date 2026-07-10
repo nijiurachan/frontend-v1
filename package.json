@@ -47,7 +47,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.3.1",
     "@eslint/js": "^9.39.4",
-    "@nijiurachan/js": "github:nijiurachan/nijiurachan-js#060ca8f6aa73bfb6dfbda6d6ee2d1bd072d725c1",
+    "@nijiurachan/js": "github:nijiurachan/nijiurachan-js#38d710c3418b185f4cdcf14376588133d3e44091",
     "@tanstack/router-cli": "^1.166.16",
     "@tanstack/router-plugin": "^1.167.2",
     "@types/cloudflare-turnstile": "^0.2.2",
