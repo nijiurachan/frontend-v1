@@ -31,6 +31,10 @@
     {
       "pattern": "test.nijiurachan.net/ts/*",
       "zone_name": "nijiurachan.net"
+    },
+    {
+      "pattern": "test.nijiurachan.net/assets/klecks/*",
+      "zone_name": "nijiurachan.net"
     }
   ],
   "env": {

@@ -10,6 +10,10 @@ interface WranglerConfig {
 }
 
 const configPath: URL = new URL("../../wrangler.jsonc", import.meta.url);
+const sortRoutes = (routes: Map<string, string>): [string, string][] =>
+  [...routes.entries()].sort(([leftPattern], [rightPattern]) =>
+    leftPattern.localeCompare(rightPattern),
+  );
 
 describe("production Worker routes", () => {
   test("preserves every deployed route and serves bundled Klecks assets", async () => {
@@ -26,11 +30,10 @@ describe("production Worker routes", () => {
       ["test.nijiurachan.net/ts", "nijiurachan.net"],
       ["test.nijiurachan.net/ts/*", "nijiurachan.net"],
       ["nijiurachan.net/assets/klecks/*", "nijiurachan.net"],
+      ["test.nijiurachan.net/assets/klecks/*", "nijiurachan.net"],
     ]);
 
     expect(config.routes).toHaveLength(expectedRoutes.size);
-    expect([...routes.entries()].sort()).toEqual(
-      [...expectedRoutes.entries()].sort(),
-    );
+    expect(sortRoutes(routes)).toEqual(sortRoutes(expectedRoutes));
   });
 });

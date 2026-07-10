@@ -22,12 +22,12 @@ jobs:
         with:
           filters: |
             js:
-              - '**.ts'
-              - '**.tsx'
-              - '**.json'
+              - '**/*.ts'
+              - '**/*.tsx'
+              - '**/*.json'
               - '**/*.jsonc'
-              - '*.yaml'
-              - '*.lock'
+              - '**/*.yaml'
+              - '**/*.lock'
 
   check-js:
     name: TS(フォーマット+型チェック)
