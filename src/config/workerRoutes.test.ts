@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { readFile } from "node:fs/promises";
 
 interface WorkerRoute {
   pattern: string;
@@ -13,17 +12,25 @@ interface WranglerConfig {
 const configPath: URL = new URL("../../wrangler.jsonc", import.meta.url);
 
 describe("production Worker routes", () => {
-  test("serves the app and bundled Klecks assets from nijiurachan.net", async () => {
-    const config = JSON.parse(
-      await readFile(configPath, "utf8"),
+  test("preserves every deployed route and serves bundled Klecks assets", async () => {
+    const config = Bun.JSONC.parse(
+      await Bun.file(configPath).text(),
     ) as WranglerConfig;
     const routes = new Map(
       (config.routes ?? []).map((route) => [route.pattern, route.zone_name]),
     );
+    const expectedRoutes = new Map([
+      ["nijiurachan.net/ts", "nijiurachan.net"],
+      ["nijiurachan.net/ts/*", "nijiurachan.net"],
+      ["nijiurachan.net/manifest.json", "nijiurachan.net"],
+      ["test.nijiurachan.net/ts", "nijiurachan.net"],
+      ["test.nijiurachan.net/ts/*", "nijiurachan.net"],
+      ["nijiurachan.net/assets/klecks/*", "nijiurachan.net"],
+    ]);
 
-    expect(routes.get("nijiurachan.net/ts/*")).toBe("nijiurachan.net");
-    expect(routes.get("nijiurachan.net/assets/klecks/*")).toBe(
-      "nijiurachan.net",
+    expect(config.routes).toHaveLength(expectedRoutes.size);
+    expect([...routes.entries()].sort()).toEqual(
+      [...expectedRoutes.entries()].sort(),
     );
   });
 });

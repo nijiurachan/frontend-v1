@@ -25,6 +25,7 @@ jobs:
               - '**.ts'
               - '**.tsx'
               - '**.json'
+              - '**/*.jsonc'
               - '*.yaml'
               - '*.lock'
 
@@ -48,3 +49,6 @@ jobs:
 
       - name: TSビルド
         run: bun run --bun build
+
+      - name: テスト
+        run: bun test

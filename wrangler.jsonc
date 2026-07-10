@@ -9,11 +9,27 @@
   },
   "routes": [
     {
+      "pattern": "nijiurachan.net/manifest.json",
+      "zone_name": "nijiurachan.net"
+    },
+    {
+      "pattern": "nijiurachan.net/ts",
+      "zone_name": "nijiurachan.net"
+    },
+    {
       "pattern": "nijiurachan.net/ts/*",
       "zone_name": "nijiurachan.net"
     },
     {
       "pattern": "nijiurachan.net/assets/klecks/*",
+      "zone_name": "nijiurachan.net"
+    },
+    {
+      "pattern": "test.nijiurachan.net/ts",
+      "zone_name": "nijiurachan.net"
+    },
+    {
+      "pattern": "test.nijiurachan.net/ts/*",
       "zone_name": "nijiurachan.net"
     }
   ],
