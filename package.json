@@ -58,6 +58,7 @@
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "@vitejs/plugin-react": "^6.0.1",
     "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#a642aa2fae0465745a7afe1122c6f3e98bc254ab",
+    "klecks-for-aimg": "github:nijiurachan/klecks#2aad786d1040d9ea97b01736e5d38abd35081f7a",
     "dompurify": "3.4.11",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
