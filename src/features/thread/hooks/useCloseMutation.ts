@@ -3,10 +3,11 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { ApiError, apiPost } from "@/shared/api";
+import { apiPost } from "@/shared/api";
 import { toast } from "@/shared/ui/toast";
 
 interface CloseResponse {
+  changed?: boolean;
   [key: string]: unknown;
 }
 
@@ -16,11 +17,9 @@ function isInvalidPasswordError(error: unknown): boolean {
   }
 
   const message = error.message.toLowerCase();
-  return (
-    (error instanceof ApiError && error.status === 403) ||
-    message.includes("invalid password") ||
-    message.includes("削除キー")
-  );
+  // apiPost は HTTP status を ApiError に載せないため message ベースで判定する。
+  // backend の CloseController::close が返す "Invalid password" 文言に依存する。
+  return message.includes("invalid password");
 }
 
 export function useCloseMutation(
@@ -36,9 +35,16 @@ export function useCloseMutation(
 
       return apiPost<CloseResponse>("/close", formData);
     },
-    onSuccess: (): void => {
+    onSuccess: (data: CloseResponse): void => {
       queryClient.invalidateQueries({ queryKey: ["thread", threadId] });
-      toast.success("スレッドを閉じました (5分後に落ちます)");
+      if (data.changed === false) {
+        toast(
+          "このスレッドは閉じられませんでした（既に短寿命または恒久スレです）",
+        );
+        return;
+      }
+
+      toast.success("スレッドを閉じました（閉店後まもなくスレが落ちます）");
     },
     onError: (error: unknown): void => {
       if (isInvalidPasswordError(error)) {

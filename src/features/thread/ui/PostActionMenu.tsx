@@ -196,7 +196,7 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
         onClose={(): void => setIsCloseDialogOpen(false)}
         onConfirm={(): void => closeThread(deleteKey)}
         title="スレを閉じる"
-        message="このスレッドを閉じますか？\n5分後にスレが落ちます"
+        message={"このスレッドを閉じますか？\n閉店後まもなくスレが落ちます"}
         confirmText="閉じる"
         variant="destructive"
       />

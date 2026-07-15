@@ -29,7 +29,7 @@ export const NewRepliesBanner: React.FunctionComponent<
   return (
     <button
       type="button"
-      className="fixed left-2 right-2 bottom-[calc(58px+env(safe-area-inset-bottom))] z-30 flex items-center justify-center gap-2 rounded-lg border border-primary bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-70"
+      className="fixed left-2 right-16 bottom-[calc(58px+env(safe-area-inset-bottom))] z-30 flex items-center justify-center gap-2 rounded-lg border border-primary bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 disabled:cursor-wait disabled:opacity-70"
       onClick={(): void => {
         void handleRefresh();
       }}

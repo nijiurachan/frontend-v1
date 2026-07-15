@@ -27,8 +27,14 @@ export const ReportModal: React.FunctionComponent<ReportModalProps> = ({
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
 
+    const trimmedReason = reason.trim();
+    if (!trimmedReason) {
+      toast.error("通報理由を入力してください");
+      return;
+    }
+
     report(
-      { postId, reason: reason.trim() },
+      { postId, reason: trimmedReason },
       {
         onSuccess: (): void => {
           toast.success("通報を送信しました");

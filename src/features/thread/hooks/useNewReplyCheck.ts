@@ -9,6 +9,7 @@ interface NewReplyCheckResponse {
 
 interface NewReplyCheckResult {
   newCount: number;
+  isError: boolean;
 }
 
 export function useNewReplyCheck(threadId: number): NewReplyCheckResult {
@@ -30,7 +31,7 @@ export function useNewReplyCheck(threadId: number): NewReplyCheckResult {
     };
   }, []);
 
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: ["thread-new-replies", threadId, latestPostId],
     queryFn: () =>
       apiGet<NewReplyCheckResponse>(
@@ -41,5 +42,5 @@ export function useNewReplyCheck(threadId: number): NewReplyCheckResult {
     refetchIntervalInBackground: false,
   });
 
-  return { newCount: data?.count ?? 0 };
+  return { newCount: data?.count ?? 0, isError };
 }
