@@ -131,7 +131,6 @@ export const SideMenu: React.FunctionComponent<Props> = ({
                 icon={<FiWatch className="w-5 h-5" />}
                 to="/archive"
                 onClick={onClose}
-                isInternal
               >
                 過去ログ
               </MenuItem>
