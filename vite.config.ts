@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import ssl from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react";
+import { klecksEmbed } from "klecks-for-aimg/vite";
 import type {
   ConfigEnv,
   HtmlTagDescriptor,
@@ -11,7 +12,6 @@ import type {
   UserConfig,
 } from "vite";
 import { defineConfig } from "vite";
-import { klecksEmbed } from "klecks-for-aimg/vite";
 import { generateIndexTsUnplugin } from "./node_modules/@nijiurachan/js/src/build/plugins/generate-index-ts";
 import { tscUnplugin } from "./node_modules/@nijiurachan/js/src/build/plugins/tsc";
 import manifest from "./public/manifest.json" with { type: "json" };
