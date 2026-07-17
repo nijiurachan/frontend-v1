@@ -43,6 +43,7 @@ import {
   PullRefresh,
 } from "@/shared/ui/feedback";
 import { ModalContext } from "@/shared/ui/overlay/modal-context";
+import { useReadReplyNumber } from "../../hooks/useReadReplyNumber";
 import { useThread } from "../../hooks/useThread";
 import { useReplyModalStore } from "../../stores/replyModalStore";
 import { extractImages } from "../../utils/extractImages";
@@ -79,47 +80,6 @@ const QuoteSearchModal: LazyExoticComponent<typeof modals.QuoteSearchModal> =
       default: m.QuoteSearchModal,
     })),
   );
-
-/** 既読レス数の記録をページの更新・離脱時に保存する。 */
-function useReadReplyNumber(threadId: string): {
-  handlePostFullyVisible: (replyNumberInThread: number) => void;
-  handleRefresh: () => void;
-} {
-  const recordReadReplyNumber = useHistoryStore((s) => s.recordReadReplyNumber);
-  const fullyVisibleReplyNumberRef = useRef(0);
-  const router = useRouter();
-
-  const handlePostFullyVisible = useCallback(
-    (replyNumberInThread: number): void => {
-      fullyVisibleReplyNumberRef.current = replyNumberInThread;
-    },
-    [],
-  );
-
-  const handleRefresh = useCallback((): void => {
-    recordReadReplyNumber(threadId, fullyVisibleReplyNumberRef.current);
-  }, [recordReadReplyNumber, threadId]);
-
-  useEffect(() => {
-    function handlePageLeave(): void {
-      recordReadReplyNumber(threadId, fullyVisibleReplyNumberRef.current);
-    }
-
-    document.addEventListener("visibilitychange", handlePageLeave);
-    window.addEventListener("pagehide", handlePageLeave);
-    const routerUnsubscribe = router.subscribe("onBeforeNavigate", (event) => {
-      if (event.pathChanged) handlePageLeave();
-    });
-
-    return (): void => {
-      routerUnsubscribe();
-      window.removeEventListener("pagehide", handlePageLeave);
-      document.removeEventListener("visibilitychange", handlePageLeave);
-    };
-  }, [recordReadReplyNumber, router, threadId]);
-
-  return { handlePostFullyVisible, handleRefresh };
-}
 
 interface Props {
   threadId: string;

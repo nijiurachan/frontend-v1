@@ -13,6 +13,7 @@ import {
   runAimogeBeforeRender,
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
+import { usePostReadObserver } from "../../hooks/usePostReadObserver";
 import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
 import { PostItem } from "../lists/PostItem";
 
@@ -24,6 +25,7 @@ interface Props {
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost: (postSeq: number) => void;
   onRegisterScrollToPost?: (scrollToPost: (postSeq?: number) => void) => void;
+  onPostFullyVisible?: (replyNumberInThread: number) => void;
   isArchived?: boolean;
   postContentVersion?: number;
 }
@@ -41,6 +43,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   onQuoteClick,
   onJumpToPost,
   onRegisterScrollToPost,
+  onPostFullyVisible,
   isArchived = false,
   postContentVersion,
 }: Props) => {
@@ -56,6 +59,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
       return preparedPost ? [preparedPost] : [];
     });
   }, [aimogeGeneration, posts, isPostHidden, showNgContent]);
+  const observePostRead = usePostReadObserver(onPostFullyVisible, visiblePosts);
   const listRef = useRef<HTMLDivElement>(null);
   // TanStack Virtual intentionally exposes an imperative virtualizer API.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -123,6 +127,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
               allPosts={allPosts}
               onQuoteClick={onQuoteClick}
               onJumpToPost={onJumpToPost}
+              readSentinelRef={observePostRead(post.seq)}
               isArchived={isArchived}
               postContentVersion={postContentVersion}
             />
@@ -142,6 +147,7 @@ interface RowProps {
   allPosts: Post[];
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost: (postSeq: number) => void;
+  readSentinelRef: (element: HTMLSpanElement | null) => void;
   isArchived: boolean;
   postContentVersion?: number;
 }
@@ -156,6 +162,7 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
     allPosts,
     onQuoteClick,
     onJumpToPost,
+    readSentinelRef,
     isArchived,
     postContentVersion,
   }: RowProps) {
@@ -190,6 +197,11 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
             postAlreadyPrepared
           />
         </div>
+        <span
+          ref={readSentinelRef}
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 left-0 h-px w-px"
+        />
       </div>
     );
   },
@@ -207,6 +219,7 @@ function areDesktopPostRowPropsEqual(
     previous.measureElement !== next.measureElement ||
     previous.onQuoteClick !== next.onQuoteClick ||
     previous.onJumpToPost !== next.onJumpToPost ||
+    previous.readSentinelRef !== next.readSentinelRef ||
     previous.isArchived !== next.isArchived ||
     previous.postContentVersion !== next.postContentVersion
   ) {

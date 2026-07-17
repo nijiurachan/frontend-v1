@@ -6,6 +6,7 @@ import { useSettingsStore } from "@/features/settings/hooks";
 import { NewRepliesBanner } from "@/features/thread/ui";
 import { BmgBanner } from "@/shared/ui/ad";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
+import { useReadReplyNumber } from "../../hooks/useReadReplyNumber";
 import { useThread } from "../../hooks/useThread";
 import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
 import { ThreadOP } from "../views/ThreadOP";
@@ -38,6 +39,8 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const fontSize = useSettingsStore((state) => `${state.fontScalePosts}%`);
   const [replyComment, setReplyComment] = useState("");
   const [replyOpenCount, setReplyOpenCount] = useState(0);
+  const { handlePostFullyVisible, handleRefresh: recordReadReplyNumber } =
+    useReadReplyNumber(threadId);
   const scrollToVirtualPostRef = useRef<((postSeq?: number) => void) | null>(
     null,
   );
@@ -88,6 +91,11 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     void router.navigate({ to: "/" });
   }, [router]);
 
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    recordReadReplyNumber();
+    await refetch();
+  }, [recordReadReplyNumber, refetch]);
+
   if (isLoading) return <LoadingScreen />;
   if (error) {
     return <Message variant="error">スレッドの読み込みに失敗しました</Message>;
@@ -127,7 +135,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
         <button type="button" onClick={scrollToBottom}>
           ▼最下部へ
         </button>
-        <button type="button" onClick={(): void => void refetch()}>
+        <button type="button" onClick={(): void => void handleRefresh()}>
           {isFetching ? "更新中..." : "リロード"}
         </button>
       </nav>
@@ -168,6 +176,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
             onQuoteClick={isArchived ? undefined : handleQuoteClick}
             onJumpToPost={handleJumpToPost}
             onRegisterScrollToPost={registerScrollToPost}
+            onPostFullyVisible={handlePostFullyVisible}
             isArchived={isArchived}
             postContentVersion={postsContentVersion}
           />
