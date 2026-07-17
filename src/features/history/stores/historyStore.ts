@@ -1,5 +1,6 @@
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist } from "zustand/middleware";
+import { migrateHistoryState } from "@/shared/lib/threadIdMigration";
 
 interface ViewedItem {
   id: string;
@@ -99,27 +100,8 @@ export const useHistoryStore: UseBoundStore<StoreApi<HistoryState>> =
       }),
       {
         name: "aimg-history",
-        version: 1,
-        migrate: (persisted: unknown, version: number) => {
-          if (version === 0) {
-            // version 0 -> 1: ViewedItem.readReplyNumberを追加する
-            // 旧データ構造では既読レス数を持たなかったので、「0レス既読」であるかのように移行する。
-            type HistoryStateV0 = {
-              viewed: { id: string; ts: number }[];
-            };
-            const oldState = persisted as HistoryStateV0;
-            persisted = {
-              ...oldState,
-              viewed: oldState.viewed.map((item) => ({
-                ...item,
-                readReplyNumber: INITIAL_READ_REPLY_NUMBER,
-              })),
-            };
-            version = 1;
-          }
-
-          return persisted;
-        },
+        version: 2,
+        migrate: migrateHistoryState,
       },
     ),
   );

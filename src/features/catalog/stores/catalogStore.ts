@@ -1,5 +1,6 @@
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist } from "zustand/middleware";
+import { migrateThreadIdArray } from "@/shared/lib/threadIdMigration";
 
 export type SortType = "default" | "created" | "old" | "replies";
 
@@ -74,6 +75,9 @@ export const useCatalogStore: UseBoundStore<StoreApi<CatalogState>> =
       }),
       {
         name: "aimg-catalog-settings",
+        version: 1,
+        migrate: (persisted: unknown, version: number): unknown =>
+          migrateThreadIdArray(persisted, version, 1, "lastCatalogIds"),
         partialize: (state: CatalogState) => ({
           currentSort: state.currentSort,
           columns: state.columns,

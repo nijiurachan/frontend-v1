@@ -3,6 +3,7 @@ import { persist } from "zustand/middleware";
 import type { Post } from "@/entities/post";
 import type { Thread } from "@/entities/thread";
 import { getThreadTitle } from "@/entities/thread";
+import { migrateThreadIdArray } from "@/shared/lib/threadIdMigration";
 
 interface NgState {
   enabled: boolean;
@@ -198,6 +199,9 @@ export const useNgStore: UseBoundStore<StoreApi<NgState>> = create<NgState>()(
     }),
     {
       name: "aimg-ng-settings",
+      version: 1,
+      migrate: (persisted: unknown, version: number): unknown =>
+        migrateThreadIdArray(persisted, version, 1, "hiddenThreadIds"),
     },
   ),
 );
