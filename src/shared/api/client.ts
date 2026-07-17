@@ -1,23 +1,16 @@
 import { getFingerprint } from "@/shared/lib/fingerprint";
 import { type AltchaChallenge, solveAltcha } from "./altcha";
+import { readAttachmentWithinLimit } from "./attachmentUpload";
+import { ApiError } from "./errors";
 import { md5 } from "./md5";
+import { AimgTokenManager, shouldRetryManagedToken } from "./tokenManager";
+
+export { ApiError } from "./errors";
 
 const BASE_URL: string = import.meta.env.VITE_BASE_URL || "";
 
 export const API_BASE = `${BASE_URL}/api`;
 export const UPLOADS_BASE = `${BASE_URL}/uploads`;
-
-export class ApiError extends Error {
-  status?: number;
-  code?: string;
-
-  constructor(message: string, status?: number, code?: string) {
-    super(message);
-    this.name = "ApiError";
-    this.status = status;
-    this.code = code;
-  }
-}
 
 interface RequestOptions {
   token?: string;
@@ -35,8 +28,7 @@ interface NativeErrorBody {
   error?: { code?: unknown; message?: unknown };
 }
 
-let cachedToken: string | null = null;
-let tokenPromise: Promise<string> | null = null;
+const tokenManager: AimgTokenManager = new AimgTokenManager(issueAimgToken);
 
 export async function apiGet<T>(
   path: string,
@@ -69,20 +61,11 @@ export async function apiDelete<T>(
 }
 
 export async function getAimgToken(): Promise<string> {
-  if (cachedToken) return cachedToken;
-  if (tokenPromise) return tokenPromise;
-
-  tokenPromise = issueAimgToken();
-  try {
-    cachedToken = await tokenPromise;
-    return cachedToken;
-  } finally {
-    tokenPromise = null;
-  }
+  return tokenManager.get();
 }
 
 export function clearAimgToken(): void {
-  cachedToken = null;
+  tokenManager.clear();
 }
 
 export async function getAltchaSolution(): Promise<string> {
@@ -91,7 +74,7 @@ export async function getAltchaSolution(): Promise<string> {
 }
 
 export async function uploadAttachment(file: File): Promise<string> {
-  const digest = await md5(await file.arrayBuffer());
+  const digest = await md5(await readAttachmentWithinLimit(file));
   const result = await apiPost<PresignResult>(
     "/attachments/presign",
     {
@@ -141,6 +124,7 @@ async function request<T>(
   path: string,
   body?: object,
   options: RequestOptions = {},
+  retryCount: number = 0,
 ): Promise<T> {
   const headers: Record<string, string> = { Accept: "application/json" };
   let token = options.token;
@@ -162,7 +146,27 @@ async function request<T>(
 
   const payload: unknown = await readJson(response);
   if (!response.ok) {
-    throw makeApiError(payload, response.status);
+    const error = makeApiError(payload, response.status);
+    if (
+      token &&
+      shouldRetryManagedToken(
+        Boolean(options.requiresToken),
+        Boolean(options.token),
+        retryCount,
+        error.code,
+      )
+    ) {
+      const freshToken = await tokenManager.refresh(token);
+      return request<T>(
+        method,
+        path,
+        body,
+        { ...options, token: freshToken },
+        retryCount + 1,
+      );
+    }
+    if (error.code === "TOKEN_EXPIRED" && token) tokenManager.clear(token);
+    throw error;
   }
 
   return payload as T;
@@ -183,7 +187,6 @@ function makeApiError(payload: unknown, status: number): ApiError {
   const message =
     typeof body?.message === "string" ? body.message : `HTTP ${status}`;
   const code = typeof body?.code === "string" ? body.code : undefined;
-  if (code === "TOKEN_EXPIRED") clearAimgToken();
   return new ApiError(message, status, code);
 }
 
