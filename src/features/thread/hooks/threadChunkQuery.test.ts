@@ -14,6 +14,6 @@ describe("thread chunk query behavior", () => {
   });
 
   test("focus復帰では末尾チャンクを再取得しない", () => {
-    expect(THREAD_CHUNK_QUERY_BEHAVIOR.refetchOnWindowFocus).toBeFalse();
+    expect(THREAD_CHUNK_QUERY_BEHAVIOR.refetchOnWindowFocus).toBe(false);
   });
 });
