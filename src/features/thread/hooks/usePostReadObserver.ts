@@ -1,5 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import type { Post } from "@/entities/post";
+
+type PostSentinelRef = (element: HTMLSpanElement | null) => void;
 
 /**
  * レスの真下に置いた sentinel が画面に映った時、そのレスを既読とみなす。
@@ -7,8 +9,9 @@ import type { Post } from "@/entities/post";
 export function usePostReadObserver(
   onPostFullyVisible: ((replyNumberInThread: number) => void) | undefined,
   visiblePosts: Post[],
-): (replyNumberInThread: number) => (element: HTMLSpanElement | null) => void {
+): (replyNumberInThread: number) => PostSentinelRef {
   const postSentinelsRef = useRef(new Map<Element, number>());
+  const sentinelRefsRef = useRef(new Map<number, PostSentinelRef>());
   const observerRef = useRef<IntersectionObserver>(null);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies(visiblePosts): 可視レスが変化したら observer を立て直す
@@ -41,8 +44,13 @@ export function usePostReadObserver(
     };
   }, [onPostFullyVisible, visiblePosts]);
 
-  return (replyNumberInThread: number) =>
-    (element: HTMLSpanElement | null): void => {
+  return useCallback((replyNumberInThread: number): PostSentinelRef => {
+    const cachedRef = sentinelRefsRef.current.get(replyNumberInThread);
+    if (cachedRef) return cachedRef;
+
+    const sentinelRef: PostSentinelRef = (
+      element: HTMLSpanElement | null,
+    ): void => {
       const oldElement = [...postSentinelsRef.current].find(
         (entry) => entry[1] === replyNumberInThread,
       )?.[0];
@@ -57,6 +65,10 @@ export function usePostReadObserver(
         observerRef.current?.observe(element);
       }
     };
+
+    sentinelRefsRef.current.set(replyNumberInThread, sentinelRef);
+    return sentinelRef;
+  }, []);
 }
 
 export function getLatestVisibleReplyNumber(
