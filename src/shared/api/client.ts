@@ -1,6 +1,6 @@
 import { getFingerprint } from "@/shared/lib/fingerprint";
 import { type AltchaChallenge, solveAltcha } from "./altcha";
-import { readAttachmentWithinLimit } from "./attachmentUpload";
+import { readAttachmentForUpload } from "./attachmentUpload";
 import { ApiError } from "./errors";
 import { md5 } from "./md5";
 import { AimgTokenManager, shouldRetryManagedToken } from "./tokenManager";
@@ -74,7 +74,7 @@ export async function getAltchaSolution(): Promise<string> {
 }
 
 export async function uploadAttachment(file: File): Promise<string> {
-  const digest = await md5(await readAttachmentWithinLimit(file));
+  const digest = await md5(await readAttachmentForUpload(file));
   const result = await apiPost<PresignResult>(
     "/attachments/presign",
     {
