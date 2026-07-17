@@ -26,7 +26,11 @@ import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import type * as modals from "@/features/thread/components/modals";
-import { type ActionButton, BottomActionBar } from "@/features/thread/ui";
+import {
+  type ActionButton,
+  BottomActionBar,
+  NewRepliesBanner,
+} from "@/features/thread/ui";
 import { apiGet } from "@/shared/api";
 import { useIsDesktop } from "@/shared/hooks";
 import { useSwipeBack } from "@/shared/hooks/useSwipeBack";
@@ -123,7 +127,15 @@ interface Props {
 const MobileThreadView: React.FunctionComponent<Props> = ({
   threadId,
 }: Props) => {
-  const { data, isLoading, error, refetch, isFetching } = useThread(threadId);
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+    newPostsCount,
+    acceptNewPosts,
+  } = useThread(threadId);
   const router = useRouter();
   const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
@@ -316,10 +328,13 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
     createdAt: data.createdAt,
     bumpedAt: data.bumpedAt,
     tags: data.tags,
+    closedAt: data.closedAt,
+    allowImageReplies: data.allowImageReplies,
   };
 
   return (
     <>
+      <NewRepliesBanner newCount={newPostsCount} onAccept={acceptNewPosts} />
       <title>{`${firstPost.body.slice(0, 20) || `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
       <div ref={swipeContentRef}>
         <PullRefresh onRefresh={handleRefresh}>

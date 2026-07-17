@@ -18,6 +18,52 @@ export interface ThreadSummary {
   createdAt: string;
   bumpedAt: string;
   tags: ThreadTag[];
+  closedAt?: string | null;
+  allowImageReplies?: boolean;
+}
+
+/** GET /api/threads/:threadId/chunks/:n の公開レス要素。 */
+export interface ThreadChunkPost {
+  id: string;
+  seq: number;
+  body: string;
+  createdAt: string;
+  displayId: string | null;
+  attachment: Post["attachment"];
+}
+
+/** 非公開レスのチャンク内プレースホルダ。 */
+export interface ThreadUnavailablePost {
+  seq: number;
+  status: "unavailable";
+}
+
+export type ThreadChunkElement = ThreadChunkPost | ThreadUnavailablePost;
+
+export function isThreadChunkPost(
+  element: ThreadChunkElement,
+): element is ThreadChunkPost {
+  return !("status" in element) || element.status !== "unavailable";
+}
+
+export interface ThreadPostState {
+  seq: number;
+  status: "public" | "shadowed" | "unavailable";
+  reactions: {
+    up: number;
+    del: number;
+  };
+}
+
+/** GET /api/threads/:threadId/state の可変状態。 */
+export interface ThreadState {
+  replyCount: number;
+  bumpedAt: string;
+  tags: ThreadTag[];
+  closedAt: string | null;
+  allowImageReplies: boolean;
+  postStates: ThreadPostState[];
+  newPosts?: ThreadChunkElement[];
 }
 
 /** backend-v1 ThreadView */
@@ -28,6 +74,8 @@ export interface ThreadView {
   bumpedAt: string;
   tags: ThreadTag[];
   posts: Post[];
+  closedAt: string | null;
+  allowImageReplies: boolean;
 }
 
 export interface TopPage {

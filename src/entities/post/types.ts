@@ -11,7 +11,7 @@ export interface Post {
   id: string;
   threadId: string;
   seq: number;
-  status: "public" | "shadowed";
+  status: "public" | "shadowed" | "unavailable";
   body: string;
   createdAt: string;
   attachment: Attachment | null;

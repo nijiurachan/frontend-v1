@@ -13,7 +13,7 @@ interface Props {
   onQuoteClick?: (quoteText: string) => void;
   quoteReferencesMap?: QuoteReferencesMap;
   allPosts?: Post[];
-  onJumpToPost?: () => void;
+  onJumpToPost?: (postSeq: number) => void;
 }
 
 export const PostItem: React.FunctionComponent<Props> = memo(function PostItem({
@@ -27,6 +27,17 @@ export const PostItem: React.FunctionComponent<Props> = memo(function PostItem({
   const { isPostHidden, showNgContent } = useNgStore();
   const isNg = showNgContent && isPostHidden(post);
   const [expanded, setExpanded] = useState(false);
+
+  if (post.status === "unavailable") {
+    return (
+      <div
+        id={`post-${post.id}`}
+        className="m-2 rounded border border-border bg-muted p-3 text-sm text-muted-foreground"
+      >
+        No.{post.seq} このレスは表示できません
+      </div>
+    );
+  }
 
   if (isNg && !expanded) {
     return (

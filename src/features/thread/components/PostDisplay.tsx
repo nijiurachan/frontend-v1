@@ -30,7 +30,7 @@ interface Props {
   onQuoteClick?: (quoteText: string) => void;
   quoteReferencesMap?: QuoteReferencesMap;
   allPosts?: Post[];
-  onJumpToPost?: () => void;
+  onJumpToPost?: (postSeq: number) => void;
 }
 
 export const PostDisplay: React.FunctionComponent<Props> = memo(
@@ -254,6 +254,8 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
                 postNumber={postNumber}
                 isSubView={isSubView}
                 isRainbow={isRainbow}
+                allPosts={allPosts}
+                onJumpToPost={onJumpToPost}
               />
             </Fragment>
           ))}

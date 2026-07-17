@@ -7,7 +7,7 @@ import { getAttachedFile } from "@/features/otegaki-upfile/lib/attachUpfileImage
 import { useSubmitPost } from "@/features/post/hooks/useSubmitPost";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { Button, Checkbox, Textarea } from "@/shared/ui/form";
-import { PostNotice } from "@/shared/ui/navigation";
+import { OnlineUsersIndicator, PostNotice } from "@/shared/ui/navigation";
 
 interface Props {
   onSuccess?: () => void;
@@ -99,6 +99,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
         onChange={setAllowImageReplies}
         label="画像レスを許可"
       />
+      <OnlineUsersIndicator className="block text-center text-xs text-muted-foreground" />
       <Button
         type="submit"
         variant="primary"

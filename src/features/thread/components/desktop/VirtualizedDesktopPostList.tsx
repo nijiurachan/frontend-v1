@@ -1,5 +1,5 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { memo, type RefObject, useMemo, useRef } from "react";
+import { memo, type RefObject, useEffect, useMemo, useRef } from "react";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
 import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
@@ -11,6 +11,8 @@ interface Props {
   quoteReferencesMap: QuoteReferencesMap;
   allPosts: Post[];
   onQuoteClick: (quoteText: string) => void;
+  onJumpToPost: (postSeq: number) => void;
+  onRegisterScrollToPost?: (scrollToPost: (postSeq: number) => void) => void;
 }
 
 /**
@@ -24,6 +26,8 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   quoteReferencesMap,
   allPosts,
   onQuoteClick,
+  onJumpToPost,
+  onRegisterScrollToPost,
 }: Props) => {
   const { isPostHidden, showNgContent } = useNgStore();
   const visiblePosts = useMemo(
@@ -42,6 +46,19 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
     measureElement: (element: HTMLElement): number =>
       element.getBoundingClientRect().height,
   });
+
+  useEffect(() => {
+    if (!onRegisterScrollToPost) return;
+    onRegisterScrollToPost((postSeq: number): void => {
+      const index = visiblePosts.findIndex((post) => post.seq === postSeq);
+      if (index >= 0) {
+        rowVirtualizer.scrollToIndex(index, {
+          align: "center",
+          behavior: "smooth",
+        });
+      }
+    });
+  }, [onRegisterScrollToPost, rowVirtualizer, visiblePosts]);
 
   if (visiblePosts.length === 0) {
     return (
@@ -73,6 +90,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
               quoteReferencesMap={quoteReferencesMap}
               allPosts={allPosts}
               onQuoteClick={onQuoteClick}
+              onJumpToPost={onJumpToPost}
             />
           );
         })}
@@ -88,6 +106,7 @@ interface RowProps {
   quoteReferencesMap: QuoteReferencesMap;
   allPosts: Post[];
   onQuoteClick: (quoteText: string) => void;
+  onJumpToPost: (postSeq: number) => void;
 }
 
 const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
@@ -98,6 +117,7 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
     quoteReferencesMap,
     allPosts,
     onQuoteClick,
+    onJumpToPost,
   }: RowProps) {
     const quoteDepth = Math.min(
       3,
@@ -124,6 +144,7 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
             allPosts={allPosts}
             onQuoteClick={onQuoteClick}
             isSubView={false}
+            onJumpToPost={onJumpToPost}
           />
         </div>
       </div>

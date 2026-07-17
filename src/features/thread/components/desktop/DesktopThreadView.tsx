@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ThreadSummary } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { NewRepliesBanner } from "@/features/thread/ui";
 import { BmgBanner } from "@/shared/ui/ad";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
 import { useThread } from "../../hooks/useThread";
@@ -18,13 +19,24 @@ interface Props {
 export const DesktopThreadView: React.FunctionComponent<Props> = ({
   threadId,
 }: Props) => {
-  const { data, isLoading, error, refetch, isFetching } = useThread(threadId);
+  const {
+    data,
+    isLoading,
+    error,
+    refetch,
+    isFetching,
+    newPostsCount,
+    acceptNewPosts,
+  } = useThread(threadId);
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const addViewed = useHistoryStore((state) => state.addViewed);
   const fontSize = useSettingsStore((state) => `${state.fontScalePosts}%`);
   const [replyComment, setReplyComment] = useState("");
   const [replyOpenCount, setReplyOpenCount] = useState(0);
+  const scrollToVirtualPostRef = useRef<((postSeq: number) => void) | null>(
+    null,
+  );
 
   const quoteReferencesMap = useMemo(
     () => (data ? extractQuoteReferences(data.posts) : new Map()),
@@ -38,6 +50,21 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const handleQuoteClick = useCallback((quoteText: string): void => {
     setReplyComment(`${quoteText}\n`);
     setReplyOpenCount((count) => count + 1);
+  }, []);
+
+  const registerScrollToPost = useCallback(
+    (scrollToPost: (postSeq: number) => void): void => {
+      scrollToVirtualPostRef.current = scrollToPost;
+    },
+    [],
+  );
+
+  const handleJumpToPost = useCallback((postSeq: number): void => {
+    if (postSeq === 0) {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+      return;
+    }
+    scrollToVirtualPostRef.current?.(postSeq);
   }, []);
 
   const scrollToTop = useCallback((): void => {
@@ -70,10 +97,13 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     createdAt: data.createdAt,
     bumpedAt: data.bumpedAt,
     tags: data.tags,
+    closedAt: data.closedAt,
+    allowImageReplies: data.allowImageReplies,
   };
 
   return (
     <div className="desktop-thread-page">
+      <NewRepliesBanner newCount={newPostsCount} onAccept={acceptNewPosts} />
       <title>{`${firstPost.body.slice(0, 20) || `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
       <nav className="desktop-thread-nav" aria-label="スレッドナビゲーション">
         [
@@ -112,6 +142,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
             onQuoteClick={handleQuoteClick}
             quoteReferencesMap={quoteReferencesMap}
             allPosts={data.posts}
+            onJumpToPost={handleJumpToPost}
           />
         </section>
         <div style={{ fontSize }}>
@@ -121,6 +152,8 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
             quoteReferencesMap={quoteReferencesMap}
             allPosts={data.posts}
             onQuoteClick={handleQuoteClick}
+            onJumpToPost={handleJumpToPost}
+            onRegisterScrollToPost={registerScrollToPost}
           />
         </div>
         <BmgBanner />

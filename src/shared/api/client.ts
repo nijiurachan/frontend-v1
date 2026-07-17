@@ -22,6 +22,7 @@ export class ApiError extends Error {
 interface RequestOptions {
   token?: string;
   requiresToken?: boolean;
+  cache?: RequestCache;
 }
 
 interface TokenIssueResult {
@@ -152,6 +153,7 @@ async function request<T>(
   const response = await fetch(`${API_BASE}${path}`, {
     method,
     credentials: "same-origin",
+    cache: options.cache,
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });

@@ -148,9 +148,7 @@ export const PostList: React.FunctionComponent<Props> = ({
             onQuoteClick={onQuoteClick}
             quoteReferencesMap={quoteReferencesMap}
             allPosts={allPosts}
-            onJumpToPost={
-              onJumpToPost ? (): void => onJumpToPost(post.seq) : undefined
-            }
+            onJumpToPost={onJumpToPost}
             isSubView={false}
           />
           <span
