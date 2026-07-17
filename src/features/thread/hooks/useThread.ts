@@ -21,19 +21,29 @@ const THREAD_TAIL_STALE_TIME = 15_000;
 export interface UseThreadResult
   extends Omit<UseQueryResult<ThreadView>, "data" | "refetch" | "promise"> {
   data: ThreadView | undefined;
-  refetch: UseQueryResult<ThreadState>["refetch"];
+  refetch: () => Promise<void>;
   newPostsCount: number;
   acceptNewPosts: () => void;
+  isArchived: boolean;
+}
+
+export interface UseThreadOptions {
+  /** アーカイブ一覧から渡される archivedAt。指定時はフルJSONを1回だけ取得する。 */
+  archivedAt?: string | null;
 }
 
 /**
- * スレッドを不変チャンクと可変 state に分けて取得する。
+ * 通常スレッドは不変チャンクと可変 state に分け、アーカイブはフルJSONで取得する。
  *
  * チャンクは seq の範囲をキーに持つため、state のポーリングで既読チャンクを
  * 再取得しない。state の newPosts はユーザーがバナーを押した時だけ表示列に
  * 取り込むので、表示中のレスが勝手に並び替わらない。
  */
-export function useThread(threadId: string): UseThreadResult {
+export function useThread(
+  threadId: string,
+  options: UseThreadOptions = {},
+): UseThreadResult {
+  const isArchiveView = Boolean(options.archivedAt);
   const [acceptedNewPosts, setAcceptedNewPosts] = useState<
     ThreadChunkElement[]
   >([]);
@@ -51,6 +61,16 @@ export function useThread(threadId: string): UseThreadResult {
     latestAcceptedSeqRef.current = 0;
   }, [threadId]);
 
+  const fullThreadQuery = useQuery<ThreadView>({
+    queryKey: ["thread", threadId, "full"],
+    queryFn: () =>
+      apiGet<ThreadView>(`/threads/${encodeURIComponent(threadId)}`, {
+        cache: "force-cache",
+      }),
+    enabled: Boolean(threadId) && isArchiveView,
+    staleTime: Infinity,
+  });
+
   const stateQuery = useQuery<ThreadState>({
     queryKey: ["thread", threadId, "state"],
     queryFn: () => {
@@ -60,9 +80,9 @@ export function useThread(threadId: string): UseThreadResult {
         { cache: "no-store" },
       );
     },
-    enabled: Boolean(threadId),
+    enabled: Boolean(threadId) && !isArchiveView,
     staleTime: 0,
-    refetchInterval: THREAD_STATE_POLL_INTERVAL,
+    refetchInterval: isArchiveView ? false : THREAD_STATE_POLL_INTERVAL,
     refetchIntervalInBackground: false,
   });
 
@@ -95,7 +115,7 @@ export function useThread(threadId: string): UseThreadResult {
         apiGet<ThreadChunkElement[]>(
           `/threads/${threadId}/chunks/${chunkNumber}`,
         ),
-      enabled: Boolean(threadId),
+      enabled: Boolean(threadId) && !isArchiveView,
       staleTime: (query: {
         state: { data: ThreadChunkElement[] | undefined };
       }) =>
@@ -125,6 +145,7 @@ export function useThread(threadId: string): UseThreadResult {
   }, [acceptedNewPosts, chunkElements, stateQuery.data?.newPosts]);
 
   const data = useMemo<ThreadView | undefined>(() => {
+    if (isArchiveView) return fullThreadQuery.data;
     if (!stateQuery.data || chunkElements.length === 0) return undefined;
 
     const allElements = mergeChunkElements(chunkElements, acceptedNewPosts);
@@ -143,8 +164,16 @@ export function useThread(threadId: string): UseThreadResult {
       posts,
       closedAt: stateQuery.data.closedAt,
       allowImageReplies: stateQuery.data.allowImageReplies,
+      archivedAt: stateQuery.data.archivedAt ?? null,
     };
-  }, [acceptedNewPosts, chunkElements, stateQuery.data, threadId]);
+  }, [
+    acceptedNewPosts,
+    chunkElements,
+    fullThreadQuery.data,
+    isArchiveView,
+    stateQuery.data,
+    threadId,
+  ]);
 
   useEffect(() => {
     const maxSeq = data?.posts.at(-1)?.seq ?? 0;
@@ -165,27 +194,33 @@ export function useThread(threadId: string): UseThreadResult {
     );
   }, [visibleNewPosts]);
 
+  const fullThreadRefetch = fullThreadQuery.refetch;
   const stateRefetch = stateQuery.refetch;
-  const refetch = useCallback(
-    (...args: Parameters<UseQueryResult<ThreadState>["refetch"]>) =>
-      stateRefetch(...args),
-    [stateRefetch],
-  );
+  const refetch = useCallback(async (): Promise<void> => {
+    if (isArchiveView) {
+      await fullThreadRefetch();
+      return;
+    }
+    await stateRefetch();
+  }, [fullThreadRefetch, isArchiveView, stateRefetch]);
 
   const isChunkLoading = chunkQueries.some((query) => query.isPending);
   const chunkError = chunkQueries.find((query) => query.error)?.error;
+  const activeQuery = isArchiveView ? fullThreadQuery : stateQuery;
 
   return {
-    ...stateQuery,
+    ...activeQuery,
     data,
-    error: stateQuery.error ?? chunkError ?? null,
-    isLoading: stateQuery.isPending || isChunkLoading,
-    isPending: stateQuery.isPending || isChunkLoading,
+    error: activeQuery.error ?? (isArchiveView ? null : chunkError) ?? null,
+    isLoading: activeQuery.isPending || (!isArchiveView && isChunkLoading),
+    isPending: activeQuery.isPending || (!isArchiveView && isChunkLoading),
     isFetching:
-      stateQuery.isFetching || chunkQueries.some((query) => query.isFetching),
+      activeQuery.isFetching ||
+      (!isArchiveView && chunkQueries.some((query) => query.isFetching)),
     refetch,
-    newPostsCount: visibleNewPosts.length,
+    newPostsCount: isArchiveView ? 0 : visibleNewPosts.length,
     acceptNewPosts,
+    isArchived: isArchiveView || Boolean(data?.archivedAt),
   };
 }
 

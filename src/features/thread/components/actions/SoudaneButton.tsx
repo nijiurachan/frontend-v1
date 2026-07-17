@@ -5,6 +5,7 @@ interface SoudaneButtonProps {
   count: number;
   onClick: () => void;
   disabled?: boolean;
+  frozen?: boolean;
 }
 
 /**
@@ -16,7 +17,14 @@ export const SoudaneButton: React.FunctionComponent<SoudaneButtonProps> = ({
   count,
   onClick,
   disabled,
+  frozen = false,
 }: SoudaneButtonProps) => {
+  if (frozen) {
+    return (
+      <span className="px-2 py-1 text-muted-foreground">そうだねx{count}</span>
+    );
+  }
+
   return (
     <label
       className={clsx(

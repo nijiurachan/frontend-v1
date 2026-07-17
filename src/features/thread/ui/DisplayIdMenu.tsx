@@ -14,6 +14,7 @@ interface DisplayIdMenuProps {
   allPosts?: Post[];
   quoteReferencesMap?: Map<string, number[]>;
   onQuoteClick?: (quoteText: string) => void;
+  isArchived?: boolean;
 }
 
 interface ActionItem {
@@ -31,6 +32,7 @@ export const DisplayIdMenu: React.FunctionComponent<DisplayIdMenuProps> = ({
   allPosts,
   quoteReferencesMap,
   onQuoteClick,
+  isArchived = false,
 }: DisplayIdMenuProps) => {
   const { addNgDisplayId } = useNgStore();
   const openReplyModal = useReplyModalStore((s) => s.open);
@@ -118,6 +120,7 @@ export const DisplayIdMenu: React.FunctionComponent<DisplayIdMenuProps> = ({
           threadId={threadId}
           quoteReferencesMap={quoteReferencesMap}
           onQuoteClick={onQuoteClick}
+          isArchived={isArchived}
         />
       )}
     </>

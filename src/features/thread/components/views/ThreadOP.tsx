@@ -17,6 +17,7 @@ interface Props {
   quoteReferencesMap?: QuoteReferencesMap;
   allPosts?: Post[];
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 export const ThreadOP: React.FunctionComponent<Props> = ({
@@ -26,6 +27,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
   quoteReferencesMap,
   allPosts,
   onJumpToPost,
+  isArchived = false,
 }: Props) => {
   const { isPostHidden, showNgContent } = useNgStore();
   const isNg = isPostHidden(post);
@@ -121,6 +123,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
         allPosts={allPosts}
         onJumpToPost={onJumpToPost}
         isSubView={false}
+        isArchived={isArchived}
       />
     </div>
   );

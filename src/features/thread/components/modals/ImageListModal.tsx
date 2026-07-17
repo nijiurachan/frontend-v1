@@ -14,6 +14,7 @@ interface ImageListModalProps {
   onImageClick?: (image: ImageItem) => void;
   allPosts?: Post[];
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -27,6 +28,7 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
   onImageClick,
   allPosts = [],
   onJumpToPost,
+  isArchived = false,
 }: ImageListModalProps) => {
   const [menuPost, setMenuPost] = useState<Post | null>(null);
   const [lastValidMenuPost, setLastValidMenuPost] = useState<Post | null>(null);
@@ -127,6 +129,8 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
           onClose={handleCloseMenu}
           post={lastValidMenuPost}
           onJumpToPost={onJumpToPost ? handleJumpToPost : undefined}
+          isArchived={isArchived}
+          maxSeq={allPosts.at(-1)?.seq ?? lastValidMenuPost.seq}
         />
       )}
     </>

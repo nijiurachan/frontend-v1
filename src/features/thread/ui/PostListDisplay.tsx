@@ -9,6 +9,7 @@ interface PostListDisplayProps {
   allPosts?: Post[];
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -22,6 +23,7 @@ export const PostListDisplay: React.FunctionComponent<PostListDisplayProps> = ({
   allPosts,
   onQuoteClick,
   onJumpToPost,
+  isArchived = false,
 }: PostListDisplayProps) => {
   return (
     <div className="bg-muted/30">
@@ -35,6 +37,7 @@ export const PostListDisplay: React.FunctionComponent<PostListDisplayProps> = ({
           allPosts={allPosts}
           onQuoteClick={onQuoteClick}
           onJumpToPost={onJumpToPost}
+          isArchived={isArchived}
         />
       ))}
     </div>

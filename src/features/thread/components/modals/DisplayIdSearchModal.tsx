@@ -12,6 +12,7 @@ interface DisplayIdSearchModalProps {
   threadId: string;
   quoteReferencesMap?: QuoteReferencesMap;
   onQuoteClick?: (quoteText: string) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -26,6 +27,7 @@ export const DisplayIdSearchModal: React.FunctionComponent<
   posts,
   quoteReferencesMap,
   onQuoteClick,
+  isArchived = false,
 }: DisplayIdSearchModalProps) => {
   // displayIdでフィルタリング
   const filteredPosts = useMemo(() => {
@@ -57,6 +59,7 @@ export const DisplayIdSearchModal: React.FunctionComponent<
             quoteReferencesMap={quoteReferencesMap}
             allPosts={posts}
             onQuoteClick={onQuoteClick}
+            isArchived={isArchived}
           />
         )}
       </div>

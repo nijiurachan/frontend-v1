@@ -8,6 +8,7 @@ interface Props {
   initialComment: string;
   openCount: number;
   onCloseComment: () => void;
+  isArchived?: boolean;
 }
 
 /** 旧PC版の右側固定返信フォーム。フォーム本体は既存API連携を再利用する。 */
@@ -16,6 +17,7 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
   initialComment,
   openCount,
   onCloseComment,
+  isArchived = false,
 }: Props) => {
   const [manuallyCollapsed, setManuallyCollapsed] = useState(false);
   const collapsed = initialComment ? false : manuallyCollapsed;
@@ -69,6 +71,7 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
             threadId={thread.id}
             allowImageReplies={thread.allowImageReplies ?? true}
             closedAt={thread.closedAt}
+            isArchived={isArchived}
             initialComment={initialComment}
             openCount={openCount}
             onSuccess={onCloseComment}

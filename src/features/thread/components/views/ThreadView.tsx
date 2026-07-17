@@ -122,10 +122,12 @@ function useReadReplyNumber(threadId: string): {
 
 interface Props {
   threadId: string;
+  archivedAt?: string | null;
 }
 
 const MobileThreadView: React.FunctionComponent<Props> = ({
   threadId,
+  archivedAt,
 }: Props) => {
   const {
     data,
@@ -135,7 +137,8 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
     isFetching,
     newPostsCount,
     acceptNewPosts,
-  } = useThread(threadId);
+    isArchived,
+  } = useThread(threadId, { archivedAt });
   const router = useRouter();
   const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
@@ -346,6 +349,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
               quoteReferencesMap={quoteReferencesMap}
               allPosts={data.posts}
               onJumpToPost={handleJumpToPost}
+              isArchived={isArchived}
             />
             <PostList
               posts={remainingPosts}
@@ -354,6 +358,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
               allPosts={data.posts}
               onJumpToPost={handleJumpToPost}
               onPostFullyVisible={handlePostFullyVisible}
+              isArchived={isArchived}
             />
             <BmgBanner />
           </div>
@@ -367,6 +372,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
           initialComment={replyInitialComment}
           openCount={replyOpenCount}
           contentKey={threadId}
+          isArchived={isArchived}
         />
       </Suspense>
       <Suspense fallback={null}>
@@ -376,6 +382,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
           images={images}
           allPosts={data.posts}
           onJumpToPost={handleJumpToPost}
+          isArchived={isArchived}
         />
       </Suspense>
       <Suspense fallback={null}>
@@ -387,6 +394,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
           allPosts={data.posts}
           onQuoteClick={handleQuoteClick}
           onJumpToPost={handleJumpToPost}
+          isArchived={isArchived}
         />
       </Suspense>
       <Suspense fallback={null}>
@@ -400,6 +408,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
           allPosts={data.posts}
           onQuoteClick={handleQuoteClick}
           onJumpToPost={handleJumpToPost}
+          isArchived={isArchived}
         />
       </Suspense>
       <Suspense fallback={null}>
@@ -411,6 +420,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
           quoteReferencesMap={quoteReferencesMap}
           onQuoteClick={handleQuoteClick}
           onJumpToPost={handleJumpToPost}
+          isArchived={isArchived}
         />
       </Suspense>
       <BottomActionBar actions={threadActions} primaryAction={replyAction} />
@@ -420,9 +430,10 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
 
 export const ThreadView: React.FunctionComponent<Props> = ({
   threadId,
+  archivedAt,
 }: Props) =>
   useIsDesktop() ? (
-    <DesktopThreadView threadId={threadId} />
+    <DesktopThreadView threadId={threadId} archivedAt={archivedAt} />
   ) : (
-    <MobileThreadView threadId={threadId} />
+    <MobileThreadView threadId={threadId} archivedAt={archivedAt} />
   );

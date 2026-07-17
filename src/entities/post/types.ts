@@ -16,6 +16,8 @@ export interface Post {
   createdAt: string;
   attachment: Attachment | null;
   sodaneCount: number;
+  /** アーカイブ時点のdel数。旧レスポンス互換のため未提供時はundefined。 */
+  delCount?: number;
   displayId: string | null;
 }
 

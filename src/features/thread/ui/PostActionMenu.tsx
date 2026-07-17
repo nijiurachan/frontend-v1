@@ -24,6 +24,8 @@ interface PostActionMenuProps {
   onClose: () => void;
   post: Post;
   onJumpToPost?: (postSeq: number) => void;
+  isArchived?: boolean;
+  maxSeq?: number;
 }
 
 interface ActionItem {
@@ -39,6 +41,8 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
   isOpen,
   onClose,
   post,
+  isArchived = false,
+  maxSeq = post.seq,
 }: PostActionMenuProps) => {
   const openReplyModal = useReplyModalStore((s) => s.open);
   const { addNgWord } = useNgStore();
@@ -90,10 +94,12 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
     {
       icon: FiThumbsUp,
       label: "そうだね",
-      onClick: () => {
-        soudane(post.id);
-        onClose();
-      },
+      onClick: isArchived
+        ? undefined
+        : () => {
+            soudane(post.id);
+            onClose();
+          },
     },
     {
       icon: FiTrash2,
@@ -112,12 +118,14 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
     },
     {
       icon: FiThumbsDown,
-      label: "del",
+      label: post.delCount == null ? "del" : `del (${post.delCount})`,
       variant: "destructive" as const,
-      onClick: () => {
-        del(post.id);
-        onClose();
-      },
+      onClick: isArchived
+        ? undefined
+        : () => {
+            del(post.id);
+            onClose();
+          },
     },
     {
       icon: FiFlag,
@@ -175,7 +183,9 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
       <ReportModal
         isOpen={isReportModalOpen}
         onClose={(): void => setIsReportModalOpen(false)}
-        postId={post.id}
+        threadId={post.threadId}
+        postSeq={post.seq}
+        maxSeq={maxSeq}
       />
       <ConfirmDialog
         isOpen={isCloseDialogOpen}

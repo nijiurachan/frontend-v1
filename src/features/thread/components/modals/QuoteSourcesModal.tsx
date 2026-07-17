@@ -12,6 +12,7 @@ interface QuoteSourcesModalProps {
   quoteReferencesMap?: QuoteReferencesMap;
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export const QuoteSourcesModal: React.FunctionComponent<
   quoteReferencesMap,
   onQuoteClick,
   onJumpToPost,
+  isArchived = false,
 }: QuoteSourcesModalProps) => {
   // 引用元レスのリストを作成
   const sourcePosts = sourceIndexes
@@ -70,6 +72,7 @@ export const QuoteSourcesModal: React.FunctionComponent<
         allPosts={posts}
         onQuoteClick={onQuoteClick}
         onJumpToPost={onJumpToPost}
+        isArchived={isArchived}
       />
     </Modal>
   );

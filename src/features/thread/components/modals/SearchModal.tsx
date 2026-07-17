@@ -16,6 +16,7 @@ interface SearchModalProps {
   allPosts?: Post[];
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -31,6 +32,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
   allPosts,
   onQuoteClick,
   onJumpToPost,
+  isArchived = false,
 }: SearchModalProps) => {
   const [query, setQuery] = useState("");
   const [lastSearchedQuery, setLastSearchedQuery] = useState("");
@@ -100,6 +102,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
             allPosts={allPosts}
             onQuoteClick={onQuoteClick}
             onJumpToPost={onJumpToPost}
+            isArchived={isArchived}
           />
         )}
       </div>

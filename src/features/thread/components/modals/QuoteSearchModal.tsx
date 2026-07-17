@@ -13,6 +13,7 @@ interface QuoteSearchModalProps {
   quoteReferencesMap?: QuoteReferencesMap;
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export const QuoteSearchModal: React.FunctionComponent<
   quoteReferencesMap,
   onQuoteClick,
   onJumpToPost,
+  isArchived = false,
 }: QuoteSearchModalProps) => {
   // 引用テキストから検索クエリを抽出（&gt;を除去してデコード）
   const searchQuery = useMemo(() => {
@@ -81,6 +83,7 @@ export const QuoteSearchModal: React.FunctionComponent<
             allPosts={posts}
             onQuoteClick={onQuoteClick}
             onJumpToPost={onJumpToPost}
+            isArchived={isArchived}
           />
         )}
       </div>

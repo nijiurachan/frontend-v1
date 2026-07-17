@@ -14,6 +14,7 @@ interface Props {
   quoteReferencesMap?: QuoteReferencesMap;
   allPosts?: Post[];
   onJumpToPost?: (postSeq: number) => void;
+  isArchived?: boolean;
 }
 
 export const PostItem: React.FunctionComponent<Props> = memo(function PostItem({
@@ -23,6 +24,7 @@ export const PostItem: React.FunctionComponent<Props> = memo(function PostItem({
   quoteReferencesMap,
   allPosts,
   onJumpToPost,
+  isArchived = false,
 }: Props) {
   const { isPostHidden, showNgContent } = useNgStore();
   const isNg = showNgContent && isPostHidden(post);
@@ -83,6 +85,7 @@ export const PostItem: React.FunctionComponent<Props> = memo(function PostItem({
         quoteReferencesMap={quoteReferencesMap}
         allPosts={allPosts}
         onJumpToPost={onJumpToPost}
+        isArchived={isArchived}
       />
     </div>
   );

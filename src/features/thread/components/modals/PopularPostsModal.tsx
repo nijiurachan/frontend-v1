@@ -12,6 +12,7 @@ interface PopularPostsModalProps {
   allPosts?: Post[];
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export const PopularPostsModal: React.FunctionComponent<
   allPosts,
   onQuoteClick,
   onJumpToPost,
+  isArchived = false,
 }: PopularPostsModalProps) => {
   if (posts.length === 0) {
     return (
@@ -58,6 +60,7 @@ export const PopularPostsModal: React.FunctionComponent<
         allPosts={allPosts}
         onQuoteClick={onQuoteClick}
         onJumpToPost={onJumpToPost}
+        isArchived={isArchived}
       />
     </Modal>
   );

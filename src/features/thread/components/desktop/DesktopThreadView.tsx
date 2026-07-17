@@ -14,10 +14,12 @@ import { VirtualizedDesktopPostList } from "./VirtualizedDesktopPostList";
 
 interface Props {
   threadId: string;
+  archivedAt?: string | null;
 }
 
 export const DesktopThreadView: React.FunctionComponent<Props> = ({
   threadId,
+  archivedAt,
 }: Props) => {
   const {
     data,
@@ -27,7 +29,8 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     isFetching,
     newPostsCount,
     acceptNewPosts,
-  } = useThread(threadId);
+    isArchived,
+  } = useThread(threadId, { archivedAt });
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const addViewed = useHistoryStore((state) => state.addViewed);
@@ -143,6 +146,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
             quoteReferencesMap={quoteReferencesMap}
             allPosts={data.posts}
             onJumpToPost={handleJumpToPost}
+            isArchived={isArchived}
           />
         </section>
         <div style={{ fontSize }}>
@@ -154,6 +158,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
             onQuoteClick={handleQuoteClick}
             onJumpToPost={handleJumpToPost}
             onRegisterScrollToPost={registerScrollToPost}
+            isArchived={isArchived}
           />
         </div>
         <BmgBanner />
@@ -172,6 +177,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
         initialComment={replyComment}
         openCount={replyOpenCount}
         onCloseComment={(): void => setReplyComment("")}
+        isArchived={isArchived}
       />
     </div>
   );

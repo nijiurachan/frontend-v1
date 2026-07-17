@@ -95,6 +95,7 @@ interface Props {
   allPosts?: Post[];
   onJumpToPost?: (postIndex: number) => void;
   onPostFullyVisible?: (replyNumberInThread: number) => void;
+  isArchived?: boolean;
 }
 
 export const PostList: React.FunctionComponent<Props> = ({
@@ -104,6 +105,7 @@ export const PostList: React.FunctionComponent<Props> = ({
   allPosts,
   onJumpToPost,
   onPostFullyVisible,
+  isArchived = false,
 }: Props) => {
   const {
     isPostHidden,
@@ -150,6 +152,7 @@ export const PostList: React.FunctionComponent<Props> = ({
             allPosts={allPosts}
             onJumpToPost={onJumpToPost}
             isSubView={false}
+            isArchived={isArchived}
           />
           <span
             ref={observePostRead(post.seq)}

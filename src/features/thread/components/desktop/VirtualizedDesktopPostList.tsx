@@ -13,6 +13,7 @@ interface Props {
   onQuoteClick: (quoteText: string) => void;
   onJumpToPost: (postSeq: number) => void;
   onRegisterScrollToPost?: (scrollToPost: (postSeq: number) => void) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   onQuoteClick,
   onJumpToPost,
   onRegisterScrollToPost,
+  isArchived = false,
 }: Props) => {
   const { isPostHidden, showNgContent } = useNgStore();
   const visiblePosts = useMemo(
@@ -91,6 +93,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
               allPosts={allPosts}
               onQuoteClick={onQuoteClick}
               onJumpToPost={onJumpToPost}
+              isArchived={isArchived}
             />
           );
         })}
@@ -107,6 +110,7 @@ interface RowProps {
   allPosts: Post[];
   onQuoteClick: (quoteText: string) => void;
   onJumpToPost: (postSeq: number) => void;
+  isArchived: boolean;
 }
 
 const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
@@ -118,6 +122,7 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
     allPosts,
     onQuoteClick,
     onJumpToPost,
+    isArchived,
   }: RowProps) {
     const quoteDepth = Math.min(
       3,
@@ -145,6 +150,7 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
             onQuoteClick={onQuoteClick}
             isSubView={false}
             onJumpToPost={onJumpToPost}
+            isArchived={isArchived}
           />
         </div>
       </div>

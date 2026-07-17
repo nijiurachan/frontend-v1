@@ -62,6 +62,7 @@ export interface ThreadState {
   tags: ThreadTag[];
   closedAt: string | null;
   allowImageReplies: boolean;
+  archivedAt?: string | null;
   postStates: ThreadPostState[];
   newPosts?: ThreadChunkElement[];
 }
@@ -76,6 +77,8 @@ export interface ThreadView {
   posts: Post[];
   closedAt: string | null;
   allowImageReplies: boolean;
+  /** アーカイブ済みの場合のみ設定される。 */
+  archivedAt?: string | null;
 }
 
 export interface TopPage {

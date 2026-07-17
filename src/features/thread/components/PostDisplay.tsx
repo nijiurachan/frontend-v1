@@ -31,6 +31,7 @@ interface Props {
   quoteReferencesMap?: QuoteReferencesMap;
   allPosts?: Post[];
   onJumpToPost?: (postSeq: number) => void;
+  isArchived?: boolean;
 }
 
 export const PostDisplay: React.FunctionComponent<Props> = memo(
@@ -42,6 +43,7 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
     quoteReferencesMap,
     allPosts,
     onJumpToPost,
+    isArchived = false,
   }: Props) {
     const [menuOpen, setMenuOpen] = useState(false);
     const [quoteSourcesOpen, setQuoteSourcesOpen] = useState(false);
@@ -154,7 +156,13 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
               count={post.sodaneCount}
               onClick={(): void => soudane(post.id)}
               disabled={isPending}
+              frozen={isArchived}
             />
+            {isArchived && (
+              <span className="px-2 py-1 text-muted-foreground">
+                delx{post.delCount ?? 0}
+              </span>
+            )}
             {quoteSourceIndexes.length > 0 && (
               <button
                 type="button"
@@ -269,6 +277,8 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
           onClose={(): void => setMenuOpen(false)}
           post={post}
           onJumpToPost={onJumpToPost}
+          isArchived={isArchived}
+          maxSeq={allPosts?.at(-1)?.seq ?? post.seq}
         />
 
         {/* 引用元一覧モーダル */}
@@ -282,6 +292,7 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
             quoteReferencesMap={quoteReferencesMap}
             onQuoteClick={onQuoteClick}
             onJumpToPost={onJumpToPost}
+            isArchived={isArchived}
           />
         )}
 
@@ -295,6 +306,7 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
             allPosts={allPosts}
             quoteReferencesMap={quoteReferencesMap}
             onQuoteClick={onQuoteClick}
+            isArchived={isArchived}
           />
         )}
       </article>

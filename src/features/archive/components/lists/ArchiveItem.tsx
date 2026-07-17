@@ -19,6 +19,7 @@ export const ArchiveItem: React.FunctionComponent<ArchiveItemProps> = memo(
         <Link
           to="/thread/$threadId"
           params={{ threadId: thread.threadId }}
+          search={{ archivedAt: thread.archivedAt }}
           className="block focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset"
         >
           <div className="relative aspect-square bg-muted flex items-center justify-center">
