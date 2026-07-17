@@ -8,6 +8,8 @@ import { useSubmitPost } from "@/features/post/hooks/useSubmitPost";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { Button, Checkbox, Textarea } from "@/shared/ui/form";
 import { OnlineUsersIndicator, PostNotice } from "@/shared/ui/navigation";
+import { toast } from "@/shared/ui/toast";
+import { prepareThreadCreateAttachment } from "../../utils/threadCreateSubmission";
 
 interface Props {
   onSuccess?: () => void;
@@ -42,18 +44,22 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
     if (isPending || isPaintPopupOpen || !body.trim()) return;
 
     const form = event.currentTarget;
-    const prepareEvent = new CustomEvent("aimg:prepare-submit", {
-      detail: {} as { preparing?: Promise<void> },
-    });
-    form.dispatchEvent(prepareEvent);
-    await prepareEvent.detail.preparing;
+    let file: File;
+    try {
+      file = await prepareThreadCreateAttachment(form, getAttachedFile);
+    } catch (error) {
+      toast.error(
+        error instanceof Error ? error.message : "画像の準備に失敗しました",
+      );
+      return;
+    }
 
     try {
       await submitPost({
         mode: "thread",
         body: body.trim(),
         deleteKey,
-        file: getAttachedFile(form),
+        file,
         r18,
         allowImageReplies,
       });

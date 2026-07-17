@@ -14,6 +14,7 @@ import icon_aimoge_dark1 from "@/assets/img/icon_aimoge_dark1.webp";
 import icon_blumoge from "@/assets/img/icon_blumoge.webp";
 import icon_main from "@/assets/img/icon_main.webp";
 import { SearchBar } from "@/features/catalog/components";
+import { getInitialHeaderScrollY } from "./headerScroll";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -27,7 +28,7 @@ export const Header: FunctionComponent<HeaderProps> = ({
   const isThreadView = location.pathname.startsWith("/thread/");
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
-  const lastScrollYRef = useRef(0);
+  const lastScrollYRef = useRef(getInitialHeaderScrollY());
 
   // 検索バーの開閉
   const toggleSearch = useCallback(() => {

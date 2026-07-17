@@ -15,6 +15,7 @@ import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
 import { VideoBadge } from "@/shared/ui/media";
 import { TagBadges } from "@/shared/ui/navigation";
 import { useCatalogStore } from "../../stores/catalogStore";
+import { getCatalogThreadClickAction } from "../../utils/catalogReveal";
 import { ThreadContextMenu } from "../actions/ThreadContextMenu";
 
 interface CatalogItemProps {
@@ -144,12 +145,16 @@ const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
     };
 
     const handleThreadClick = (e: React.MouseEvent): void => {
-      if (isNg) {
-        handleNgClick(e);
-      } else if (isR18Hidden) {
-        handleR18Click(e);
-      } else {
-        addViewed(thread.id);
+      switch (getCatalogThreadClickAction({ isNg, ngRevealed, isR18Hidden })) {
+        case "toggle-ng":
+          handleNgClick(e);
+          break;
+        case "reveal-r18":
+          handleR18Click(e);
+          break;
+        case "view":
+          addViewed(thread.id);
+          break;
       }
     };
 

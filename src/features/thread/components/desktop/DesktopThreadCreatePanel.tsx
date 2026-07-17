@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getDesktopThreadCreatePanelAction } from "../../utils/desktopThreadCreatePanelState";
 import { ThreadCreateForm } from "../forms/ThreadCreateForm";
 
 interface Props {
@@ -14,6 +15,12 @@ export const DesktopThreadCreatePanel: React.FunctionComponent<Props> = ({
   const [manuallyCollapsed, setManuallyCollapsed] = useState(true);
   const collapsed = isOpen ? false : manuallyCollapsed;
 
+  const handleTabClick = (): void => {
+    const action = getDesktopThreadCreatePanelAction(isOpen, manuallyCollapsed);
+    setManuallyCollapsed(action.nextManuallyCollapsed);
+    if (action.closeExternalOpen) onClose();
+  };
+
   return (
     <aside
       className="desktop-floating-panel"
@@ -24,7 +31,7 @@ export const DesktopThreadCreatePanel: React.FunctionComponent<Props> = ({
       <button
         type="button"
         className="desktop-floating-tab"
-        onClick={(): void => setManuallyCollapsed((value) => !value)}
+        onClick={handleTabClick}
         aria-expanded={!collapsed}
       >
         <span aria-hidden="true">◀</span>スレ立て

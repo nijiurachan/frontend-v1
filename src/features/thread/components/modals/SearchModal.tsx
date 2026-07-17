@@ -4,6 +4,7 @@ import type { Post } from "@/entities/post";
 import { Modal } from "@/shared/ui/overlay";
 import { PostListDisplay } from "../../ui";
 import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
+import { isSearchPending } from "../../utils/searchModalState";
 import type { SearchResult } from "../../utils/searchPosts";
 
 interface SearchModalProps {
@@ -28,6 +29,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
   onClose,
   onSearch,
   results,
+  isSearching,
   quoteReferencesMap,
   allPosts,
   onQuoteClick,
@@ -84,7 +86,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
           <div className="p-8 text-center text-muted-foreground">
             キーワードを入力してください
           </div>
-        ) : lastSearchedQuery !== query ? (
+        ) : isSearchPending(query, lastSearchedQuery, isSearching) ? (
           <div className="p-8 text-center text-muted-foreground">検索中...</div>
         ) : results.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
