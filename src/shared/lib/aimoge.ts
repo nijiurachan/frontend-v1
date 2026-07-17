@@ -97,8 +97,9 @@ export function createAimogeRuntime(): AimogeRuntime {
     }
   };
 
-  const getHooks = (name: AimogeHookName): RegisteredHook[] =>
-    hooks.get(name) ?? [];
+  const getHooks = (name: AimogeHookName): RegisteredHook[] => [
+    ...(hooks.get(name) ?? []),
+  ];
 
   return {
     api,

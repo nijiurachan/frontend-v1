@@ -53,6 +53,37 @@ describe("aimoge extension hooks", () => {
     expect(calls).toEqual(["first", "second"]);
   });
 
+  test("実行開始時のhook snapshotを使い実行中の登録解除は次回から反映する", () => {
+    const runtime = createAimogeRuntime();
+    const calls: string[] = [];
+    let unregisterSecond = (): void => {};
+    let registeredThird = false;
+
+    runtime.api.register("data:state", (value) => {
+      calls.push("first");
+      unregisterSecond();
+      if (!registeredThird) {
+        registeredThird = true;
+        runtime.api.register("data:state", (nextValue) => {
+          calls.push("third");
+          return nextValue;
+        });
+      }
+      return value;
+    });
+    unregisterSecond = runtime.api.register("data:state", (value) => {
+      calls.push("second");
+      return value;
+    });
+
+    runtime.transformData("data:state", { id: 1 });
+    expect(calls).toEqual(["first", "second"]);
+
+    calls.length = 0;
+    runtime.transformData("data:state", { id: 2 });
+    expect(calls).toEqual(["first", "third"]);
+  });
+
   test("registration generation changes and queued userscripts are drained", () => {
     const runtime = createAimogeRuntime();
     const generations: number[] = [runtime.getGeneration()];
