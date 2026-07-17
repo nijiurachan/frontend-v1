@@ -7,7 +7,7 @@ import {
 const THREAD_ID = "550e8400-e29b-41d4-a716-446655440000";
 
 describe("persisted thread ID migrations", () => {
-  test("history v1 の数値IDを破棄し既読位置を0始まりに直す", () => {
+  test("history v1 の数値IDを破棄しUUIDの既読位置を維持する", () => {
     expect(
       migrateHistoryState(
         {
@@ -19,7 +19,7 @@ describe("persisted thread ID migrations", () => {
         1,
       ),
     ).toEqual({
-      viewed: [{ id: THREAD_ID, ts: 2, readReplyNumber: 7 }],
+      viewed: [{ id: THREAD_ID, ts: 2, readReplyNumber: 8 }],
     });
   });
 

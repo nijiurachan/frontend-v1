@@ -11,6 +11,11 @@ export function useReadReplyNumber(threadId: string): {
   const fullyVisibleReplyNumberRef = useRef(0);
   const router = useRouter();
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies(threadId): threadId changes require resetting the ref
+  useEffect(() => {
+    fullyVisibleReplyNumberRef.current = 0;
+  }, [threadId]);
+
   const handlePostFullyVisible = useCallback(
     (replyNumberInThread: number): void => {
       fullyVisibleReplyNumberRef.current = replyNumberInThread;

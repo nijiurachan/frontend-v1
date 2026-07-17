@@ -39,10 +39,12 @@ export function migrateHistoryState(
   const viewed = Array.isArray(persisted.viewed)
     ? persisted.viewed.flatMap((item): PersistedViewedItem[] => {
         if (!isRecord(item) || !isUuidThreadId(item.id)) return [];
-        const readReplyNumber =
-          version === 1 && isFiniteNumber(item.readReplyNumber)
-            ? Math.max(0, Math.trunc(item.readReplyNumber) - 1)
-            : 0;
+        // v1 から残る UUID レコードはすでに backend-v1 の seq (0 始まり)
+        // を保存している。旧数値IDレコードは上の判定で破棄されるため、
+        // UUID レコードの既読位置を一律に 1 減らさない。
+        const readReplyNumber = isFiniteNumber(item.readReplyNumber)
+          ? Math.max(0, Math.trunc(item.readReplyNumber))
+          : 0;
         return [
           {
             id: item.id,
