@@ -70,7 +70,7 @@ function usePostReadObserver(
   // する必要がある。
   return (replyNumberInThread: number) => (element: HTMLSpanElement | null) => {
     const oldElement = [...postSentinelsRef.current].find(
-      ([_el, n]) => n === replyNumberInThread,
+      (entry) => entry[1] === replyNumberInThread,
     )?.[0];
 
     if (oldElement) {

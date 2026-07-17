@@ -33,25 +33,22 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
   onJumpToPost,
 }: SearchModalProps) => {
   const [query, setQuery] = useState("");
-  const [hasSearched, setHasSearched] = useState(false);
+  const [lastSearchedQuery, setLastSearchedQuery] = useState("");
 
   // リアルタイム検索（debounce: 300ms）
   useEffect(() => {
     if (!isOpen) {
-      setQuery("");
-      setHasSearched(false);
       return;
     }
 
     if (!query.trim()) {
-      setHasSearched(false);
       onSearch("");
       return;
     }
 
     const timer = setTimeout(() => {
       onSearch(query);
-      setHasSearched(true);
+      setLastSearchedQuery(query);
     }, 300);
 
     return (): void => clearTimeout(timer);
@@ -59,7 +56,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
 
   const handleClose = (): void => {
     setQuery("");
-    setHasSearched(false);
+    setLastSearchedQuery("");
     onClose();
   };
 
@@ -85,7 +82,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
           <div className="p-8 text-center text-muted-foreground">
             キーワードを入力してください
           </div>
-        ) : !hasSearched ? (
+        ) : lastSearchedQuery !== query ? (
           <div className="p-8 text-center text-muted-foreground">検索中...</div>
         ) : results.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">

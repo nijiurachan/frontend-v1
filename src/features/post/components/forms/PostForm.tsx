@@ -1,6 +1,6 @@
 import type { UpfileStateFlags } from "@nijiurachan/js/pure";
 import { Scope, useEventLatest } from "@nijiurachan/js/react/PreactWrapperV1";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { UpfileInput } from "@/features/otegaki-upfile/components";
 import { getAttachedFile } from "@/features/otegaki-upfile/lib/attachUpfileImage";
@@ -42,6 +42,19 @@ export const PostForm: React.FunctionComponent<Props> = ({
   const [formData, setFormData] = useState<PostFormData>({
     comment: initialComment,
   });
+  const formDataRef = useRef<PostFormData>({ comment: initialComment });
+  const updateFormData = useCallback(
+    (
+      update: PostFormData | ((previous: PostFormData) => PostFormData),
+    ): void => {
+      setFormData((previous) => {
+        const next = typeof update === "function" ? update(previous) : update;
+        formDataRef.current = next;
+        return next;
+      });
+    },
+    [],
+  );
   const [showSuccess, setShowSuccess] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [pendingQuote, setPendingQuote] = useState("");
@@ -54,16 +67,18 @@ export const PostForm: React.FunctionComponent<Props> = ({
     ) ?? false;
 
   // 投稿モーダルの openCount 変化時だけ、引用初期値を適用する。
-  // biome-ignore lint/correctness/useExhaustiveDependencies: openCount はモーダル再表示を表す明示的なトリガー
+  // biome-ignore lint/correctness/useExhaustiveDependencies: openCountはモーダル再表示を表す明示的なトリガー
   useEffect(() => {
     if (!initialComment) return;
-    if (!formData.comment.trim()) {
-      setFormData((prev) => ({ ...prev, comment: initialComment }));
-      return;
-    }
-    setPendingQuote(initialComment);
-    setQuoteDialogOpen(true);
-  }, [openCount]);
+    queueMicrotask(() => {
+      if (!formDataRef.current.comment.trim()) {
+        updateFormData((prev) => ({ ...prev, comment: initialComment }));
+        return;
+      }
+      setPendingQuote(initialComment);
+      setQuoteDialogOpen(true);
+    });
+  }, [initialComment, openCount, updateFormData]);
 
   const { mutateAsync: submitPost, isPending } = useSubmitPost();
 
@@ -98,7 +113,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
         file: allowImage ? getAttachedFile(form) : null,
       });
       setShowSuccess(true);
-      setFormData({ comment: "" });
+      updateFormData({ comment: "" });
       window.setTimeout(() => {
         setShowSuccess(false);
         onSuccess?.();
@@ -111,7 +126,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
   };
 
   const handleQuoteDialogClose = (reason: CloseReason): void => {
-    setFormData((prev) => ({
+    updateFormData((prev) => ({
       comment:
         reason === "pressed-confirm"
           ? `${pendingQuote}\n${prev.comment}`
@@ -125,7 +140,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
       <Textarea
         value={formData.comment}
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>): void =>
-          setFormData({ comment: event.target.value })
+          updateFormData({ comment: event.target.value })
         }
         placeholder="ｷﾀ━━━━(ﾟ∀ﾟ)━━━━!!"
         rows={6}

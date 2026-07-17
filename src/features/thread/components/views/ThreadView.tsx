@@ -28,6 +28,7 @@ import { useSettingsStore } from "@/features/settings/hooks";
 import type * as modals from "@/features/thread/components/modals";
 import { type ActionButton, BottomActionBar } from "@/features/thread/ui";
 import { apiGet } from "@/shared/api";
+import { useIsDesktop } from "@/shared/hooks";
 import { useSwipeBack } from "@/shared/hooks/useSwipeBack";
 import { BmgBanner } from "@/shared/ui/ad";
 import {
@@ -37,13 +38,14 @@ import {
   PULL_ZONE_HEIGHT,
   PullRefresh,
 } from "@/shared/ui/feedback";
-import { ModalContext } from "@/shared/ui/overlay/ModalContext";
+import { ModalContext } from "@/shared/ui/overlay/modal-context";
 import { useThread } from "../../hooks/useThread";
 import { useReplyModalStore } from "../../stores/replyModalStore";
 import { extractImages } from "../../utils/extractImages";
 import { extractPopularPosts } from "../../utils/extractPopularPosts";
 import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
 import type { SearchResult } from "../../utils/searchPosts";
+import { DesktopThreadView } from "../desktop/DesktopThreadView";
 import { PostList } from "../lists/PostList";
 import { ThreadOP } from "./ThreadOP";
 
@@ -118,7 +120,7 @@ interface Props {
   threadId: string;
 }
 
-export const ThreadView: React.FunctionComponent<Props> = ({
+const MobileThreadView: React.FunctionComponent<Props> = ({
   threadId,
 }: Props) => {
   const { data, isLoading, error, refetch, isFetching } = useThread(threadId);
@@ -153,7 +155,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
   const fontSize = useSettingsStore((s) => `${s.fontScalePosts}%`);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: スレ切替時に返信モーダルを閉じる
-  useEffect(() => (): void => resetReplyModal(), [threadId]);
+  useEffect(() => (): void => resetReplyModal(), [resetReplyModal, threadId]);
 
   const { isPostHidden, showNgContent } = useNgStore();
   const images = useMemo(() => {
@@ -244,7 +246,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
         });
       }
     },
-    [data?.posts, router.navigate],
+    [data?.posts, router],
   );
 
   const handleJumpToPost = useCallback(
@@ -400,3 +402,12 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     </>
   );
 };
+
+export const ThreadView: React.FunctionComponent<Props> = ({
+  threadId,
+}: Props) =>
+  useIsDesktop() ? (
+    <DesktopThreadView threadId={threadId} />
+  ) : (
+    <MobileThreadView threadId={threadId} />
+  );

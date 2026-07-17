@@ -31,16 +31,10 @@ export const Header: FunctionComponent<HeaderProps> = ({
 
   // 検索バーの開閉
   const toggleSearch = useCallback(() => {
+    lastScrollYRef.current = window.scrollY;
+    setIsHeaderVisible(true);
     setIsSearchOpen((prev) => !prev);
   }, []);
-
-  // 検索バーの開閉時はスクロール基準値をリセット（レイアウトシフトによる誤判定防止）
-  useEffect(() => {
-    lastScrollYRef.current = window.scrollY;
-    if (isSearchOpen) {
-      setIsHeaderVisible(true);
-    }
-  }, [isSearchOpen]);
 
   // スクロール方向に応じてヘッダーの表示/非表示を切り替え
   useEffect((): (() => void) => {

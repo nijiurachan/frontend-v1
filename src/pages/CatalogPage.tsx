@@ -5,17 +5,23 @@ import { SortNav } from "@/features/catalog/components/navigation";
 import { TagFilter } from "@/features/catalog/components/TagFilter";
 import { useThreads } from "@/features/catalog/hooks";
 import { useCatalogStore } from "@/features/catalog/stores";
+import { DesktopThreadCreatePanel } from "@/features/thread/components/desktop";
 import { ThreadCreateModal } from "@/features/thread/components/modals";
 import { useThreadCreateModalStore } from "@/features/thread/stores/threadCreateModalStore";
+import { useIsDesktop } from "@/shared/hooks";
 import { BmgBanner } from "@/shared/ui/ad";
 import { PullRefresh } from "@/shared/ui/feedback";
 
 export const CatalogPage: React.FunctionComponent = () => {
-  const { updateLastCatalogIds } = useCatalogStore();
+  const updateLastCatalogIds = useCatalogStore(
+    (state) => state.updateLastCatalogIds,
+  );
+  const setSort = useCatalogStore((state) => state.setSort);
   const isOpen = useThreadCreateModalStore((s) => s.isOpen);
   const open = useThreadCreateModalStore((s) => s.open);
   const close = useThreadCreateModalStore((s) => s.close);
   const { data, refetch } = useThreads();
+  const isDesktop = useIsDesktop();
 
   const onRefresh = useCallback(async () => {
     await refetch();
@@ -37,6 +43,51 @@ export const CatalogPage: React.FunctionComponent = () => {
       close();
     };
   }, [close]);
+
+  if (isDesktop) {
+    return (
+      <div className="desktop-catalog-page">
+        <nav
+          className="desktop-catalog-nav"
+          aria-label="カタログナビゲーション"
+        >
+          [<a href="/">掲示板に戻る</a>]<a href="/">カタログ</a>
+          <button
+            className="desktop-nav-link"
+            type="button"
+            onClick={(): void => setSort("created")}
+          >
+            新順
+          </button>
+          <button
+            className="desktop-nav-link"
+            type="button"
+            onClick={(): void => setSort("old")}
+          >
+            古順
+          </button>
+          <button
+            className="desktop-nav-link"
+            type="button"
+            onClick={(): void => setSort("replies")}
+          >
+            多順
+          </button>
+          <a href="/archive">過去ログ</a>
+          <button type="button" onClick={open}>
+            [スレ立て]
+          </button>
+        </nav>
+        <h1 className="desktop-mode-title">カタログモード</h1>
+        <BmgBanner />
+        <div className="desktop-catalog-tools">
+          <TagFilter threads={data?.threads ?? []} />
+        </div>
+        <CatalogGrid />
+        <DesktopThreadCreatePanel isOpen={isOpen} onClose={close} />
+      </div>
+    );
+  }
 
   return (
     <>

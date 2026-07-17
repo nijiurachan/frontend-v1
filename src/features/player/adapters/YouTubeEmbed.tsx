@@ -320,6 +320,7 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
       },
     );
 
+    const container = containerRef.current;
     return (): void => {
       mountedRef.current = false;
       isReadyRef.current = false;
@@ -342,9 +343,7 @@ export const YouTubeEmbed: React.FunctionComponent<YouTubeEmbedProps> = ({
       }
       playerRef.current = null;
       // destroy() で残った残骸をクリア（外側 div は React が管理）
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
+      if (container) container.innerHTML = "";
     };
   }, [slotId, syncVideo]);
 

@@ -15,7 +15,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
-import { ModalContext } from "./ModalContext";
+import { ModalContext } from "./modal-context";
 
 export interface PersistentModalRenderProps {
   destroy: () => void;
@@ -88,12 +88,16 @@ export const PersistentModal: React.FunctionComponent<PersistentModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       const modalDepth = registerModal();
-      setDepth(modalDepth);
+      let disposed = false;
+      queueMicrotask(() => {
+        if (!disposed) setDepth(modalDepth);
+      });
       registerCloseHandler(onClose);
       return (): void => {
+        disposed = true;
         unregisterModal();
         unregisterCloseHandler(onClose);
-        setDepth(null);
+        queueMicrotask(() => setDepth(null));
       };
     }
   }, [

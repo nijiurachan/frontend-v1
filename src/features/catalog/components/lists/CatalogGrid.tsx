@@ -1,13 +1,20 @@
 import { useMemo } from "react";
+import { useIsDesktop } from "@/shared/hooks";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
 import { useFavoriteThreads } from "../../hooks/useFavoriteThreads";
 import { useFilteredThreads } from "../../hooks/useFilteredThreads";
 import { useOekakiFloor } from "../../hooks/useOekakiFloor";
 import { useThreads } from "../../hooks/useThreads";
 import { useCatalogStore } from "../../stores/catalogStore";
+import { DesktopCatalogGrid } from "../desktop";
 import { CatalogItem } from "./CatalogItem";
 
 export const CatalogGrid: React.FunctionComponent = () => {
+  const isDesktop = useIsDesktop();
+  return isDesktop ? <DesktopCatalogGrid /> : <MobileCatalogGrid />;
+};
+
+const MobileCatalogGrid: React.FunctionComponent = () => {
   const { data, isLoading, error } = useThreads();
   const { columns, lastCatalogIds } = useCatalogStore();
 

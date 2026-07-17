@@ -9,7 +9,7 @@ import {
 import { type ReactNode, useContext, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
-import { ModalContext } from "./ModalContext";
+import { ModalContext } from "./modal-context";
 
 interface ModalProps {
   isOpen: boolean;
@@ -43,12 +43,16 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       const modalDepth = registerModal();
-      setDepth(modalDepth);
+      let disposed = false;
+      queueMicrotask(() => {
+        if (!disposed) setDepth(modalDepth);
+      });
       registerCloseHandler(onClose);
       return (): void => {
+        disposed = true;
         unregisterModal();
         unregisterCloseHandler(onClose);
-        setDepth(null);
+        queueMicrotask(() => setDepth(null));
       };
     }
   }, [

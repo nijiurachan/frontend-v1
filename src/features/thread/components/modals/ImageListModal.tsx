@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import type { Post } from "@/entities/post";
 import { VideoPlayOverlay } from "@/shared/ui/media";
@@ -31,17 +31,11 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
   const [menuPost, setMenuPost] = useState<Post | null>(null);
   const [lastValidMenuPost, setLastValidMenuPost] = useState<Post | null>(null);
 
-  // menuPostが有効な値のとき、それを保持する（アニメーション用）
-  useEffect(() => {
-    if (menuPost) {
-      setLastValidMenuPost(menuPost);
-    }
-  }, [menuPost]);
-
   const handleMenuClick = (e: React.MouseEvent, postId: string): void => {
     e.stopPropagation();
     const post = allPosts.find((p) => p.id === postId);
     if (post) {
+      setLastValidMenuPost(post);
       setMenuPost(post);
     }
   };

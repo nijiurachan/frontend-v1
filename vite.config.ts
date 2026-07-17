@@ -64,6 +64,48 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
     resolve: {
       alias: [
         {
+          find: "react-dom/client",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/client.mjs",
+          ),
+        },
+        {
+          find: "react-dom",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/dist/compat.module.js",
+          ),
+        },
+        {
+          find: "react/jsx-dev-runtime",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/jsx-dev-runtime.mjs",
+          ),
+        },
+        {
+          find: "react/jsx-runtime",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/jsx-runtime.mjs",
+          ),
+        },
+        {
+          find: "react",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/dist/compat.module.js",
+          ),
+        },
+        {
+          find: "preact/compat",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/dist/compat.module.js",
+          ),
+        },
+        {
           find: "preact/hooks",
           replacement: resolve(
             import.meta.dirname,

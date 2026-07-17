@@ -324,6 +324,7 @@ const TwitchApiPlayer: React.FunctionComponent<TwitchApiPlayerProps> = ({
       },
     );
 
+    const container = containerRef.current;
     return (): void => {
       mountedRef.current = false;
       stopTimeUpdate();
@@ -339,9 +340,7 @@ const TwitchApiPlayer: React.FunctionComponent<TwitchApiPlayerProps> = ({
         }
       }
       playerRef.current = null;
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
+      if (container) container.innerHTML = "";
     };
   }, [subtype, id, slotId]);
 

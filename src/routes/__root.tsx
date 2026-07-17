@@ -1,10 +1,12 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
 import { lazy, Suspense, useLayoutEffect, useState } from "react";
+import { DesktopLayout } from "@/app/layouts/DesktopLayout";
 import { MobileLayout } from "@/app/layouts/MobileLayout";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { FONT_SIZE_DEFAULT } from "@/features/settings/stores/settingsStore";
+import { useIsDesktop } from "@/shared/hooks";
 import { cn } from "@/shared/lib/cn";
 import { ModalProvider } from "@/shared/ui/overlay";
 import { ToastProvider } from "@/shared/ui/toast";
@@ -35,6 +37,7 @@ const RootComponent: React.FunctionComponent = () => {
   const privacyMode = useSettingsStore((s) => s.privacyMode);
   // MiniPlayer が一度でも開かれたかをトラッキング: 開いた後に閉じても chunk は既に DL 済み
   const miniPlayerVisible = usePlayerStore((s) => s.miniPlayer.visible);
+  const isDesktop = useIsDesktop();
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -48,9 +51,15 @@ const RootComponent: React.FunctionComponent = () => {
         )}
       >
         <ModalProvider>
-          <MobileLayout>
-            <Outlet />
-          </MobileLayout>
+          {isDesktop ? (
+            <DesktopLayout>
+              <Outlet />
+            </DesktopLayout>
+          ) : (
+            <MobileLayout>
+              <Outlet />
+            </MobileLayout>
+          )}
           {miniPlayerVisible && (
             <Suspense fallback={null}>
               <LazyMiniPlayer />
