@@ -1,13 +1,4 @@
 import { useState } from "react";
-import {
-  FiArrowLeft,
-  FiFlag,
-  FiHash,
-  FiSlash,
-  FiThumbsDown,
-  FiThumbsUp,
-  FiTrash2,
-} from "react-icons/fi";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
@@ -18,6 +9,7 @@ import { ConfirmDialog, Modal } from "@/shared/ui/overlay";
 import { ReportModal } from "../components/modals/ReportModal";
 import { useSoudaneMutation } from "../hooks/useSoudaneMutation";
 import { useReplyModalStore } from "../stores/replyModalStore";
+import { createPostActionItems } from "./postActionItems";
 
 interface PostActionMenuProps {
   isOpen: boolean;
@@ -26,13 +18,6 @@ interface PostActionMenuProps {
   onJumpToPost?: (postSeq: number) => void;
   isArchived?: boolean;
   maxSeq?: number;
-}
-
-interface ActionItem {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  onClick?: () => void;
-  variant?: "default" | "destructive";
 }
 
 type QuoteType = "body" | "no";
@@ -80,74 +65,30 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
     alert("本文をNGワードに追加しました");
     onClose();
   };
-  const reportAction: ActionItem = {
-    icon: FiFlag,
-    label: "通報",
-    onClick: () => {
+  const actions = createPostActionItems(isArchived, post, {
+    onReply: handleReply,
+    onSoudane: (): void => {
+      soudane(post.id);
+      onClose();
+    },
+    onDelete: (): void => {
+      deletePostOrThread({ postId: post.id, password: deleteKey });
+      onClose();
+    },
+    onDel: (): void => {
+      del(post.id);
+      onClose();
+    },
+    onNgBody: handleNgBody,
+    onReport: (): void => {
       setIsReportModalOpen(true);
       onClose();
     },
-  };
-  const ngAction: ActionItem = {
-    icon: FiSlash,
-    label: "本文NG",
-    variant: "destructive" as const,
-    onClick: handleNgBody,
-  };
-  const actions: ActionItem[] = isArchived
-    ? [ngAction, reportAction]
-    : [
-        {
-          icon: FiArrowLeft,
-          label: "本文返信",
-          onClick: () => handleReply("body"),
-        },
-        {
-          icon: FiHash,
-          label: "No返信",
-          onClick: () => handleReply("no"),
-        },
-        {
-          icon: FiThumbsUp,
-          label: "そうだね",
-          onClick: () => {
-            soudane(post.id);
-            onClose();
-          },
-        },
-        {
-          icon: FiTrash2,
-          label: "削除",
-          variant: "destructive" as const,
-          onClick: () => {
-            deletePostOrThread({ postId: post.id, password: deleteKey });
-            onClose();
-          },
-        },
-        ngAction,
-        {
-          icon: FiThumbsDown,
-          label: post.delCount == null ? "del" : `del (${post.delCount})`,
-          variant: "destructive" as const,
-          onClick: () => {
-            del(post.id);
-            onClose();
-          },
-        },
-        reportAction,
-      ];
-
-  if (!isArchived && post.seq === 0) {
-    actions.push({
-      icon: FiTrash2,
-      label: "スレを閉じる",
-      variant: "destructive",
-      onClick: () => {
-        setIsCloseDialogOpen(true);
-        onClose();
-      },
-    });
-  }
+    onCloseThread: (): void => {
+      setIsCloseDialogOpen(true);
+      onClose();
+    },
+  });
 
   return (
     <>
