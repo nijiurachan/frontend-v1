@@ -49,8 +49,13 @@ import { useReplyModalStore } from "../../stores/replyModalStore";
 import { extractImages } from "../../utils/extractImages";
 import { extractPopularPosts } from "../../utils/extractPopularPosts";
 import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
+import {
+  isAbortError,
+  LatestSearchRequestGuard,
+} from "../../utils/latestSearchRequest";
 import type { SearchResult } from "../../utils/searchPosts";
 import { searchPosts } from "../../utils/searchPosts";
+import { resolvePostSeqFromHash } from "../../utils/threadHash";
 import { DesktopThreadView } from "../desktop/DesktopThreadView";
 import { PostList } from "../lists/PostList";
 import { ThreadOP } from "./ThreadOP";
@@ -129,10 +134,19 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [isQuoteSearchOpen, setIsQuoteSearchOpen] = useState(false);
   const [quoteSearchText, setQuoteSearchText] = useState("");
+  const searchRequestGuardRef = useRef<LatestSearchRequestGuard | null>(null);
+  if (searchRequestGuardRef.current === null) {
+    searchRequestGuardRef.current = new LatestSearchRequestGuard();
+  }
   const fontSize = useSettingsStore((s) => `${s.fontScalePosts}%`);
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: スレ切替時に返信モーダルを閉じる
   useEffect(() => (): void => resetReplyModal(), [resetReplyModal, threadId]);
+  // biome-ignore lint/correctness/useExhaustiveDependencies: threadId changes invalidate an in-flight search even though the cleanup reads only the stable ref
+  useEffect(
+    () => (): void => searchRequestGuardRef.current?.cancel(),
+    [threadId],
+  );
 
   const { isPostHidden, showNgContent } = useNgStore();
   const images = useMemo(() => {
@@ -156,21 +170,30 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
   // 検索は backend-v1 の公開検索 API を使い、結果を現在のスレッドに限定する。
   const handleSearch = useCallback(
     async (query: string): Promise<void> => {
+      const requestGuard = searchRequestGuardRef.current;
+      if (!requestGuard) return;
       if (!query.trim() || !data) {
+        requestGuard.cancel();
         setSearchResults([]);
         setIsSearching(false);
         return;
       }
+      const request = requestGuard.start();
       setIsSearching(true);
       if (isArchived) {
-        setSearchResults(searchPosts(data.posts, query));
-        setIsSearching(false);
+        if (requestGuard.isCurrent(request)) {
+          setSearchResults(searchPosts(data.posts, query));
+          setIsSearching(false);
+        }
+        requestGuard.finish(request);
         return;
       }
       try {
         const response = await apiGet<SearchResponse>(
           `/search?q=${encodeURIComponent(query.trim())}`,
+          { signal: request.signal },
         );
+        if (!requestGuard.isCurrent(request)) return;
         const postIndex = new Map(
           data.posts.map((post, index) => [post.id, index]),
         );
@@ -180,10 +203,13 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
             .map((post) => ({ post, index: postIndex.get(post.id) ?? -1 }))
             .filter((result) => result.index >= 0),
         );
-      } catch {
-        setSearchResults([]);
+      } catch (error) {
+        if (!isAbortError(error) && requestGuard.isCurrent(request)) {
+          setSearchResults([]);
+        }
       } finally {
-        setIsSearching(false);
+        if (requestGuard.isCurrent(request)) setIsSearching(false);
+        requestGuard.finish(request);
       }
     },
     [data, isArchived, threadId],
@@ -272,12 +298,8 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
 
   useEffect(() => {
     if (!isLoading && hash && data) {
-      const hashValue = hash.replace(/^#(?:post-)?/, "");
-      const post = data.posts.find(
-        (candidate) =>
-          candidate.id === hashValue || String(candidate.seq) === hashValue,
-      );
-      if (post) scrollToPost(post.seq);
+      const postSeq = resolvePostSeqFromHash(hash, data.posts);
+      if (postSeq !== null) scrollToPost(postSeq);
     }
   }, [data, hash, isLoading, scrollToPost]);
 

@@ -6,7 +6,10 @@ import type { Post, PostBodyLine } from "@/entities/post";
 import { PlayerTrigger } from "@/features/player/components";
 import { type Segment, segmentize } from "@/shared/lib";
 import { TextDiced, TextLink } from "@/shared/ui/navigation";
-import { resolveQuotedPost } from "../utils/quotePreview";
+import {
+  getQuotePostIndex,
+  resolveQuotedPostFromIndex,
+} from "../utils/quotePreview";
 import { QuoteHoverPreview } from "./QuoteHoverPreview";
 
 interface Props {
@@ -91,6 +94,10 @@ export const LineDisplay: React.FunctionComponent<Props> = ({
   onJumpToPost,
 }: Props) => {
   const segments = useMemo(() => segmentize(line.text), [line.text]); //１行を解釈してquoteかどうか判別し、link属性とdice属性が見つかればセグメントに分ける。
+  const quotePostIndex = useMemo(
+    () => (allPosts ? getQuotePostIndex(allPosts) : null),
+    [allPosts],
+  );
 
   // 各セグメントの開始文字オフセット（連続した虹色サイクル用）
   const segmentOffsets = useMemo<number[]>(() => {
@@ -104,8 +111,8 @@ export const LineDisplay: React.FunctionComponent<Props> = ({
   }, [segments]);
 
   if (line.type === "quote") {
-    const quoteTarget = allPosts
-      ? resolveQuotedPost(line.text, postNumber, allPosts)
+    const quoteTarget = quotePostIndex
+      ? resolveQuotedPostFromIndex(line.text, postNumber, quotePostIndex)
       : null;
     return (
       <QuoteHoverPreview target={quoteTarget} onJumpToPost={onJumpToPost}>

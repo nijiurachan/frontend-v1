@@ -2,6 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Post } from "@/entities/post";
 import { useIsDesktop } from "@/shared/hooks";
+import {
+  clearQuotePreviewCloseTimer,
+  getQuotePreviewMode,
+} from "../utils/quoteHoverPreview";
 
 interface Props {
   target: Post | null;
@@ -20,12 +24,10 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const anchorRef = useRef<HTMLSpanElement>(null);
   const closeTimerRef = useRef<number | null>(null);
+  const previewMode = getQuotePreviewMode(target, Boolean(onJumpToPost));
 
   const cancelClose = (): void => {
-    if (closeTimerRef.current !== null) {
-      window.clearTimeout(closeTimerRef.current);
-      closeTimerRef.current = null;
-    }
+    clearQuotePreviewCloseTimer(closeTimerRef, window.clearTimeout);
   };
 
   const scheduleClose = (): void => {
@@ -48,7 +50,24 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
     };
   }, [isOpen]);
 
-  if (!isDesktop || !target) return <>{children}</>;
+  useEffect(
+    () => (): void =>
+      clearQuotePreviewCloseTimer(closeTimerRef, window.clearTimeout),
+    [],
+  );
+
+  if (!isDesktop || !target || previewMode === "hidden") {
+    return <>{children}</>;
+  }
+
+  const previewContent = (
+    <>
+      <span className="quote-preview-number">No.{target.seq}</span>
+      <span className="quote-preview-body">
+        {target.body || "（本文なし）"}
+      </span>
+    </>
+  );
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: hover-only preview anchor
@@ -64,23 +83,30 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
       {children}
       {isOpen && typeof document !== "undefined"
         ? createPortal(
-            <button
-              type="button"
-              className="quote-preview-popup"
-              style={{ left: position.left, top: position.top }}
-              onMouseEnter={cancelClose}
-              onMouseLeave={scheduleClose}
-              onClick={(): void => onJumpToPost?.(target.seq)}
-              aria-label={`No.${target.seq}へ移動`}
-            >
-              <span className="quote-preview-number">No.{target.seq}</span>
-              <span className="quote-preview-body">
-                {target.status !== "public"
-                  ? "このレスは表示できません"
-                  : target.body || "（本文なし）"}
-              </span>
-              <span className="quote-preview-hint">クリックでレスへ移動</span>
-            </button>,
+            previewMode === "interactive" && onJumpToPost ? (
+              <button
+                type="button"
+                className="quote-preview-popup"
+                style={{ left: position.left, top: position.top }}
+                onMouseEnter={cancelClose}
+                onMouseLeave={scheduleClose}
+                onClick={(): void => onJumpToPost(target.seq)}
+                aria-label={`No.${target.seq}へ移動`}
+              >
+                {previewContent}
+                <span className="quote-preview-hint">クリックでレスへ移動</span>
+              </button>
+            ) : (
+              // biome-ignore lint/a11y/noStaticElementInteractions: hover preview stays open while pointer is over it
+              <div
+                className="quote-preview-popup"
+                style={{ left: position.left, top: position.top }}
+                onMouseEnter={cancelClose}
+                onMouseLeave={scheduleClose}
+              >
+                {previewContent}
+              </div>
+            ),
             document.body,
           )
         : null}

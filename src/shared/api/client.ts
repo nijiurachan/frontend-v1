@@ -23,6 +23,7 @@ interface RequestOptions {
   token?: string;
   requiresToken?: boolean;
   cache?: RequestCache;
+  signal?: AbortSignal;
 }
 
 interface TokenIssueResult {
@@ -154,6 +155,7 @@ async function request<T>(
     method,
     credentials: "same-origin",
     cache: options.cache,
+    signal: options.signal,
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });

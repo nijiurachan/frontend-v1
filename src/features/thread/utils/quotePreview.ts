@@ -1,6 +1,32 @@
 import type { Post } from "../../../entities/post";
 import { stripQuoteLines } from "../../../shared/lib/quoteUtils";
 
+interface IndexedPost {
+  post: Post;
+  searchText: string;
+}
+
+export interface QuotePostIndex {
+  bySeq: ReadonlyMap<number, Post>;
+  descending: readonly IndexedPost[];
+}
+
+const quotePostIndexCache: WeakMap<Post[], QuotePostIndex> = new WeakMap();
+
+export function getQuotePostIndex(allPosts: Post[]): QuotePostIndex {
+  const cached = quotePostIndexCache.get(allPosts);
+  if (cached) return cached;
+  const descending = [...allPosts]
+    .sort((left, right) => right.seq - left.seq)
+    .map((post) => ({ post, searchText: getSearchText(post) }));
+  const index: QuotePostIndex = {
+    bySeq: new Map(allPosts.map((post) => [post.seq, post])),
+    descending,
+  };
+  quotePostIndexCache.set(allPosts, index);
+  return index;
+}
+
 /**
  * 引用行から、現在のレスより前にある引用元を全レス配列から解決する。
  * DOMに存在するレスを探さないため、仮想化窓の外にあるレスも対象にできる。
@@ -10,6 +36,18 @@ export function resolveQuotedPost(
   currentSeq: number,
   allPosts: Post[],
 ): Post | null {
+  return resolveQuotedPostFromIndex(
+    quoteLine,
+    currentSeq,
+    getQuotePostIndex(allPosts),
+  );
+}
+
+export function resolveQuotedPostFromIndex(
+  quoteLine: string,
+  currentSeq: number,
+  index: QuotePostIndex,
+): Post | null {
   const quoteText = quoteLine
     .trim()
     .replace(/^(?:(?:&gt;|>)+)\s*/, "")
@@ -17,17 +55,17 @@ export function resolveQuotedPost(
   if (!quoteText) return null;
 
   const directSeq = quoteText.match(/^No\.(\d+)$/i)?.[1];
-  const candidates = allPosts
-    .filter((post) => post.seq < currentSeq)
-    .sort((left, right) => right.seq - left.seq);
-
   if (directSeq !== undefined) {
-    return candidates.find((post) => String(post.seq) === directSeq) ?? null;
+    const post = index.bySeq.get(Number(directSeq));
+    return post && post.seq < currentSeq ? post : null;
   }
 
   const lowerQuote = quoteText.toLowerCase();
   return (
-    candidates.find((post) => getSearchText(post).includes(lowerQuote)) ?? null
+    index.descending.find(
+      ({ post, searchText }) =>
+        post.seq < currentSeq && searchText.includes(lowerQuote),
+    )?.post ?? null
   );
 }
 

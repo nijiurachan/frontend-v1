@@ -16,6 +16,7 @@ import {
   runAimogeDataHook,
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
+import { mergeThreadChunkElements } from "../utils/threadChunks";
 import { mergeThreadPosts } from "../utils/threadPosts";
 import {
   getThreadChunkStaleTime,
@@ -181,7 +182,10 @@ export function useThread(
     if (isArchiveView) return fullThreadData;
     if (!stateData || chunkElements.length === 0) return undefined;
 
-    const allElements = mergeChunkElements(chunkElements, acceptedNewPosts);
+    const allElements = mergeThreadChunkElements(
+      acceptedNewPosts,
+      chunkElements,
+    );
     const posts = mergeThreadPosts(
       threadId,
       allElements,
@@ -269,7 +273,7 @@ export function useThread(
   const acceptNewPosts = useCallback(() => {
     if (visibleNewPosts.length === 0) return;
     setAcceptedNewPosts((current) =>
-      mergeChunkElements(current, visibleNewPosts),
+      mergeThreadChunkElements(current, visibleNewPosts),
     );
     latestAcceptedSeqRef.current = Math.max(
       latestAcceptedSeqRef.current,
@@ -306,15 +310,6 @@ export function useThread(
     isArchived: isArchiveView || Boolean(data?.archivedAt),
     postsContentVersion,
   };
-}
-
-function mergeChunkElements(
-  first: ThreadChunkElement[],
-  second: ThreadChunkElement[],
-): ThreadChunkElement[] {
-  const bySeq = new Map<number, ThreadChunkElement>();
-  for (const element of [...first, ...second]) bySeq.set(element.seq, element);
-  return [...bySeq.values()].sort((left, right) => left.seq - right.seq);
 }
 
 function havePostContentsChanged(

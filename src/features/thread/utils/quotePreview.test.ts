@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import type { Post } from "../../../entities/post";
-import { resolveQuotedPost } from "./quotePreview";
+import { getQuotePostIndex, resolveQuotedPost } from "./quotePreview";
 
 function makePost(seq: number, body: string): Post {
   return {
@@ -34,5 +34,11 @@ describe("resolveQuotedPost", () => {
     ];
 
     expect(resolveQuotedPost(">元レスの本文", 1, allPosts)?.seq).toBe(0);
+  });
+
+  test("同じ投稿配列の検索indexを再利用する", () => {
+    const allPosts = [makePost(0, "zero"), makePost(1, "one")];
+
+    expect(getQuotePostIndex(allPosts)).toBe(getQuotePostIndex(allPosts));
   });
 });
