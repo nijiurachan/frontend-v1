@@ -1,8 +1,5 @@
-import { useState } from "react";
-import { BsImage } from "react-icons/bs";
 import {
   FiArrowLeft,
-  FiFlag,
   FiHash,
   FiSlash,
   FiThumbsDown,
@@ -10,16 +7,11 @@ import {
   FiTrash2,
 } from "react-icons/fi";
 import type { Post } from "@/entities/post";
-import {
-  addNgImageFromAttachment,
-  useNgStore,
-} from "@/features/ng-filter/stores";
+import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
-import { useCloseMutation } from "@/features/thread/hooks/useCloseMutation";
 import { useDeleteMutation } from "@/shared/hooks/useDeleteMutation";
 import { useDelMutation } from "@/shared/hooks/useDelMutation";
-import { ConfirmDialog, Modal } from "@/shared/ui/overlay";
-import { ReportModal } from "../components/modals/ReportModal";
+import { Modal } from "@/shared/ui/overlay";
 import { useSoudaneMutation } from "../hooks/useSoudaneMutation";
 import { useReplyModalStore } from "../stores/replyModalStore";
 
@@ -49,18 +41,18 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
   const { mutate: soudane } = useSoudaneMutation();
   const { mutate: del } = useDelMutation();
   const { mutate: deletePostOrThread } = useDeleteMutation();
-  const { mutate: closeThread } = useCloseMutation(post.thread_id);
   const { deleteKey } = useSettingsStore();
-  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
-  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
 
   // 引用テキストを生成
   const getQuoteText = (type: QuoteType): string => {
     if (type === "no") {
-      return `>No.${post.id}`;
+      return `>No.${post.seq}`;
     } else {
       // 本文引用の場合
-      return post.body.map((line) => `>${line.text}`).join("\n");
+      return post.body
+        .split(/\r?\n/)
+        .map((line) => `>${line}`)
+        .join("\n");
     }
   };
 
@@ -72,13 +64,11 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
 
   // 本文NGハンドラー
   const handleNgBody = (): void => {
-    const plainText = post.plainBody.trim();
+    const plainText = post.body.trim();
     addNgWord(plainText);
     alert("本文をNGワードに追加しました");
     onClose();
   };
-  const attachment = post.attachment;
-
   const actions: ActionItem[] = [
     {
       icon: FiArrowLeft,
@@ -113,18 +103,6 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
       variant: "destructive" as const,
       onClick: handleNgBody,
     },
-    // 画像NG
-    {
-      icon: BsImage,
-      label: "画像NG",
-      variant: "destructive" as const,
-      onClick: attachment
-        ? () => {
-            addNgImageFromAttachment(attachment);
-            onClose();
-          }
-        : undefined,
-    },
     {
       icon: FiThumbsDown,
       label: "del",
@@ -134,72 +112,37 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
         onClose();
       },
     },
-    {
-      icon: FiFlag,
-      label: "通報",
-      onClick: () => {
-        setIsReportModalOpen(true);
-        onClose();
-      },
-    },
   ];
 
-  if (post.number_in_thread === 1) {
-    actions.push({
-      icon: FiTrash2,
-      label: "スレを閉じる",
-      onClick: () => {
-        setIsCloseDialogOpen(true);
-        onClose();
-      },
-    });
-  }
-
   return (
-    <>
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        title="アクション"
-        position="bottom"
-      >
-        <div className="p-4">
-          <div className="grid grid-cols-3 gap-3">
-            {actions.map((action) => (
-              <button
-                type="button"
-                key={action.label}
-                disabled={!action.onClick}
-                onClick={action.onClick}
-                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors"
-              >
-                <action.icon
-                  className={
-                    action.variant === "destructive"
-                      ? "w-6 h-6 text-destructive"
-                      : "w-6 h-6 text-primary"
-                  }
-                />
-                <span className="text-sm text-foreground">{action.label}</span>
-              </button>
-            ))}
-          </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="アクション"
+      position="bottom"
+    >
+      <div className="p-4">
+        <div className="grid grid-cols-3 gap-3">
+          {actions.map((action) => (
+            <button
+              type="button"
+              key={action.label}
+              disabled={!action.onClick}
+              onClick={action.onClick}
+              className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors"
+            >
+              <action.icon
+                className={
+                  action.variant === "destructive"
+                    ? "w-6 h-6 text-destructive"
+                    : "w-6 h-6 text-primary"
+                }
+              />
+              <span className="text-sm text-foreground">{action.label}</span>
+            </button>
+          ))}
         </div>
-      </Modal>
-      <ReportModal
-        isOpen={isReportModalOpen}
-        onClose={(): void => setIsReportModalOpen(false)}
-        postId={post.id}
-      />
-      <ConfirmDialog
-        isOpen={isCloseDialogOpen}
-        onClose={(): void => setIsCloseDialogOpen(false)}
-        onConfirm={(): void => closeThread(deleteKey)}
-        title="スレを閉じる"
-        message={"このスレッドを閉じますか？\n閉店後まもなくスレが落ちます"}
-        confirmText="閉じる"
-        variant="destructive"
-      />
-    </>
+      </div>
+    </Modal>
   );
 };

@@ -17,7 +17,7 @@ export const CatalogGrid: React.FunctionComponent = () => {
   const visibleThreads = useFavoriteThreads(flooredThreads);
 
   const newThreadIds = useMemo(() => {
-    if (lastCatalogIds.length === 0) return new Set<number>();
+    if (lastCatalogIds.length === 0) return new Set<string>();
     const lastSet = new Set(lastCatalogIds);
     return new Set(
       data?.threads.filter((t) => !lastSet.has(t.id)).map((t) => t.id) ?? [],

@@ -8,7 +8,7 @@ interface QuoteSourcesModalProps {
   onClose: () => void;
   sourceIndexes: number[];
   posts: Post[];
-  threadId: number;
+  threadId: string;
   quoteReferencesMap?: QuoteReferencesMap;
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;

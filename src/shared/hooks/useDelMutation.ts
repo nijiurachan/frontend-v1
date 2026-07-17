@@ -3,25 +3,24 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { apiPost } from "@/shared/api";
-import { getFingerprint } from "@/shared/lib/fingerprint";
+import { apiPut } from "@/shared/api";
 
-interface DelResponse {
-  del_count: number;
+interface ReactionResponse {
+  postId: string;
+  type: "del";
 }
 
 export function useDelMutation(): UseMutationResult<
-  DelResponse,
+  ReactionResponse,
   unknown,
-  number
+  string
 > {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (postId: number) => {
-      const fingerprint = await getFingerprint();
-      return apiPost<DelResponse>(`/post/${postId}/del`, {
-        fingerprint,
+    mutationFn: async (postId: string) => {
+      return apiPut<ReactionResponse>(`/posts/${postId}/reactions/del`, {
+        requiresToken: true,
       });
     },
     onSuccess: () => {
@@ -29,7 +28,7 @@ export function useDelMutation(): UseMutationResult<
       queryClient.invalidateQueries({ queryKey: ["threads"] });
       console.info("delしました");
     },
-    onError: (error: unknown, postId: number) => {
+    onError: (error: unknown, postId: string) => {
       console.warn("delに失敗しました", { error, postId });
     },
   });

@@ -9,7 +9,7 @@ import { TextDiced, TextLink } from "@/shared/ui/navigation";
 interface Props {
   line: PostBodyLine;
   onQuoteClick?: (quoteText: string) => void;
-  threadId: number;
+  threadId: string;
   postNumber: number;
   /** モーダル等のサブビュー内表示。プレイリスト登録・チェックボックスを無効化 */
   isSubView?: boolean;

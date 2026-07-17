@@ -22,7 +22,7 @@ export function searchPosts(posts: Post[], query: string): SearchResult[] {
 
   // 全レス（1レス目を含む）を検索
   posts.forEach((post, index) => {
-    const postText = post.plainBody.toLowerCase();
+    const postText = post.body.toLowerCase();
     if (postText.includes(lowerQuery)) {
       results.push({ post, index });
     }

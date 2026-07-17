@@ -16,7 +16,7 @@ export const ArchiveGrid: React.FunctionComponent<ArchiveGridProps> = ({
   return (
     <div className="grid gap-2 p-2 pb-20 grid-cols-2 sm:grid-cols-3">
       {threads.map((thread) => (
-        <ArchiveItem key={thread.id} thread={thread} />
+        <ArchiveItem key={thread.threadId} thread={thread} />
       ))}
     </div>
   );

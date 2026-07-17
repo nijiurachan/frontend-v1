@@ -1,7 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { useParams } from "@tanstack/react-router";
 import { AnimatePresence, motion, type PanInfo } from "motion/react";
-import type { SyntheticEvent } from "react";
 import {
   FiGrid,
   FiMonitor,
@@ -11,12 +9,7 @@ import {
   FiWatch,
   FiX,
 } from "react-icons/fi";
-import noImage from "@/assets/img/no-image.svg";
-import type { ThreadsResponse } from "@/entities/thread";
-import { getImageUrl, getThreadTitle } from "@/entities/thread";
-import { useHistoryStore } from "@/features/history/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
-import { apiGet } from "@/shared/api";
 import { MenuItem } from "./MenuItem";
 
 interface Props {
@@ -28,8 +21,6 @@ export const SideMenu: React.FunctionComponent<Props> = ({
   isOpen,
   onClose,
 }: Props) => {
-  const { getViewedIds, getUnreadCount } = useHistoryStore();
-  const viewedIds = getViewedIds().slice(0, 10);
   const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
   const params = useParams({ strict: false });
 
@@ -37,22 +28,6 @@ export const SideMenu: React.FunctionComponent<Props> = ({
     params.threadId && !/\D/.test(params.threadId)
       ? `/pc/thread.php?id=${params.threadId}&pc=1`
       : "/pc/catalog.php?pc=1";
-
-  const { data } = useQuery({
-    queryKey: ["history-threads", viewedIds],
-    queryFn: async () => {
-      if (viewedIds.length === 0) return { threads: [] };
-      return apiGet<ThreadsResponse>(`/threads?ids=${viewedIds.join(",")}`);
-    },
-    enabled: isOpen && viewedIds.length > 0,
-    staleTime: 60_000,
-  });
-
-  // ID順にソート
-  const historyThreads =
-    data?.threads
-      .filter((t) => viewedIds.includes(t.id))
-      .sort((a, b) => viewedIds.indexOf(a.id) - viewedIds.indexOf(b.id)) ?? [];
 
   return (
     <AnimatePresence>
@@ -148,51 +123,9 @@ export const SideMenu: React.FunctionComponent<Props> = ({
               <header className="px-4 py-2 text-sm font-medium text-muted-foreground bg-card sticky top-14 w-full">
                 閲覧履歴
               </header>
-              {historyThreads.length === 0 ? (
-                <div className="px-4 py-8 text-center text-muted-foreground text-sm">
-                  閲覧履歴がありません
-                </div>
-              ) : (
-                <div className="px-2 pb-4 space-y-1">
-                  {historyThreads.map((thread) => {
-                    const unreadCount = getUnreadCount(
-                      thread.id,
-                      thread.replies_count,
-                    );
-                    return (
-                      <Link
-                        key={thread.id}
-                        to="/thread/$threadId"
-                        params={{ threadId: String(thread.id) }}
-                        onClick={onClose}
-                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted transition-colors"
-                      >
-                        <img
-                          src={getImageUrl(thread.attachment, false)}
-                          alt=""
-                          className="w-12 h-12 rounded object-cover bg-muted"
-                          onError={(e: SyntheticEvent): void => {
-                            (e.target as HTMLImageElement).src = noImage;
-                          }}
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-sm text-foreground truncate">
-                            {getThreadTitle(thread)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {thread.replies_count}レス
-                            {unreadCount && (
-                              <span className="mx-1 text-primary">
-                                未読{unreadCount}レス
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
+              <div className="px-4 py-8 text-center text-muted-foreground text-sm">
+                閲覧履歴のスレッド再取得は backend-v1 の公開 API 未対応です
+              </div>
             </div>
           </motion.aside>
         </>

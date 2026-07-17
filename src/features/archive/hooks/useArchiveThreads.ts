@@ -15,7 +15,7 @@ export function useArchiveThreads(
     queryKey: ["archive-threads", normalizedPage],
     queryFn: () =>
       apiGet<ArchiveThreadsResponse>(
-        `/v1/archive?page=${normalizedPage}&limit=${ARCHIVE_PAGE_LIMIT}`,
+        `/archive?page=${normalizedPage}&limit=${ARCHIVE_PAGE_LIMIT}`,
       ),
     refetchOnWindowFocus: true,
   });

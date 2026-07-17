@@ -1,6 +1,5 @@
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Attachment } from "@/entities/attachment";
 import type { Post } from "@/entities/post";
 import type { Thread } from "@/entities/thread";
 import { getThreadTitle } from "@/entities/thread";
@@ -8,7 +7,7 @@ import { getThreadTitle } from "@/entities/thread";
 interface NgState {
   enabled: boolean;
   showNgContent: boolean;
-  hiddenThreadIds: number[];
+  hiddenThreadIds: string[];
   ngDisplayIds: string[];
   ngTitles: string[];
   ngWords: string[];
@@ -17,8 +16,8 @@ interface NgState {
 
   setEnabled: (enabled: boolean) => void;
   setShowNgContent: (show: boolean) => void;
-  hideThread: (id: number) => void;
-  unhideThread: (id: number) => void;
+  hideThread: (id: string) => void;
+  unhideThread: (id: string) => void;
   addNgDisplayId: (displayId: string) => void;
   removeNgDisplayId: (displayId: string) => void;
   addNgTitle: (title: string) => void;
@@ -36,13 +35,6 @@ interface NgState {
 }
 
 // ─── 外部から呼び出し可能なヘルパー関数 ───
-/** Attachmentから画像NGに追加（コンポーネント外からも利用可能） */
-export function addNgImageFromAttachment(attachment: Attachment): void {
-  if (attachment.ng_hash) {
-    useNgStore.getState().addNgImage(attachment.ng_hash);
-  }
-}
-
 // NG処理本体 useNgStore
 export const useNgStore: UseBoundStore<StoreApi<NgState>> = create<NgState>()(
   persist(
@@ -59,14 +51,14 @@ export const useNgStore: UseBoundStore<StoreApi<NgState>> = create<NgState>()(
       setEnabled: (enabled: boolean) => set({ enabled }),
       setShowNgContent: (showNgContent: boolean) => set({ showNgContent }),
 
-      hideThread: (id: number) =>
+      hideThread: (id: string) =>
         set((s: NgState) => ({
           hiddenThreadIds: s.hiddenThreadIds.includes(id)
             ? s.hiddenThreadIds
             : [...s.hiddenThreadIds, id],
         })),
 
-      unhideThread: (id: number) =>
+      unhideThread: (id: string) =>
         set((s: NgState) => ({
           hiddenThreadIds: s.hiddenThreadIds.filter((i) => i !== id),
         })),
@@ -144,7 +136,7 @@ export const useNgStore: UseBoundStore<StoreApi<NgState>> = create<NgState>()(
         if (state.hiddenThreadIds.includes(thread.id)) return true;
 
         const title = getThreadTitle(thread);
-        const body = thread.body.replace(/<[^>]+>/g, "");
+        const body = thread.opPost.body;
         const text = `${title} ${body}`;
 
         for (const ng of state.ngTitles) {
@@ -163,12 +155,6 @@ export const useNgStore: UseBoundStore<StoreApi<NgState>> = create<NgState>()(
           }
         }
 
-        // 画像NGチェック
-        if (state.ngImages.length > 0 && thread.attachment?.ng_hash) {
-          if (isNgImageMatch(state.ngImages, thread.attachment.ng_hash))
-            return true;
-        }
-
         return false;
       },
 
@@ -176,10 +162,10 @@ export const useNgStore: UseBoundStore<StoreApi<NgState>> = create<NgState>()(
         const state = get();
         if (!state.enabled) return false;
 
-        const joinedBody = post.plainBody;
+        const joinedBody = post.body;
 
-        // display_idでチェック
-        if (post.display_id && state.ngDisplayIds.includes(post.display_id)) {
+        // displayIdでチェック
+        if (post.displayId && state.ngDisplayIds.includes(post.displayId)) {
           return true;
         }
 
@@ -193,12 +179,6 @@ export const useNgStore: UseBoundStore<StoreApi<NgState>> = create<NgState>()(
           } catch {
             // Invalid regex, skip
           }
-        }
-
-        // 画像NGチェック
-        if (state.ngImages.length > 0 && post.attachment?.ng_hash) {
-          if (isNgImageMatch(state.ngImages, post.attachment.ng_hash))
-            return true;
         }
 
         return false;
@@ -248,18 +228,4 @@ export function encodeNgHash(bits: string): string {
   }
   const std = btoa(String.fromCharCode(...bytes));
   return std.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-/** ngImages（ビット文字列配列）と attachment.ng_hash（Base64）を比較 */
-function isNgImageMatch(ngBitsList: string[], base64Hash: string): boolean {
-  const bits = decodeNgHash(base64Hash);
-  if (!bits) return false;
-  for (const ng of ngBitsList) {
-    let match = 0;
-    for (let i = 0; i < 64; i++) {
-      if (bits[i] === ng[i]) match++;
-    }
-    if (match >= 61) return true;
-  }
-  return false;
 }

@@ -11,8 +11,7 @@
     ],
     "module": "ESNext",
     "types": [
-      "vite/client",
-      "@types/cloudflare-turnstile"
+      "vite/client"
     ],
     "skipLibCheck": true,
 

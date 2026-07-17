@@ -24,7 +24,7 @@ export const ArchivePage: React.FunctionComponent = () => {
   // 専用エンドポイントが失敗しても一覧レスポンス埋め込みの容量情報で継続する
   const storage = storageQuery.data ?? data.storage;
 
-  const totalPages = Math.max(1, data.pagination.total_pages);
+  const totalPages = Math.max(1, data.pagination.totalPages);
   const changePage = (nextPage: number): void => {
     void navigate({ search: { page: nextPage } });
   };

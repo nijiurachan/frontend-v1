@@ -10,9 +10,9 @@ interface ArchiveStorageGaugeProps {
 export const ArchiveStorageGauge: React.FunctionComponent<
   ArchiveStorageGaugeProps
 > = ({ storage }: ArchiveStorageGaugeProps) => {
-  const usedBytes = Math.max(0, storage.used_bytes);
-  const limitBytes = Math.max(0, storage.limit_bytes);
-  const remainingBytes = Math.max(0, limitBytes - usedBytes);
+  const usedBytes = Math.max(0, storage.usedBytes);
+  const limitBytes = Math.max(0, storage.limitBytes);
+  const remainingBytes = Math.max(0, storage.remainingBytes);
   const usageRatio =
     limitBytes > 0 ? Math.min(1, Math.max(0, usedBytes / limitBytes)) : 0;
   const usagePercentage = usageRatio * PERCENTAGE;

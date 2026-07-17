@@ -10,9 +10,9 @@ interface DisplayIdMenuProps {
   isOpen: boolean;
   onClose: () => void;
   displayId: string;
-  threadId: number;
+  threadId: string;
   allPosts?: Post[];
-  quoteReferencesMap?: Map<number, number[]>;
+  quoteReferencesMap?: Map<string, number[]>;
   onQuoteClick?: (quoteText: string) => void;
 }
 
@@ -36,10 +36,10 @@ export const DisplayIdMenu: React.FunctionComponent<DisplayIdMenuProps> = ({
   const openReplyModal = useReplyModalStore((s) => s.open);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
 
-  // このdisplay_idを持つレスの数を計算
+  // このdisplayIdを持つレスの数を計算
   const postCount = useMemo(() => {
     if (!allPosts) return 0;
-    return allPosts.filter((p) => p.display_id === displayId).length;
+    return allPosts.filter((p) => p.displayId === displayId).length;
   }, [allPosts, displayId]);
 
   const handleSearch = (): void => {

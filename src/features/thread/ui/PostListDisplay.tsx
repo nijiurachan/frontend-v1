@@ -35,7 +35,7 @@ export const PostListDisplay: React.FunctionComponent<PostListDisplayProps> = ({
           allPosts={allPosts}
           onQuoteClick={onQuoteClick}
           onJumpToPost={
-            onJumpToPost ? (): void => onJumpToPost(post.id) : undefined
+            onJumpToPost ? (): void => onJumpToPost(post.seq) : undefined
           }
         />
       ))}

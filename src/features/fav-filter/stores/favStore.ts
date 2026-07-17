@@ -115,7 +115,7 @@ export const useFavStore: UseBoundStore<StoreApi<FavState>> =
           if (!hasLv1 && !hasLv2) return 0;
 
           const title = getThreadTitle(thread);
-          const body = thread.body.replace(/<[^>]+>/g, "");
+          const body = thread.opPost.body;
           const text = `${title} ${body}`;
 
           if (hasLv2 && matchesAny(text, state.favWords2, state.favRegexes2)) {

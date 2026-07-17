@@ -3,18 +3,17 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { apiPost } from "@/shared/api";
+import { apiDelete } from "@/shared/api";
 
 interface DeleteResponse {
-  thread_deleted: boolean;
-  post_deleted?: boolean;
-  banned: boolean;
+  postId: string;
+  threadDeleted: boolean;
 }
 
 interface DeleteParams {
   password: string;
-  threadId?: number;
-  postId?: number;
+  threadId?: string;
+  postId?: string;
 }
 
 export function useDeleteMutation(): UseMutationResult<
@@ -27,18 +26,17 @@ export function useDeleteMutation(): UseMutationResult<
   return useMutation({
     mutationFn: async ({
       password,
-      threadId,
       postId,
     }: DeleteParams): Promise<DeleteResponse> => {
-      const formData = new FormData();
-      formData.append("password", password);
-      if (threadId != null) formData.append("thread_id", String(threadId));
-      if (postId != null) formData.append("post_id", String(postId));
-
-      return apiPost<DeleteResponse>("/delete", formData);
+      if (postId == null) throw new Error("削除対象が指定されていません");
+      return apiDelete<DeleteResponse>(
+        `/posts/${postId}`,
+        { deleteKey: password },
+        { requiresToken: true },
+      );
     },
     onSuccess: (data: DeleteResponse): void => {
-      if (data.thread_deleted) {
+      if (data.threadDeleted) {
         queryClient.invalidateQueries({ queryKey: ["threads"] });
         alert("スレッドを削除しました");
       } else {

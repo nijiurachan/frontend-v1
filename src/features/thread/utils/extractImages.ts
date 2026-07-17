@@ -7,10 +7,10 @@ export interface ImageItem {
   id: string;
   thumbnail: string;
   path: string;
-  width: number;
-  height: number;
+  width: number | null;
+  height: number | null;
   source: "thread" | "post";
-  postId?: number;
+  postId?: string;
   isVideo: boolean;
 }
 
@@ -24,9 +24,9 @@ export function extractImages(posts: Post[]): ImageItem[] {
   // 全レス（1レス目を含む）から画像を抽出
   posts.forEach((post, index) => {
     if (post.attachment) {
-      // 1レス目（display_id='1'）はスレッド画像として扱う
+      // 1レス目（seq=0）はスレッド画像として扱う
       const source = index === 0 ? "thread" : "post";
-      const id = index === 0 ? `thread-${post.thread_id}` : `post-${post.id}`;
+      const id = index === 0 ? `thread-${post.threadId}` : `post-${post.id}`;
       images.push(createImageItem(post.attachment, source, id, post.id));
     }
   });
@@ -38,12 +38,12 @@ function createImageItem(
   attachment: Attachment,
   source: "thread" | "post",
   id: string,
-  postId?: number,
+  postId?: string,
 ): ImageItem {
   return {
     id,
-    thumbnail: resolveUploadPath(attachment.thumbnail),
-    path: resolveUploadPath(attachment.path),
+    thumbnail: resolveUploadPath(attachment.thumbnailUrl),
+    path: resolveUploadPath(attachment.originalUrl),
     width: attachment.width,
     height: attachment.height,
     source,

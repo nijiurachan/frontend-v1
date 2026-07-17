@@ -30,8 +30,12 @@ export function isVideoFile(filename: string, mimeType?: string): boolean {
  * Attachmentが動画かどうかを判定する
  */
 export function isVideoAttachment(attachment: {
-  path: string;
-  mime_type: string;
+  originalUrl: string;
+  mime: string;
+  kind?: string;
 }): boolean {
-  return isVideoFile(attachment.path, attachment.mime_type);
+  return (
+    attachment.kind === "video" ||
+    isVideoFile(attachment.originalUrl, attachment.mime)
+  );
 }

@@ -39,7 +39,7 @@ export const PostItem: React.FunctionComponent<Props> = memo(function PostItem({
         <div className="flex items-center justify-between">
           <div className="flex flex-col">
             <span className="text-sm text-muted-foreground">
-              No.{post.id} のレスは非表示になっています
+              No.{post.seq} のレスは非表示になっています
             </span>
             <span className="text-xs text-muted-foreground/70">
               クリックして内容を表示

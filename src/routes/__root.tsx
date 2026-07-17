@@ -5,7 +5,6 @@ import { MobileLayout } from "@/app/layouts/MobileLayout";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { FONT_SIZE_DEFAULT } from "@/features/settings/stores/settingsStore";
-import { TurnstileProvider } from "@/features/turnstile/components/TurnstileProvider";
 import { cn } from "@/shared/lib/cn";
 import { ModalProvider } from "@/shared/ui/overlay";
 import { ToastProvider } from "@/shared/ui/toast";
@@ -59,7 +58,6 @@ const RootComponent: React.FunctionComponent = () => {
           )}
         </ModalProvider>
         <ToastProvider />
-        <TurnstileProvider />
       </div>
     </QueryClientProvider>
   );

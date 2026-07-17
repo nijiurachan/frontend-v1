@@ -149,12 +149,12 @@ export const PostList: React.FunctionComponent<Props> = ({
             quoteReferencesMap={quoteReferencesMap}
             allPosts={allPosts}
             onJumpToPost={
-              onJumpToPost ? (): void => onJumpToPost(post.id) : undefined
+              onJumpToPost ? (): void => onJumpToPost(post.seq) : undefined
             }
             isSubView={false}
           />
           <span
-            ref={observePostRead(post.number_in_thread)}
+            ref={observePostRead(post.seq)}
             aria-hidden="true"
             className="pointer-events-none absolute bottom-0 left-0 h-px w-px"
           />

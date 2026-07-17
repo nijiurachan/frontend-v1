@@ -5,7 +5,7 @@ import { apiGet } from "@/shared/api";
 export function useArchiveStorage(): UseQueryResult<ArchiveStorage> {
   return useQuery({
     queryKey: ["archive-storage"],
-    queryFn: () => apiGet<ArchiveStorage>("/v1/archive/storage"),
+    queryFn: () => apiGet<ArchiveStorage>("/archive/storage"),
     refetchOnWindowFocus: true,
   });
 }

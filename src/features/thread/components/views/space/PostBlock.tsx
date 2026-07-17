@@ -7,7 +7,7 @@ interface Props {
 }
 
 export const PostBlock: React.FunctionComponent<Props> = ({ post }: Props) => {
-  const hasBody = post.plainBody.trim().length > 0;
+  const hasBody = post.body.trim().length > 0;
   const attachment = post.attachment;
 
   if (!hasBody && !attachment) return null;
@@ -15,14 +15,14 @@ export const PostBlock: React.FunctionComponent<Props> = ({ post }: Props) => {
   const imageSrc = attachment
     ? resolveUploadPath(
         isVideoAttachment(attachment)
-          ? attachment.thumbnail || attachment.path
-          : attachment.path,
+          ? attachment.thumbnailUrl
+          : attachment.originalUrl,
       )
     : null;
 
   return (
     <section className="sw-post-block">
-      {hasBody && <p>{decorateTitle(post.plainBody)}</p>}
+      {hasBody && <p>{decorateTitle(post.body)}</p>}
       {imageSrc && (
         <img
           className="sw-post-image"

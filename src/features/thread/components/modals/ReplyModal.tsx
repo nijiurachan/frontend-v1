@@ -32,8 +32,7 @@ export const ReplyModal: React.FunctionComponent<Props> = ({
         <div className="p-4">
           <PostForm
             threadId={thread.id}
-            allowImage={thread.allow_image_replies}
-            isArchived={thread.is_archived}
+            allowImage
             initialComment={initialComment}
             openCount={openCount}
             onSuccess={destroy}

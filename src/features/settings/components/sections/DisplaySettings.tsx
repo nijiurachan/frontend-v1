@@ -36,6 +36,8 @@ export const DisplaySettings: React.FunctionComponent = () => {
     setSpaceMode,
     jukeboxEnabled,
     setJukeboxEnabled,
+    showR18,
+    setShowR18,
     resetSettings,
     fontScalePosts,
     setFontScalePosts,
@@ -215,6 +217,16 @@ export const DisplaySettings: React.FunctionComponent = () => {
             checked={jukeboxEnabled}
             onChange={setJukeboxEnabled}
             aria-label="ジュークボックス切替"
+          />
+        </SettingRow>
+        <SettingRow
+          label="R18画像を表示"
+          description="R18スレッドのサムネイルをぼかさず表示します"
+        >
+          <Toggle
+            checked={showR18}
+            onChange={setShowR18}
+            aria-label="R18画像表示切替"
           />
         </SettingRow>
       </SettingSection>

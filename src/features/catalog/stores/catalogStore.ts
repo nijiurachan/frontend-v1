@@ -1,13 +1,7 @@
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type SortType =
-  | "default"
-  | "created"
-  | "old"
-  | "replies"
-  | "momentum"
-  | "soudane";
+export type SortType = "default" | "created" | "old" | "replies";
 
 export type AnimSetting = "always" | "never";
 
@@ -25,8 +19,9 @@ interface CatalogValues {
   showUnreadCount: boolean;
   catalogAnim: AnimSetting;
   threadMenuOpenMethod: ThreadMenuOpenMethod;
-  lastCatalogIds: number[];
+  lastCatalogIds: string[];
   searchQuery: string;
+  selectedTag: string | null;
 }
 
 interface CatalogActions {
@@ -37,8 +32,9 @@ interface CatalogActions {
   setShowUnreadCount: (show: boolean) => void;
   setCatalogAnim: (anim: AnimSetting) => void;
   setThreadMenuOpenMethod: (method: ThreadMenuOpenMethod) => void;
-  updateLastCatalogIds: (ids: number[]) => void;
+  updateLastCatalogIds: (ids: string[]) => void;
   setSearchQuery: (query: string) => void;
+  setSelectedTag: (tag: string | null) => void;
   resetCatalogSettings: () => void;
 }
 
@@ -54,6 +50,7 @@ const DEFAULT_CATALOG_VALUES: CatalogValues = {
   threadMenuOpenMethod: "auto",
   lastCatalogIds: [],
   searchQuery: "",
+  selectedTag: null,
 };
 
 export const useCatalogStore: UseBoundStore<StoreApi<CatalogState>> =
@@ -70,8 +67,9 @@ export const useCatalogStore: UseBoundStore<StoreApi<CatalogState>> =
         setCatalogAnim: (anim: AnimSetting) => set({ catalogAnim: anim }),
         setThreadMenuOpenMethod: (method: ThreadMenuOpenMethod) =>
           set({ threadMenuOpenMethod: method }),
-        updateLastCatalogIds: (ids: number[]) => set({ lastCatalogIds: ids }),
+        updateLastCatalogIds: (ids: string[]) => set({ lastCatalogIds: ids }),
         setSearchQuery: (query: string) => set({ searchQuery: query }),
+        setSelectedTag: (selectedTag: string | null) => set({ selectedTag }),
         resetCatalogSettings: () => set({ ...DEFAULT_CATALOG_VALUES }),
       }),
       {

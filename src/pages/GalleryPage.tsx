@@ -11,7 +11,6 @@ export const GalleryPage: React.FunctionComponent = () => {
   const { threadId } = useParams({ from: "/gallery/$threadId" });
   const { start } = useSearch({ from: "/gallery/$threadId" });
   const navigate = useNavigate();
-  const id = Number(threadId);
 
   // ギャラリー表示中はhtml/bodyを完全ロックしてiOS Safariのビューポート弾性スクロールを防止
   useEffect(() => {
@@ -48,7 +47,7 @@ export const GalleryPage: React.FunctionComponent = () => {
     };
   }, []);
 
-  const { data, isLoading, error } = useThread(id);
+  const { data, isLoading, error } = useThread(threadId);
   const { isPostHidden, showNgContent } = useNgStore();
 
   const images = useMemo(() => {

@@ -2,6 +2,7 @@ import { useCallback, useEffect } from "react";
 import { FiPlus } from "react-icons/fi";
 import { CatalogGrid } from "@/features/catalog/components/lists";
 import { SortNav } from "@/features/catalog/components/navigation";
+import { TagFilter } from "@/features/catalog/components/TagFilter";
 import { useThreads } from "@/features/catalog/hooks";
 import { useCatalogStore } from "@/features/catalog/stores";
 import { ThreadCreateModal } from "@/features/thread/components/modals";
@@ -42,6 +43,7 @@ export const CatalogPage: React.FunctionComponent = () => {
       <title>{import.meta.env.APP_NAME}</title>
       <BmgBanner />
       <PullRefresh onRefresh={onRefresh}>
+        <TagFilter threads={data?.threads ?? []} />
         <CatalogGrid />
       </PullRefresh>
       <SortNav

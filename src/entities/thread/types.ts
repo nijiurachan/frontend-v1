@@ -1,48 +1,51 @@
-import type { Attachment } from "@/entities/attachment";
 import type { Post } from "@/entities/post";
 
-export interface Thread {
-  id: number;
-  board_id: string;
-  title: string | null;
+export type ThreadTagKind = "fixed" | "free";
+export type ThreadTagSource = "op" | "ai" | "moderator";
+
+/** backend-v1 公開APIのタグ形状（addedAtは公開レスポンスに含まれない） */
+export interface ThreadTag {
   name: string;
-  email: string;
-  body: string;
-  created_at: string;
-  last_post_at: string;
-  expires_at: string;
-  is_sage: boolean;
-  is_locked: boolean;
-  is_permanent: boolean;
-  allow_image_replies: boolean;
-  is_admin: number;
-  is_deleted: number;
-  display_id: string | null;
-  op_display_id: string | null;
-  poster_id: string | null;
-  op_is_warned: boolean;
-  op_is_exposed: boolean;
-  host: string | null;
-  replies_count: number;
-  soudane_count: number;
-  op_post_id: number;
-  is_archived: boolean;
-  archived_at: string;
-  storage_path: string;
-  thumbnail_path: string;
-  attachment: Attachment | null;
+  kind: ThreadTagKind;
+  source: ThreadTagSource;
 }
 
-export interface ThreadsResponse {
-  threads: Thread[];
-  pagination: {
-    page: number;
-    total_pages: number;
-    total_threads: number;
-  };
+/** backend-v1 ThreadSummary */
+export interface ThreadSummary {
+  id: string;
+  opPost: Post;
+  replyCount: number;
+  createdAt: string;
+  bumpedAt: string;
+  tags: ThreadTag[];
 }
 
-export interface ThreadDetailResponse {
-  thread: Thread;
+/** backend-v1 ThreadView */
+export interface ThreadView {
+  id: string;
+  replyCount: number;
+  createdAt: string;
+  bumpedAt: string;
+  tags: ThreadTag[];
   posts: Post[];
 }
+
+export interface TopPage {
+  announcements: string[];
+  threads: ThreadSummary[];
+}
+
+export interface Catalog {
+  sort: "bump" | "new" | "old" | "replies";
+  threads: ThreadSummary[];
+}
+
+export interface SearchResponse {
+  query: string;
+  posts: Post[];
+}
+
+/** 既存UIが Thread と呼んでいるドメイン型 */
+export type Thread = ThreadSummary;
+export type ThreadsResponse = Catalog;
+export type ThreadDetailResponse = ThreadView;

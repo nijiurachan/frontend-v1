@@ -1,4 +1,3 @@
-import { BsImage } from "react-icons/bs";
 import { FiTrash2 } from "react-icons/fi";
 import {
   MdBlock,
@@ -10,10 +9,7 @@ import noImage from "@/assets/img/no-image.svg";
 import type { Thread } from "@/entities/thread";
 import { getImageUrl, getThreadTitle } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores/historyStore";
-import {
-  addNgImageFromAttachment,
-  useNgStore,
-} from "@/features/ng-filter/stores/ngStore";
+import { useNgStore } from "@/features/ng-filter/stores/ngStore";
 import { useDelMutation } from "@/shared/hooks/useDelMutation";
 import { Button } from "@/shared/ui/form";
 import { Modal } from "@/shared/ui/overlay";
@@ -36,7 +32,7 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
 
   const handleDel = (): void => {
     if (confirm("スレッドをdelしますか？")) {
-      del(thread.op_post_id);
+      del(thread.opPost.id);
     }
     onClose();
   };
@@ -58,20 +54,13 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
     onClose();
   };
 
-  const handleNgImage = (): void => {
-    if (!thread.attachment?.ng_hash) return;
-    addNgImageFromAttachment(thread.attachment);
-    alert("画像NGに追加しました");
-    onClose();
-  };
-
   const handleRemoveHistory = (): void => {
     removeFromHistory(thread.id);
     alert("履歴から削除しました");
     onClose();
   };
 
-  const imageUrl = getImageUrl(thread.attachment, false);
+  const imageUrl = getImageUrl(thread.opPost.attachment, false);
   const title = getThreadTitle(thread);
 
   return (
@@ -89,7 +78,7 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
         <div className="flex-1 min-w-0">
           <div className="font-medium text-foreground truncate">{title}</div>
           <div className="text-sm text-muted-foreground">
-            No.{thread.id} / {thread.replies_count}レス
+            スレッドID: {thread.id} / {thread.replyCount}レス
           </div>
         </div>
       </div>
@@ -131,13 +120,6 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
           icon={<MdBlock className="w-5 h-5" />}
         >
           NGスレ文追加
-        </Button>
-        <Button
-          variant="menu"
-          onClick={handleNgImage}
-          icon={<BsImage className="w-5 h-5" />}
-        >
-          NG画像追加
         </Button>
         <Button
           variant="menu"

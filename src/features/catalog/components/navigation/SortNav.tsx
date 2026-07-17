@@ -10,8 +10,6 @@ const SORT_OPTIONS: { key: SortType; label: string }[] = [
   { key: "created", label: "新順" },
   { key: "old", label: "古順" },
   { key: "replies", label: "多順" },
-  { key: "momentum", label: "勢順" },
-  { key: "soudane", label: "そ順" },
 ];
 
 interface SortNavProps {

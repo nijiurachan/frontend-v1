@@ -3,13 +3,16 @@ import { useState } from "react";
 import { GiSpiralBloom } from "react-icons/gi";
 import { MdBlock, MdExpandMore } from "react-icons/md";
 import type { Post } from "@/entities/post";
+import type { ThreadTag } from "@/entities/thread";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { TagBadges } from "@/shared/ui/navigation";
 import type { QuoteReferencesMap } from "../../utils";
 import { PostDisplay } from "../PostDisplay";
 
 interface Props {
   post: Post;
+  tags: ThreadTag[];
   onQuoteClick?: (quoteText: string) => void;
   quoteReferencesMap?: QuoteReferencesMap;
   allPosts?: Post[];
@@ -18,6 +21,7 @@ interface Props {
 
 export const ThreadOP: React.FunctionComponent<Props> = ({
   post,
+  tags,
   onQuoteClick,
   quoteReferencesMap,
   allPosts,
@@ -73,7 +77,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
 
   const handleOpenSpaceMode = (e: React.MouseEvent): void => {
     e.stopPropagation();
-    const url = `${import.meta.env.BASE_PATH}/space/${post.thread_id}`;
+    const url = `${import.meta.env.BASE_PATH}/space/${post.threadId}`;
     const win = window.open(url, "_blank");
     if (!win || win.closed) {
       window.location.href = url;
@@ -82,6 +86,9 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
 
   return (
     <div id="post-0" className="relative">
+      <div className="px-4 pt-4">
+        <TagBadges tags={tags} />
+      </div>
       {isNg && showNgContent && (
         // biome-ignore lint: <label>＆非表示<button>に乗り換え予定
         <div
@@ -113,7 +120,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
         quoteReferencesMap={quoteReferencesMap}
         allPosts={allPosts}
         onJumpToPost={
-          onJumpToPost ? (): void => onJumpToPost(post.id) : undefined
+          onJumpToPost ? (): void => onJumpToPost(post.seq) : undefined
         }
         isSubView={false}
       />

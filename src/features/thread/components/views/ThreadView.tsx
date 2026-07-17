@@ -21,15 +21,13 @@ import {
 } from "react-icons/fi";
 import { HiOutlineMenu } from "react-icons/hi";
 import { useSideMenu } from "@/app/layouts/SideMenuContext";
+import type { SearchResponse, ThreadSummary } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import type * as modals from "@/features/thread/components/modals";
-import {
-  type ActionButton,
-  BottomActionBar,
-  NewRepliesBanner,
-} from "@/features/thread/ui";
+import { type ActionButton, BottomActionBar } from "@/features/thread/ui";
+import { apiGet } from "@/shared/api";
 import { useSwipeBack } from "@/shared/hooks/useSwipeBack";
 import { BmgBanner } from "@/shared/ui/ad";
 import {
@@ -40,13 +38,12 @@ import {
   PullRefresh,
 } from "@/shared/ui/feedback";
 import { ModalContext } from "@/shared/ui/overlay/ModalContext";
-import { useNewReplyCheck } from "../../hooks/useNewReplyCheck";
 import { useThread } from "../../hooks/useThread";
 import { useReplyModalStore } from "../../stores/replyModalStore";
 import { extractImages } from "../../utils/extractImages";
 import { extractPopularPosts } from "../../utils/extractPopularPosts";
 import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
-import { type SearchResult, searchPosts } from "../../utils/searchPosts";
+import type { SearchResult } from "../../utils/searchPosts";
 import { PostList } from "../lists/PostList";
 import { ThreadOP } from "./ThreadOP";
 
@@ -76,15 +73,9 @@ const QuoteSearchModal: LazyExoticComponent<typeof modals.QuoteSearchModal> =
     })),
   );
 
-/**
- * 既読レス数の記録関連処理をまとめたフック。
- *
- * 開いたことのあるスレに対し、スレページを離れるタイミング、または、スレを更新したタイミングで
- * どこまでレスを読んだかを記録し、カタログに未読レス数を表示できるようにすることを意図する。
- * (「カタログの前回更新時からの増分」ではない)
- */
-function useReadReplyNumber(threadId: number): {
-  handlePostFullyVisible: (postIndex: number) => void;
+/** 既読レス数の記録をページの更新・離脱時に保存する。 */
+function useReadReplyNumber(threadId: string): {
+  handlePostFullyVisible: (replyNumberInThread: number) => void;
   handleRefresh: () => void;
 } {
   const recordReadReplyNumber = useHistoryStore((s) => s.recordReadReplyNumber);
@@ -93,40 +84,25 @@ function useReadReplyNumber(threadId: number): {
 
   const handlePostFullyVisible = useCallback(
     (replyNumberInThread: number): void => {
-      // ここでは最大値ではなく直近に見たレス番号を保持する。「チラ見」を既読カウントに入れないため
       fullyVisibleReplyNumberRef.current = replyNumberInThread;
     },
     [],
   );
 
-  // スレを更新する際も既読レス数を記憶する
   const handleRefresh = useCallback((): void => {
     recordReadReplyNumber(threadId, fullyVisibleReplyNumberRef.current);
   }, [recordReadReplyNumber, threadId]);
 
-  // スレを離れる際に既読レス数を記憶する
-  // 離れる瞬間に映り込んでいたレス番が対象
   useEffect(() => {
-    // スレページを離れる"可能性のある"操作が行われた場合、既読レスを記憶する
-    // 実際には離れていないタイミングで呼び出される可能性もある(実害はない)
     function handlePageLeave(): void {
       recordReadReplyNumber(threadId, fullyVisibleReplyNumberRef.current);
     }
 
     document.addEventListener("visibilitychange", handlePageLeave);
     window.addEventListener("pagehide", handlePageLeave);
-
     const routerUnsubscribe = router.subscribe("onBeforeNavigate", (event) => {
-      if (!event.pathChanged) {
-        return;
-      }
-
-      handlePageLeave();
+      if (event.pathChanged) handlePageLeave();
     });
-
-    // TODO スレを開いた時に最初の未読レスへスクロールする仕組みを何処かに作る(TanStackのonRenderedで？)。
-    // 注: 他の自動スクロールギミックと被らないよう
-    // TODO window.scrollYも記録して正確なスクロール量を再現する？
 
     return (): void => {
       routerUnsubscribe();
@@ -135,27 +111,21 @@ function useReadReplyNumber(threadId: number): {
     };
   }, [recordReadReplyNumber, router, threadId]);
 
-  return {
-    handlePostFullyVisible,
-    handleRefresh,
-  };
+  return { handlePostFullyVisible, handleRefresh };
 }
 
 interface Props {
-  threadId: number;
+  threadId: string;
 }
 
 export const ThreadView: React.FunctionComponent<Props> = ({
   threadId,
 }: Props) => {
-  const { data, isLoading, error, refetch, isFetching, dataUpdatedAt } =
-    useThread(threadId);
-  const { newCount } = useNewReplyCheck(threadId);
+  const { data, isLoading, error, refetch, isFetching } = useThread(threadId);
   const router = useRouter();
   const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
   const { openSideMenu } = useSideMenu();
-
   const swipeContentRef = useRef<HTMLDivElement>(null);
   const handleSwipeBack = useCallback(() => {
     if (router.history.canGoBack?.()) {
@@ -177,16 +147,15 @@ export const ThreadView: React.FunctionComponent<Props> = ({
   const [isPopularPostsOpen, setIsPopularPostsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [isQuoteSearchOpen, setIsQuoteSearchOpen] = useState(false);
   const [quoteSearchText, setQuoteSearchText] = useState("");
   const fontSize = useSettingsStore((s) => `${s.fontScalePosts}%`);
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: スレ表示切り替え時に返信モーダルの状態をリセット
+  // biome-ignore lint/correctness/useExhaustiveDependencies: スレ切替時に返信モーダルを閉じる
   useEffect(() => (): void => resetReplyModal(), [threadId]);
 
   const { isPostHidden, showNgContent } = useNgStore();
-
-  // スレッド内の全画像を抽出（NG対応: 非表示レスの画像を除外）
   const images = useMemo(() => {
     if (!data) return [];
     const posts = showNgContent
@@ -195,53 +164,62 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     return extractImages(posts);
   }, [data, isPostHidden, showNgContent]);
 
-  // 人気レス（そうだね付き）を抽出（1レス目を含む全レスから取得）
-  const popularPosts = useMemo(() => {
-    if (!data) return [];
-    return extractPopularPosts(data.posts);
-  }, [data]);
-
-  // 引用関係マップを計算（どのレスが何回引用されているか）
-  const quoteReferencesMap = useMemo(() => {
-    if (!data) return new Map();
-    return extractQuoteReferences(data.posts);
-  }, [data]);
-
-  // 既読レス記録処理
+  const popularPosts = useMemo(
+    () => (data ? extractPopularPosts(data.posts) : []),
+    [data],
+  );
+  const quoteReferencesMap = useMemo(
+    () => (data ? extractQuoteReferences(data.posts) : new Map()),
+    [data],
+  );
   const { handlePostFullyVisible, handleRefresh: handleRefreshForReplyNumber } =
     useReadReplyNumber(threadId);
 
-  // 検索処理（1レス目を含む全レスから検索）
+  // 検索は backend-v1 の公開検索 API を使い、結果を現在のスレッドに限定する。
   const handleSearch = useCallback(
-    (query: string) => {
-      if (!data || !query.trim()) {
+    async (query: string): Promise<void> => {
+      if (!query.trim() || !data) {
         setSearchResults([]);
+        setIsSearching(false);
         return;
       }
-      const results = searchPosts(data.posts, query);
-      setSearchResults(results);
+      setIsSearching(true);
+      try {
+        const response = await apiGet<SearchResponse>(
+          `/search?q=${encodeURIComponent(query.trim())}`,
+        );
+        const postIndex = new Map(
+          data.posts.map((post, index) => [post.id, index]),
+        );
+        setSearchResults(
+          response.posts
+            .filter((post) => post.threadId === threadId)
+            .map((post) => ({ post, index: postIndex.get(post.id) ?? -1 }))
+            .filter((result) => result.index >= 0),
+        );
+      } catch {
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
     },
-    [data],
+    [data, threadId],
   );
 
-  // 引用クリック処理
   const handleQuoteClick = useCallback((quoteText: string) => {
     setQuoteSearchText(quoteText);
     setIsQuoteSearchOpen(true);
   }, []);
 
-  // PullRefresh の refetch コールバック
   const handleRefresh = useCallback(async () => {
     handleRefreshForReplyNumber();
     await refetch();
   }, [handleRefreshForReplyNumber, refetch]);
 
-  // ページトップへスクロール（PTR ゾーンの下端 = 見かけ上の上端）
   const scrollToTop = useCallback(() => {
     window.scrollTo({ top: PULL_ZONE_HEIGHT, behavior: "smooth" });
   }, []);
 
-  // ページ最下部へスクロール（下端スペーサーの手前 = 見かけ上の下端）
   const scrollToBottom = useCallback(() => {
     const maxScrollY =
       document.documentElement.scrollHeight - window.innerHeight;
@@ -252,20 +230,16 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     });
   }, []);
 
-  // 指定されたレス番号の位置へスクロール
   const scrollToPost = useCallback(
-    (postIndex: number) => {
+    (postSeq: number) => {
       const nearest =
-        data?.posts.findLast(({ id }) => id <= postIndex) ?? data?.posts[0];
-
+        data?.posts.findLast(({ seq }) => seq <= postSeq) ?? data?.posts[0];
       if (nearest) {
         requestAnimationFrame(() => {
           router.navigate({
             hash: `post-${nearest.id}`,
             replace: true,
-            hashScrollIntoView: {
-              block: "center",
-            },
+            hashScrollIntoView: { block: "center" },
           });
         });
       }
@@ -273,19 +247,14 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     [data?.posts, router.navigate],
   );
 
-  // モーダルからレスへジャンプ
   const handleJumpToPost = useCallback(
-    (postIndex: number) => {
-      // すべてのモーダルを閉じる
+    (postSeq: number) => {
       closeAllModals();
-
-      // 即座にスクロール
-      scrollToPost(postIndex);
+      scrollToPost(postSeq);
     },
     [scrollToPost, closeAllModals],
   );
 
-  // スレッドページ用のアクション
   const threadActions: ActionButton[] = [
     { icon: HiOutlineMenu, label: "メニュー", onClick: openSideMenu },
     {
@@ -318,120 +287,49 @@ export const ThreadView: React.FunctionComponent<Props> = ({
     if (threadId) addViewed(threadId);
   }, [threadId, addViewed]);
 
-  // ハッシュ変更時レス番号にスクロール
   useEffect(() => {
-    if (!isLoading && hash) {
-      const match = hash.match(/^(?:post-)?(\d+)$/);
-      if (match) {
-        const postIndex = Number.parseInt(match[1], 10);
-        scrollToPost(postIndex);
-      }
+    if (!isLoading && hash && data) {
+      const hashValue = hash.replace(/^#(?:post-)?/, "");
+      const post = data.posts.find(
+        (candidate) =>
+          candidate.id === hashValue || String(candidate.seq) === hashValue,
+      );
+      if (post) scrollToPost(post.seq);
     }
-  }, [isLoading, hash, scrollToPost]);
-
-  // Use the query's fetch-success time (dataUpdatedAt) as "now" so the render
-  // stays pure. It refreshes on every successful fetch (initial fetch, refetch,
-  // pull-to-refresh), so the remaining time is recomputed at each update rather
-  // than counting down in real time.
-  // Must run before any early return — Rules of Hooks.
-  // biome-ignore-start lint/correctness/useExhaustiveDependencies(data?.thread): thread自体はスレ落ち表示に影響しない
-  const { isThreadClosed, closureMessage, expireAtMessage, isExpiringSoon } =
-    useMemo(() => {
-      if (!data?.thread) {
-        return {
-          isThreadClosed: false,
-          closureMessage: null as string | null,
-          expireAtMessage: null as string | null,
-          isExpiringSoon: false,
-        };
-      }
-      // "now" はフェッチ成功時刻。再取得のたびに dataUpdatedAt が更新され、
-      // それを依存配列に含めることで残り時間が再計算される。
-      const now = dataUpdatedAt;
-      const rawExpiresAtMs = data.thread.expires_at
-        ? new Date(data.thread.expires_at).getTime()
-        : null;
-      const expiresAtMs =
-        rawExpiresAtMs !== null && Number.isFinite(rawExpiresAtMs)
-          ? rawExpiresAtMs
-          : null;
-      const isExpired =
-        !data.thread.is_permanent && expiresAtMs !== null && expiresAtMs < now;
-      const isThreadClosed = data.thread.is_archived || isExpired;
-
-      let closureMessage: string | null = null;
-      let expireAtMessage: string | null = null;
-      let isExpiringSoon = false;
-
-      if (data.thread.is_archived) {
-        closureMessage =
-          "このスレッドはアーカイブされています。新しいレスは投稿できません。";
-      } else if (data.thread.is_permanent) {
-        expireAtMessage = "永久";
-      } else if (isExpired) {
-        closureMessage =
-          "このスレッドは期限切れです。新しいレスは投稿できません。";
-      } else if (expiresAtMs !== null) {
-        // 期限切れまでの残り時間を計算
-        const remainingMs = expiresAtMs - now;
-        // 期限切れまで1時間以内なら「消えるまであとX」の警告を表示
-        isExpiringSoon = remainingMs > 0 && remainingMs <= 60 * 60 * 1000;
-
-        // 残り時間を「あとX時間Y分Z秒」の形式で表示
-        const totalSeconds = Math.max(0, Math.floor(remainingMs / 1000));
-        const hours = Math.floor(totalSeconds / 3600);
-        const minutes = Math.floor((totalSeconds % 3600) / 60);
-        const seconds = totalSeconds % 60;
-        const remainingText =
-          hours >= 1
-            ? `あと${hours}時間${minutes}分${seconds}秒`
-            : minutes >= 1
-              ? `あと${minutes}分${seconds}秒`
-              : `あと${seconds}秒`;
-
-        expireAtMessage = `${new Date(expiresAtMs).toLocaleString()} 頃落ちます(${remainingText})`;
-      }
-
-      return {
-        isThreadClosed,
-        closureMessage,
-        expireAtMessage,
-        isExpiringSoon,
-      };
-    }, [
-      data?.thread?.is_archived,
-      data?.thread?.is_permanent,
-      data?.thread?.expires_at,
-      dataUpdatedAt,
-    ]);
-  // biome-ignore-end lint/correctness/useExhaustiveDependencies(data?.thread): thread自体はスレ落ち表示に影響しない
+  }, [data, hash, isLoading, scrollToPost]);
 
   if (isLoading) return <LoadingScreen />;
-
   if (error) {
     return <Message variant="error">スレッドの読み込みに失敗しました</Message>;
   }
-
   if (!data) return null;
 
-  // 1レス目（スレッド本文）と2レス目以降に分割
   const [firstPost, ...remainingPosts] = data.posts;
+  if (!firstPost) return <Message variant="info">レスがありません</Message>;
+
+  const threadSummary: ThreadSummary = {
+    id: data.id,
+    opPost: firstPost,
+    replyCount: data.replyCount,
+    createdAt: data.createdAt,
+    bumpedAt: data.bumpedAt,
+    tags: data.tags,
+  };
 
   return (
     <>
-      <title>{`${data.posts?.[0]?.plainBody.slice(0, 20) ?? `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
+      <title>{`${firstPost.body.slice(0, 20) || `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
       <div ref={swipeContentRef}>
         <PullRefresh onRefresh={handleRefresh}>
           <div className="pb-14" style={{ fontSize }}>
-            {firstPost && (
-              <ThreadOP
-                post={firstPost}
-                onQuoteClick={handleQuoteClick}
-                quoteReferencesMap={quoteReferencesMap}
-                allPosts={data.posts}
-                onJumpToPost={handleJumpToPost}
-              />
-            )}
+            <ThreadOP
+              post={firstPost}
+              tags={data.tags}
+              onQuoteClick={handleQuoteClick}
+              quoteReferencesMap={quoteReferencesMap}
+              allPosts={data.posts}
+              onJumpToPost={handleJumpToPost}
+            />
             <PostList
               posts={remainingPosts}
               onQuoteClick={handleQuoteClick}
@@ -440,24 +338,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
               onJumpToPost={handleJumpToPost}
               onPostFullyVisible={handlePostFullyVisible}
             />
-            {/* 最下レスと残り寿命表示の間の広告枠 */}
             <BmgBanner />
-            {isThreadClosed && closureMessage && (
-              <div className="px-4 py-4 mt-4 text-destructive text-sm bg-destructive/10 rounded">
-                {closureMessage}
-              </div>
-            )}
-            {!isThreadClosed && expireAtMessage && (
-              <div
-                className={`px-3 py-1.5 mx-4 text-xs rounded-md border-l-2 ${
-                  isExpiringSoon
-                    ? "text-destructive border-l-destructive bg-destructive/10"
-                    : "text-muted-foreground border-l-primary bg-primary/5"
-                }`}
-              >
-                {expireAtMessage}
-              </div>
-            )}
           </div>
         </PullRefresh>
       </div>
@@ -465,7 +346,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
         <ReplyModal
           isOpen={isReplyOpen}
           onClose={closeReplyModal}
-          thread={data.thread}
+          thread={threadSummary}
           initialComment={replyInitialComment}
           openCount={replyOpenCount}
           contentKey={threadId}
@@ -497,7 +378,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
           onClose={(): void => setIsSearchOpen(false)}
           onSearch={handleSearch}
           results={searchResults}
-          isSearching={false}
+          isSearching={isSearching}
           quoteReferencesMap={quoteReferencesMap}
           allPosts={data.posts}
           onQuoteClick={handleQuoteClick}
@@ -515,7 +396,6 @@ export const ThreadView: React.FunctionComponent<Props> = ({
           onJumpToPost={handleJumpToPost}
         />
       </Suspense>
-      <NewRepliesBanner threadId={threadId} newCount={newCount} />
       <BottomActionBar actions={threadActions} primaryAction={replyAction} />
     </>
   );

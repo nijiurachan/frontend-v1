@@ -3,31 +3,53 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { apiPost } from "@/shared/api";
+import type { CreatePostResult } from "@/shared/api";
+import { apiPost, getAltchaSolution, uploadAttachment } from "@/shared/api";
 
 interface SubmitParams {
-  formData: FormData;
   mode: "thread" | "reply";
+  threadId?: string;
+  body: string;
+  deleteKey: string;
+  file: File | null;
+  r18?: boolean;
 }
 
 export function useSubmitPost(): UseMutationResult<
-  unknown,
+  CreatePostResult,
   unknown,
   SubmitParams
 > {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ formData, mode }: SubmitParams): Promise<unknown> => {
-      const endpoint = mode === "thread" ? "/thread" : "/post";
-      return apiPost(endpoint, formData);
+    mutationFn: async ({
+      mode,
+      threadId,
+      body,
+      deleteKey,
+      file,
+      r18 = false,
+    }: SubmitParams): Promise<CreatePostResult> => {
+      if (mode === "reply" && !threadId) {
+        throw new Error("スレッドIDがありません");
+      }
+      const attachmentId = file ? await uploadAttachment(file) : undefined;
+      const altcha = await getAltchaSolution();
+      const payload = {
+        body,
+        altcha,
+        deleteKey,
+        ...(attachmentId ? { attachmentId } : {}),
+        ...(mode === "thread" ? { r18 } : {}),
+      };
+      const path =
+        mode === "thread" ? "/threads" : `/threads/${threadId}/posts`;
+      return apiPost<CreatePostResult>(path, payload, { requiresToken: true });
     },
-    onSuccess: (_: unknown, { mode }: SubmitParams): void => {
+    onSuccess: (_result: CreatePostResult, { mode }: SubmitParams): void => {
       if (mode === "thread") {
         queryClient.invalidateQueries({ queryKey: ["threads"] });
-        // active_threads が増えてティア短縮が起きる可能性があるため
-        // スレ立てフォームの duration 上限を再取得させる
-        queryClient.invalidateQueries({ queryKey: ["thread-limits"] });
       } else {
         queryClient.invalidateQueries({ queryKey: ["thread"] });
       }

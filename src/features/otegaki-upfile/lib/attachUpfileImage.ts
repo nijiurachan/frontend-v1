@@ -6,18 +6,11 @@
  * baseform (base64 APNG) や canvas が `<input type="file" name="upfile">` 内の
  * File に変換済みの状態になる。
  * @param form 設定元フォーム
- * @param data 設定先送信データ
- * @returns `true` if the upfile is attached, otherwise `false`.
+ * @returns 送信対象の File。添付が無い場合は null。
  */
-export function attachUpfileImage(
-  _form: HTMLFormElement,
-  data: FormData,
-): boolean {
-  const file = data.get("upfile");
-  data.delete("upfile");
-  if (!(file instanceof File) || file.size === 0) {
-    return false;
-  }
-  data.append("image", file);
-  return true;
+export function attachUpfileImage(form: HTMLFormElement): File | null {
+  const file = new FormData(form).get("upfile");
+  return file instanceof File && file.size > 0 ? file : null;
 }
+
+export const getAttachedFile: typeof attachUpfileImage = attachUpfileImage;

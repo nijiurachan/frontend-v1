@@ -38,7 +38,7 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
     }
   }, [menuPost]);
 
-  const handleMenuClick = (e: React.MouseEvent, postId: number): void => {
+  const handleMenuClick = (e: React.MouseEvent, postId: string): void => {
     e.stopPropagation();
     const post = allPosts.find((p) => p.id === postId);
     if (post) {
@@ -54,7 +54,7 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
     if (!lastValidMenuPost || !onJumpToPost) return;
     const post = allPosts.find((p) => p.id === lastValidMenuPost.id);
     if (post) {
-      onJumpToPost(post.id);
+      onJumpToPost(post.seq);
     }
   };
 
@@ -73,7 +73,7 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
     );
   }
 
-  const [{ thread_id: threadId }] = allPosts;
+  const [{ threadId }] = allPosts;
 
   return (
     <>

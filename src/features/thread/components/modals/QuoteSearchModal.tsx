@@ -48,9 +48,9 @@ export const QuoteSearchModal: React.FunctionComponent<
       // 全レス・ファイル名・レスNoから検索
       // TODO QuoteReferenceMapを利用
       const content = [
-        `No.${post.id}`,
-        post.attachment?.path,
-        ...post.body.map((line) => line.text),
+        `No.${post.seq}`,
+        post.attachment?.originalUrl,
+        post.body,
       ]
         .join("\n")
         .toLowerCase();

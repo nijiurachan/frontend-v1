@@ -60,6 +60,9 @@ export type SettingsStore = SettingsStoreBase & {
   jukeboxEnabled: boolean;
   /** ジュークボックスの有効/無効を設定 */
   setJukeboxEnabled(value: boolean): void;
+  /** R18添付を常時表示する */
+  showR18: boolean;
+  setShowR18(value: boolean): void;
 };
 
 /** 表示設定のストアを作る */
@@ -79,6 +82,8 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
         setSpaceMode: (spaceMode: boolean) => set({ spaceMode }),
         jukeboxEnabled: true,
         setJukeboxEnabled: (jukeboxEnabled: boolean) => set({ jukeboxEnabled }),
+        showR18: false,
+        setShowR18: (showR18: boolean) => set({ showR18 }),
         resetSettings(): void {
           base.resetSettings();
           set({
@@ -86,6 +91,7 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
             fontScalePosts: FONT_SCALE_DEFAULT,
             spaceMode: false,
             jukeboxEnabled: true,
+            showR18: false,
           });
         },
       };
