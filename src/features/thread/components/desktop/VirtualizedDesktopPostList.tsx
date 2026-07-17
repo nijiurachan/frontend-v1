@@ -23,7 +23,7 @@ interface Props {
   allPosts: Post[];
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost: (postSeq: number) => void;
-  onRegisterScrollToPost?: (scrollToPost: (postSeq: number) => void) => void;
+  onRegisterScrollToPost?: (scrollToPost: (postSeq?: number) => void) => void;
   isArchived?: boolean;
   postContentVersion?: number;
 }
@@ -77,12 +77,17 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
 
   useEffect(() => {
     if (!onRegisterScrollToPost) return;
-    onRegisterScrollToPost((postSeq: number): void => {
-      const index = visiblePosts.findIndex((post) => post.seq === postSeq);
+    onRegisterScrollToPost((postSeq?: number): void => {
+      const index =
+        postSeq === undefined
+          ? visiblePosts.length - 1
+          : visiblePosts.findIndex((post) => post.seq === postSeq);
       if (index >= 0) {
         rowVirtualizer.scrollToIndex(index, {
           align: "center",
-          behavior: "smooth",
+          // Smooth scrolling is incompatible with dynamically measured rows:
+          // measurements change the target offset while the animation runs.
+          behavior: "auto",
         });
       }
     });

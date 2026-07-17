@@ -38,7 +38,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const fontSize = useSettingsStore((state) => `${state.fontScalePosts}%`);
   const [replyComment, setReplyComment] = useState("");
   const [replyOpenCount, setReplyOpenCount] = useState(0);
-  const scrollToVirtualPostRef = useRef<((postSeq: number) => void) | null>(
+  const scrollToVirtualPostRef = useRef<((postSeq?: number) => void) | null>(
     null,
   );
 
@@ -56,7 +56,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   }, []);
 
   const registerScrollToPost = useCallback(
-    (scrollToPost: (postSeq: number) => void): void => {
+    (scrollToPost: (postSeq?: number) => void): void => {
       scrollToVirtualPostRef.current = scrollToPost;
     },
     [],
@@ -75,9 +75,13 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   }, []);
 
   const scrollToBottom = useCallback((): void => {
+    if (scrollToVirtualPostRef.current) {
+      scrollToVirtualPostRef.current();
+      return;
+    }
     const element = scrollRef.current;
     if (element)
-      element.scrollTo({ top: element.scrollHeight, behavior: "smooth" });
+      element.scrollTo({ top: element.scrollHeight, behavior: "auto" });
   }, []);
 
   const goCatalog = useCallback((): void => {
