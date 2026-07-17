@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import ssl from "@vitejs/plugin-basic-ssl";
 import react from "@vitejs/plugin-react";
+import { klecksEmbed } from "klecks-for-aimg/vite";
 import type {
   ConfigEnv,
   HtmlTagDescriptor,
@@ -10,7 +11,7 @@ import type {
   Plugin,
   UserConfig,
 } from "vite";
-import { defineConfig, loadEnv } from "vite";
+import { defineConfig } from "vite";
 import { generateIndexTsUnplugin } from "./node_modules/@nijiurachan/js/src/build/plugins/generate-index-ts";
 import { tscUnplugin } from "./node_modules/@nijiurachan/js/src/build/plugins/tsc";
 import manifest from "./public/manifest.json" with { type: "json" };
@@ -21,9 +22,6 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
   const isProd = mode === "production";
   const isDev = !isProd;
   const basePath = isProd ? "/ts" : mode === "testing" ? "/ts-test" : "/ts-dev";
-  const env = loadEnv(mode, import.meta.dirname, "");
-  const klecksEmbedUrl =
-    env.VITE_KLECKS_EMBED_URL?.trim() || "/assets/klecks/embed.js";
 
   return {
     build: {
@@ -42,7 +40,8 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
       tanstackRouter(),
       react(),
       tailwindcss(),
-      addImportMap(klecksEmbedUrl),
+      klecksEmbed(),
+      addImportMap(),
       generateIndexTsUnplugin.vite({
         dir: "src",
         excludePatterns: [
@@ -117,14 +116,14 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
 });
 
 /** index.htmlにお絵描きポップアップに必要なimportmapを足す */
-function addImportMap(klecksEmbedUrl: string): Plugin {
+function addImportMap(): Plugin {
   return {
     name: "import-map-maker",
     transformIndexHtml(
       _src: string,
       cxt: IndexHtmlTransformContext,
     ): HtmlTagDescriptor[] {
-      const importmap = makeImportMap(cxt, klecksEmbedUrl);
+      const importmap = makeImportMap(cxt);
 
       return [
         {
@@ -142,15 +141,11 @@ type ImportMap = {
 };
 
 /** importmapを作る */
-function makeImportMap(
-  cxt: IndexHtmlTransformContext,
-  klecksEmbedUrl: string,
-): ImportMap {
+function makeImportMap(cxt: IndexHtmlTransformContext): ImportMap {
   return {
     imports: {
       "#oekaki": makeEntryChunkPath(cxt, "oekaki", "src/oekaki.ts"),
       "#klecks": makeEntryChunkPath(cxt, "klecks", "src/klecks.ts"),
-      "#klecks-embed": klecksEmbedUrl,
     },
   };
 }

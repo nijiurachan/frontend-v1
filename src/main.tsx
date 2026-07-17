@@ -13,6 +13,7 @@ import { makeUpfileInputV2Element } from "@nijiurachan/js/elements/upfile-input-
 import { AxnosPaintPopup } from "@nijiurachan/js/io/axnos-paint-popup";
 import { KlecksPopup } from "@nijiurachan/js/io/klecks-popup";
 import { initCookieStore } from "@nijiurachan/js/util/cookie-store";
+import { klecksEmbedUrl } from "klecks-for-aimg/embed-url";
 import { installCanvas98Patch } from "@/features/otegaki-upfile/lib/canvas98Patch";
 import { installIosOffsetPatch } from "@/features/otegaki-upfile/lib/iosOffsetPatch";
 import { SettingsStoreContext } from "@/features/settings/hooks";
@@ -74,9 +75,6 @@ function initUpfileInput(
   // ポップアップ用のJSパスはimportmapから取得する(Viteの設定参照)
   const paintPopupUrl = import.meta.resolve("#oekaki");
   const klecksPopupUrl = import.meta.resolve("#klecks");
-  const klecksEmbedUrl =
-    import.meta.env.VITE_KLECKS_EMBED_URL?.trim() ||
-    import.meta.resolve("#klecks-embed");
 
   makeUpfileInputV2Element(
     makeUpfileInputFragmentV2({
