@@ -48,7 +48,7 @@ export function isThreadChunkPost(
 
 export interface ThreadPostState {
   seq: number;
-  status: "public" | "shadowed" | "unavailable";
+  status: "public" | "shadowed" | "trash" | "unavailable";
   reactions: {
     up: number;
     del: number;

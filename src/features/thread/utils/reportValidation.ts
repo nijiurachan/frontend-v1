@@ -1,5 +1,22 @@
 export const REPORT_RANGE_LIMIT = 50;
 
+export interface ReportWholeThreadRange {
+  fromSeq: number;
+  toSeq: number;
+  usesRecentRange: boolean;
+}
+
+export function getReportWholeThreadRange(
+  lastSeq: number,
+): ReportWholeThreadRange {
+  const normalizedLastSeq = Math.max(0, Math.floor(lastSeq));
+  return {
+    fromSeq: Math.max(0, normalizedLastSeq - REPORT_RANGE_LIMIT + 1),
+    toSeq: normalizedLastSeq,
+    usesRecentRange: normalizedLastSeq >= REPORT_RANGE_LIMIT,
+  };
+}
+
 export type ReportSeq = number | "";
 
 /** 範囲通報の入力値を検証する。問題がなければnullを返す。 */

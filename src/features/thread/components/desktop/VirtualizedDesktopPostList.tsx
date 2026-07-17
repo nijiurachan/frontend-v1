@@ -1,7 +1,18 @@
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { memo, type RefObject, useEffect, useMemo, useRef } from "react";
+import {
+  memo,
+  type RefObject,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
+import {
+  runAimogeBeforeRender,
+  useAimogeHookGeneration,
+} from "@/shared/lib/aimoge";
 import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
 import { PostItem } from "../lists/PostItem";
 
@@ -10,10 +21,11 @@ interface Props {
   scrollElementRef: RefObject<HTMLDivElement | null>;
   quoteReferencesMap: QuoteReferencesMap;
   allPosts: Post[];
-  onQuoteClick: (quoteText: string) => void;
+  onQuoteClick?: (quoteText: string) => void;
   onJumpToPost: (postSeq: number) => void;
   onRegisterScrollToPost?: (scrollToPost: (postSeq: number) => void) => void;
   isArchived?: boolean;
+  postContentVersion?: number;
 }
 
 /**
@@ -30,12 +42,20 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   onJumpToPost,
   onRegisterScrollToPost,
   isArchived = false,
+  postContentVersion,
 }: Props) => {
   const { isPostHidden, showNgContent } = useNgStore();
-  const visiblePosts = useMemo(
-    () => (showNgContent ? posts : posts.filter((post) => !isPostHidden(post))),
-    [posts, isPostHidden, showNgContent],
-  );
+  const aimogeGeneration = useAimogeHookGeneration();
+  const visiblePosts = useMemo(() => {
+    void aimogeGeneration;
+    const ngFilteredPosts = showNgContent
+      ? posts
+      : posts.filter((post) => !isPostHidden(post));
+    return ngFilteredPosts.flatMap((post) => {
+      const preparedPost = runAimogeBeforeRender("post:beforeRender", post);
+      return preparedPost ? [preparedPost] : [];
+    });
+  }, [aimogeGeneration, posts, isPostHidden, showNgContent]);
   const listRef = useRef<HTMLDivElement>(null);
   // TanStack Virtual intentionally exposes an imperative virtualizer API.
   // eslint-disable-next-line react-hooks/incompatible-library
@@ -48,6 +68,12 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
     measureElement: (element: HTMLElement): number =>
       element.getBoundingClientRect().height,
   });
+  const measureElement = useCallback(
+    (element: HTMLDivElement | null): void => {
+      if (element) rowVirtualizer.measureElement(element);
+    },
+    [rowVirtualizer],
+  );
 
   useEffect(() => {
     if (!onRegisterScrollToPost) return;
@@ -85,15 +111,15 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
             <DesktopPostRow
               key={virtualRow.key}
               post={post}
+              virtualIndex={virtualRow.index}
               virtualStart={virtualRow.start}
-              measureElement={(element: HTMLDivElement | null): void => {
-                if (element) rowVirtualizer.measureElement(element);
-              }}
+              measureElement={measureElement}
               quoteReferencesMap={quoteReferencesMap}
               allPosts={allPosts}
               onQuoteClick={onQuoteClick}
               onJumpToPost={onJumpToPost}
               isArchived={isArchived}
+              postContentVersion={postContentVersion}
             />
           );
         })}
@@ -104,18 +130,21 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
 
 interface RowProps {
   post: Post;
+  virtualIndex: number;
   virtualStart: number;
   measureElement: (element: HTMLDivElement | null) => void;
   quoteReferencesMap: QuoteReferencesMap;
   allPosts: Post[];
-  onQuoteClick: (quoteText: string) => void;
+  onQuoteClick?: (quoteText: string) => void;
   onJumpToPost: (postSeq: number) => void;
   isArchived: boolean;
+  postContentVersion?: number;
 }
 
 const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
   function DesktopPostRow({
     post,
+    virtualIndex,
     virtualStart,
     measureElement,
     quoteReferencesMap,
@@ -123,6 +152,7 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
     onQuoteClick,
     onJumpToPost,
     isArchived,
+    postContentVersion,
   }: RowProps) {
     const quoteDepth = Math.min(
       3,
@@ -138,7 +168,7 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
     return (
       <div
         ref={measureElement}
-        data-index={post.seq}
+        data-index={virtualIndex}
         className="desktop-thread-post-row"
         style={{ transform: `translateY(${virtualStart}px)` }}
       >
@@ -151,9 +181,35 @@ const DesktopPostRow: React.FunctionComponent<RowProps> = memo(
             isSubView={false}
             onJumpToPost={onJumpToPost}
             isArchived={isArchived}
+            postContentVersion={postContentVersion}
+            postAlreadyPrepared
           />
         </div>
       </div>
     );
   },
+  areDesktopPostRowPropsEqual,
 );
+
+function areDesktopPostRowPropsEqual(
+  previous: RowProps,
+  next: RowProps,
+): boolean {
+  if (
+    previous.post !== next.post ||
+    previous.virtualIndex !== next.virtualIndex ||
+    previous.virtualStart !== next.virtualStart ||
+    previous.measureElement !== next.measureElement ||
+    previous.onQuoteClick !== next.onQuoteClick ||
+    previous.onJumpToPost !== next.onJumpToPost ||
+    previous.isArchived !== next.isArchived ||
+    previous.postContentVersion !== next.postContentVersion
+  ) {
+    return false;
+  }
+  if (previous.postContentVersion !== undefined) return true;
+  return (
+    previous.quoteReferencesMap === next.quoteReferencesMap &&
+    previous.allPosts === next.allPosts
+  );
+}

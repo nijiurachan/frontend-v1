@@ -49,6 +49,7 @@ import { extractImages } from "../../utils/extractImages";
 import { extractPopularPosts } from "../../utils/extractPopularPosts";
 import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
 import type { SearchResult } from "../../utils/searchPosts";
+import { searchPosts } from "../../utils/searchPosts";
 import { DesktopThreadView } from "../desktop/DesktopThreadView";
 import { PostList } from "../lists/PostList";
 import { ThreadOP } from "./ThreadOP";
@@ -138,6 +139,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
     newPostsCount,
     acceptNewPosts,
     isArchived,
+    postsContentVersion,
   } = useThread(threadId, { archivedAt });
   const router = useRouter();
   const { hash } = useLocation();
@@ -185,10 +187,9 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
     () => (data ? extractPopularPosts(data.posts) : []),
     [data],
   );
-  const quoteReferencesMap = useMemo(
-    () => (data ? extractQuoteReferences(data.posts) : new Map()),
-    [data],
-  );
+  const quoteReferencesMap = useMemo(() => {
+    return data ? extractQuoteReferences(data.posts) : new Map();
+  }, [data]);
   const { handlePostFullyVisible, handleRefresh: handleRefreshForReplyNumber } =
     useReadReplyNumber(threadId);
 
@@ -201,6 +202,11 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
         return;
       }
       setIsSearching(true);
+      if (isArchived) {
+        setSearchResults(searchPosts(data.posts, query));
+        setIsSearching(false);
+        return;
+      }
       try {
         const response = await apiGet<SearchResponse>(
           `/search?q=${encodeURIComponent(query.trim())}`,
@@ -220,7 +226,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
         setIsSearching(false);
       }
     },
-    [data, threadId],
+    [data, isArchived, threadId],
   );
 
   const handleQuoteClick = useCallback((quoteText: string) => {
@@ -345,7 +351,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
             <ThreadOP
               post={firstPost}
               tags={data.tags}
-              onQuoteClick={handleQuoteClick}
+              onQuoteClick={isArchived ? undefined : handleQuoteClick}
               quoteReferencesMap={quoteReferencesMap}
               allPosts={data.posts}
               onJumpToPost={handleJumpToPost}
@@ -353,12 +359,13 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
             />
             <PostList
               posts={remainingPosts}
-              onQuoteClick={handleQuoteClick}
+              onQuoteClick={isArchived ? undefined : handleQuoteClick}
               quoteReferencesMap={quoteReferencesMap}
               allPosts={data.posts}
               onJumpToPost={handleJumpToPost}
               onPostFullyVisible={handlePostFullyVisible}
               isArchived={isArchived}
+              postContentVersion={postsContentVersion}
             />
             <BmgBanner />
           </div>
@@ -392,7 +399,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
           posts={popularPosts}
           quoteReferencesMap={quoteReferencesMap}
           allPosts={data.posts}
-          onQuoteClick={handleQuoteClick}
+          onQuoteClick={isArchived ? undefined : handleQuoteClick}
           onJumpToPost={handleJumpToPost}
           isArchived={isArchived}
         />
@@ -406,7 +413,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
           isSearching={isSearching}
           quoteReferencesMap={quoteReferencesMap}
           allPosts={data.posts}
-          onQuoteClick={handleQuoteClick}
+          onQuoteClick={isArchived ? undefined : handleQuoteClick}
           onJumpToPost={handleJumpToPost}
           isArchived={isArchived}
         />
@@ -418,12 +425,15 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
           quoteText={quoteSearchText}
           posts={data.posts}
           quoteReferencesMap={quoteReferencesMap}
-          onQuoteClick={handleQuoteClick}
+          onQuoteClick={isArchived ? undefined : handleQuoteClick}
           onJumpToPost={handleJumpToPost}
           isArchived={isArchived}
         />
       </Suspense>
-      <BottomActionBar actions={threadActions} primaryAction={replyAction} />
+      <BottomActionBar
+        actions={threadActions}
+        primaryAction={isArchived ? undefined : replyAction}
+      />
     </>
   );
 };

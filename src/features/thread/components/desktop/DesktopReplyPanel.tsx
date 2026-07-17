@@ -23,6 +23,8 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
   const collapsed = initialComment ? false : manuallyCollapsed;
   const deleteKey = useSettingsStore((state) => state.deleteKey);
 
+  if (isArchived) return null;
+
   return (
     <aside
       className="desktop-floating-panel"

@@ -152,15 +152,16 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
               <button type="button" onClick={(): void => setMenuOpen(true)} />
               No.{post.seq}
             </label>
-            <SoudaneButton
-              count={post.sodaneCount}
-              onClick={(): void => soudane(post.id)}
-              disabled={isPending}
-              frozen={isArchived}
-            />
-            {isArchived && (
+            {!isArchived && (
+              <SoudaneButton
+                count={post.sodaneCount}
+                onClick={(): void => soudane(post.id)}
+                disabled={isPending}
+              />
+            )}
+            {isArchived && post.delCount != null && (
               <span className="px-2 py-1 text-muted-foreground">
-                delx{post.delCount ?? 0}
+                delx{post.delCount}
               </span>
             )}
             {quoteSourceIndexes.length > 0 && (

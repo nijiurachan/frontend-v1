@@ -30,6 +30,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     newPostsCount,
     acceptNewPosts,
     isArchived,
+    postsContentVersion,
   } = useThread(threadId, { archivedAt });
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -41,10 +42,9 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     null,
   );
 
-  const quoteReferencesMap = useMemo(
-    () => (data ? extractQuoteReferences(data.posts) : new Map()),
-    [data],
-  );
+  const quoteReferencesMap = useMemo(() => {
+    return data ? extractQuoteReferences(data.posts) : new Map();
+  }, [data]);
 
   useEffect(() => {
     addViewed(threadId);
@@ -132,9 +132,15 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
           <BmgBanner />
           <div className="desktop-thread-notice">
             <ul>
-              <li>添付可能: GIF, JPG, PNG, WEBP, WEBM, MP4</li>
-              <li>引用行をクリックすると返信フォームへ引用できます</li>
-              <li>長いスレッドは画面近傍のレスだけを描画します</li>
+              {isArchived ? (
+                <li>過去ログは閲覧と通報のみ利用できます</li>
+              ) : (
+                <>
+                  <li>添付可能: GIF, JPG, PNG, WEBP, WEBM, MP4</li>
+                  <li>引用行をクリックすると返信フォームへ引用できます</li>
+                  <li>長いスレッドは画面近傍のレスだけを描画します</li>
+                </>
+              )}
             </ul>
           </div>
         </div>
@@ -142,7 +148,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
           <ThreadOP
             post={firstPost}
             tags={data.tags}
-            onQuoteClick={handleQuoteClick}
+            onQuoteClick={isArchived ? undefined : handleQuoteClick}
             quoteReferencesMap={quoteReferencesMap}
             allPosts={data.posts}
             onJumpToPost={handleJumpToPost}
@@ -155,10 +161,11 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
             scrollElementRef={scrollRef}
             quoteReferencesMap={quoteReferencesMap}
             allPosts={data.posts}
-            onQuoteClick={handleQuoteClick}
+            onQuoteClick={isArchived ? undefined : handleQuoteClick}
             onJumpToPost={handleJumpToPost}
             onRegisterScrollToPost={registerScrollToPost}
             isArchived={isArchived}
+            postContentVersion={postsContentVersion}
           />
         </div>
         <BmgBanner />

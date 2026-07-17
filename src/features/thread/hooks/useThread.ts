@@ -2,17 +2,21 @@ import {
   type UseQueryResult,
   useQueries,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Post } from "@/entities/post";
 import type {
   ThreadChunkElement,
-  ThreadPostState,
   ThreadState,
   ThreadView,
 } from "@/entities/thread";
-import { isThreadChunkPost } from "@/entities/thread";
 import { apiGet } from "@/shared/api";
+import {
+  runAimogeDataHook,
+  useAimogeHookGeneration,
+} from "@/shared/lib/aimoge";
+import { mergeThreadPosts } from "../utils/threadPosts";
 
 export const THREAD_CHUNK_SIZE = 100;
 export const THREAD_STATE_POLL_INTERVAL = 15_000;
@@ -25,6 +29,7 @@ export interface UseThreadResult
   newPostsCount: number;
   acceptNewPosts: () => void;
   isArchived: boolean;
+  postsContentVersion: number;
 }
 
 export interface UseThreadOptions {
@@ -43,14 +48,24 @@ export function useThread(
   threadId: string,
   options: UseThreadOptions = {},
 ): UseThreadResult {
-  const isArchiveView = Boolean(options.archivedAt);
+  const archiveFromOption = Boolean(options.archivedAt);
+  const aimogeGeneration = useAimogeHookGeneration();
+  const queryClient = useQueryClient();
   const [acceptedNewPosts, setAcceptedNewPosts] = useState<
     ThreadChunkElement[]
   >([]);
   const [initialChunkCount, setInitialChunkCount] = useState<number | null>(
     null,
   );
+  const [postCache, setPostCache] = useState<Post[]>([]);
+  const [contentSnapshot, setContentSnapshot] = useState<{
+    posts: Post[] | undefined;
+    version: number;
+  }>({ posts: undefined, version: 0 });
   const latestAcceptedSeqRef = useRef(0);
+  const previousStateBySeqRef = useRef(
+    new Map<number, ThreadState["postStates"][number]>(),
+  );
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: threadId changes reset hook-local accepted state
   useEffect(() => {
@@ -59,7 +74,33 @@ export function useThread(
     setAcceptedNewPosts([]);
     setInitialChunkCount(null);
     latestAcceptedSeqRef.current = 0;
+    setPostCache([]);
+    previousStateBySeqRef.current = new Map();
+    setContentSnapshot({ posts: undefined, version: 0 });
   }, [threadId]);
+
+  const stateQuery = useQuery<ThreadState>({
+    queryKey: ["thread", threadId, "state"],
+    queryFn: () => {
+      const after = latestAcceptedSeqRef.current;
+      return apiGet<ThreadState>(
+        `/threads/${threadId}/state?after=${encodeURIComponent(after)}`,
+        { cache: "no-store" },
+      );
+    },
+    enabled: Boolean(threadId) && !archiveFromOption,
+    staleTime: 0,
+    refetchInterval: (query: { state: { data: ThreadState | undefined } }) =>
+      query.state.data?.archivedAt ? false : THREAD_STATE_POLL_INTERVAL,
+    refetchIntervalInBackground: false,
+  });
+
+  const stateData = useMemo(() => {
+    void aimogeGeneration;
+    if (!stateQuery.data) return undefined;
+    return runAimogeDataHook("data:state", stateQuery.data);
+  }, [aimogeGeneration, stateQuery.data]);
+  const isArchiveView = archiveFromOption || Boolean(stateData?.archivedAt);
 
   const fullThreadQuery = useQuery<ThreadView>({
     queryKey: ["thread", threadId, "full"],
@@ -71,33 +112,21 @@ export function useThread(
     staleTime: Infinity,
   });
 
-  const stateQuery = useQuery<ThreadState>({
-    queryKey: ["thread", threadId, "state"],
-    queryFn: () => {
-      const after = latestAcceptedSeqRef.current;
-      return apiGet<ThreadState>(
-        `/threads/${threadId}/state?after=${encodeURIComponent(after)}`,
-        { cache: "no-store" },
-      );
-    },
-    enabled: Boolean(threadId) && !isArchiveView,
-    staleTime: 0,
-    refetchInterval: isArchiveView ? false : THREAD_STATE_POLL_INTERVAL,
-    refetchIntervalInBackground: false,
-  });
+  const fullThreadData = useMemo(() => {
+    void aimogeGeneration;
+    if (!fullThreadQuery.data) return undefined;
+    return runAimogeDataHook("data:thread", fullThreadQuery.data);
+  }, [aimogeGeneration, fullThreadQuery.data]);
 
   useEffect(() => {
-    if (initialChunkCount !== null || !stateQuery.data) return;
+    if (initialChunkCount !== null || !stateData || isArchiveView) return;
     // Pagination is initialized from the first state snapshot and must not
     // expand before the user accepts state.newPosts from the banner.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setInitialChunkCount(
-      Math.max(
-        1,
-        Math.floor(stateQuery.data.replyCount / THREAD_CHUNK_SIZE) + 1,
-      ),
+      Math.max(1, Math.floor(stateData.replyCount / THREAD_CHUNK_SIZE) + 1),
     );
-  }, [initialChunkCount, stateQuery.data]);
+  }, [initialChunkCount, isArchiveView, stateData]);
 
   const acceptedMaxSeq = acceptedNewPosts.reduce(
     (maxSeq, element) => Math.max(maxSeq, element.seq),
@@ -115,7 +144,7 @@ export function useThread(
         apiGet<ThreadChunkElement[]>(
           `/threads/${threadId}/chunks/${chunkNumber}`,
         ),
-      enabled: Boolean(threadId) && !isArchiveView,
+      enabled: Boolean(threadId) && Boolean(stateData) && !isArchiveView,
       staleTime: (query: {
         state: { data: ThreadChunkElement[] | undefined };
       }) =>
@@ -125,55 +154,107 @@ export function useThread(
     })),
   });
 
-  const chunkElements = useMemo(
-    () =>
-      chunkQueries
-        .flatMap((query) => query.data ?? [])
-        .sort((left, right) => left.seq - right.seq),
-    [chunkQueries],
-  );
+  const chunkElements = useMemo(() => {
+    void aimogeGeneration;
+    const transformedChunks = chunkQueries.flatMap((query) => {
+      const elements = query.data ?? [];
+      return runAimogeDataHook("data:chunk", elements);
+    });
+    return transformedChunks.sort((left, right) => left.seq - right.seq);
+  }, [aimogeGeneration, chunkQueries]);
 
   const visibleNewPosts = useMemo(() => {
     const knownSeqs = new Set(chunkElements.map((element) => element.seq));
     const acceptedSeqs = new Set(
       acceptedNewPosts.map((element) => element.seq),
     );
-    return (stateQuery.data?.newPosts ?? []).filter(
+    return (stateData?.newPosts ?? []).filter(
       (element) =>
         !knownSeqs.has(element.seq) && !acceptedSeqs.has(element.seq),
     );
-  }, [acceptedNewPosts, chunkElements, stateQuery.data?.newPosts]);
+  }, [acceptedNewPosts, chunkElements, stateData?.newPosts]);
 
   const data = useMemo<ThreadView | undefined>(() => {
-    if (isArchiveView) return fullThreadQuery.data;
-    if (!stateQuery.data || chunkElements.length === 0) return undefined;
+    void aimogeGeneration;
+    if (isArchiveView) return fullThreadData;
+    if (!stateData || chunkElements.length === 0) return undefined;
 
     const allElements = mergeChunkElements(chunkElements, acceptedNewPosts);
-    const posts = allElements.map((element) =>
-      normalizeChunkElement(threadId, element),
+    const posts = mergeThreadPosts(
+      threadId,
+      allElements,
+      stateData.postStates,
+      postCache,
     );
-    applyPostStates(posts, stateQuery.data.postStates);
     const firstPost = posts[0];
 
-    return {
+    return runAimogeDataHook("data:thread", {
       id: threadId,
-      replyCount: stateQuery.data.replyCount,
-      createdAt: firstPost?.createdAt ?? stateQuery.data.bumpedAt,
-      bumpedAt: stateQuery.data.bumpedAt,
-      tags: stateQuery.data.tags,
+      replyCount: stateData.replyCount,
+      createdAt: firstPost?.createdAt ?? stateData.bumpedAt,
+      bumpedAt: stateData.bumpedAt,
+      tags: stateData.tags,
       posts,
-      closedAt: stateQuery.data.closedAt,
-      allowImageReplies: stateQuery.data.allowImageReplies,
-      archivedAt: stateQuery.data.archivedAt ?? null,
-    };
+      closedAt: stateData.closedAt,
+      allowImageReplies: stateData.allowImageReplies,
+      archivedAt: stateData.archivedAt ?? null,
+    });
   }, [
     acceptedNewPosts,
+    aimogeGeneration,
     chunkElements,
-    fullThreadQuery.data,
+    fullThreadData,
     isArchiveView,
-    stateQuery.data,
+    postCache,
+    stateData,
     threadId,
   ]);
+
+  useEffect(() => {
+    if (isArchiveView || !data || data.posts === postCache) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPostCache(data.posts);
+  }, [data, isArchiveView, postCache]);
+
+  const postsContentVersion = contentSnapshot.version;
+
+  useEffect(() => {
+    if (!data) return;
+    if (
+      contentSnapshot.posts &&
+      !havePostContentsChanged(contentSnapshot.posts, data.posts)
+    ) {
+      return;
+    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setContentSnapshot({
+      posts: data.posts,
+      version: contentSnapshot.version + 1,
+    });
+  }, [contentSnapshot, data]);
+
+  useEffect(() => {
+    if (isArchiveView || !stateData) return;
+    const previousStates = previousStateBySeqRef.current;
+    for (const state of stateData.postStates) {
+      const previous = previousStates.get(state.seq);
+      if (
+        previous &&
+        previous.status !== "public" &&
+        state.status === "public"
+      ) {
+        void queryClient.invalidateQueries({
+          queryKey: [
+            "thread",
+            threadId,
+            "chunk",
+            Math.floor(state.seq / THREAD_CHUNK_SIZE),
+          ],
+        });
+      }
+      previousStates.set(state.seq, state);
+    }
+  }, [isArchiveView, queryClient, stateData, threadId]);
 
   useEffect(() => {
     const maxSeq = data?.posts.at(-1)?.seq ?? 0;
@@ -221,6 +302,7 @@ export function useThread(
     newPostsCount: isArchiveView ? 0 : visibleNewPosts.length,
     acceptNewPosts,
     isArchived: isArchiveView || Boolean(data?.archivedAt),
+    postsContentVersion,
   };
 }
 
@@ -233,39 +315,21 @@ function mergeChunkElements(
   return [...bySeq.values()].sort((left, right) => left.seq - right.seq);
 }
 
-function normalizeChunkElement(
-  threadId: string,
-  element: ThreadChunkElement,
-): Post {
-  if (!isThreadChunkPost(element)) {
-    return {
-      id: `unavailable-${threadId}-${element.seq}`,
-      threadId,
-      seq: element.seq,
-      status: "unavailable",
-      body: "",
-      createdAt: "",
-      attachment: null,
-      sodaneCount: 0,
-      displayId: null,
-    };
-  }
-
-  return {
-    ...element,
-    threadId,
-    status: "public",
-    sodaneCount: 0,
-  };
-}
-
-function applyPostStates(posts: Post[], postStates: ThreadPostState[]): void {
-  const stateBySeq = new Map(postStates.map((state) => [state.seq, state]));
-  for (const post of posts) {
-    const state = stateBySeq.get(post.seq);
-    if (!state) continue;
-    post.status = state.status;
-    post.sodaneCount = state.reactions.up;
-    if (state.status === "unavailable") post.body = "";
-  }
+function havePostContentsChanged(
+  previousPosts: Post[],
+  nextPosts: Post[],
+): boolean {
+  if (previousPosts.length !== nextPosts.length) return true;
+  return nextPosts.some((post, index) => {
+    const previous = previousPosts[index];
+    return (
+      !previous ||
+      previous.id !== post.id ||
+      previous.status !== post.status ||
+      previous.body !== post.body ||
+      previous.createdAt !== post.createdAt ||
+      previous.attachment !== post.attachment ||
+      previous.displayId !== post.displayId
+    );
+  });
 }

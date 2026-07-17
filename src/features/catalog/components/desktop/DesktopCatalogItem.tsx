@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
-import { memo, useState } from "react";
+import { memo, type RefObject, useState } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { MdBlock } from "react-icons/md";
 import noImage from "@/assets/img/no-image.svg";
@@ -10,6 +10,7 @@ import { useHistoryStore } from "@/features/history/stores/historyStore";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { isVideoAttachment } from "@/shared/lib";
+import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
 import { TagBadges } from "@/shared/ui/navigation";
 import { useCatalogStore } from "../../stores/catalogStore";
 import { ThreadContextMenu } from "../actions/ThreadContextMenu";
@@ -21,7 +22,38 @@ interface Props {
 
 /** 旧カタログの1セル。モバイルのCatalogItemとはDOM/寸法を分離する。 */
 export const DesktopCatalogItem: React.FunctionComponent<Props> = memo(
-  function DesktopCatalogItem({ thread, isNew }: Props) {
+  function DesktopCatalogItem(props: Props) {
+    const renderedThread = useAimogeBeforeRender(
+      "catalog:beforeRender",
+      props.thread,
+    );
+    const elementRef = useAimogeRendered(
+      "catalog",
+      renderedThread,
+      renderedThread?.id,
+    );
+
+    if (!renderedThread) return null;
+    return (
+      <DesktopCatalogItemContent
+        thread={renderedThread}
+        isNew={props.isNew}
+        elementRef={elementRef}
+      />
+    );
+  },
+);
+
+interface ContentProps extends Props {
+  elementRef: RefObject<HTMLDivElement | null>;
+}
+
+const DesktopCatalogItemContent: React.FunctionComponent<ContentProps> = memo(
+  function DesktopCatalogItemContent({
+    thread,
+    isNew,
+    elementRef,
+  }: ContentProps) {
     const showNew = useCatalogStore((state) => state.showNew);
     const showCount = useCatalogStore((state) => state.showCount);
     const showUnreadCount = useCatalogStore((state) => state.showUnreadCount);
@@ -51,7 +83,7 @@ export const DesktopCatalogItem: React.FunctionComponent<Props> = memo(
     };
 
     return (
-      <div className="desktop-catalog-item">
+      <div ref={elementRef} className="desktop-catalog-item">
         <Link
           to="/thread/$threadId"
           params={{ threadId: thread.id }}

@@ -8,6 +8,8 @@ import {
   useReportMutation,
 } from "../../hooks/useReportMutation";
 import {
+  getReportWholeThreadRange,
+  REPORT_RANGE_LIMIT,
   type ReportSeq,
   validateReportRange,
 } from "../../utils/reportValidation";
@@ -45,6 +47,7 @@ export const ReportModal: React.FunctionComponent<ReportModalProps> = ({
   const formId = useId();
   const defaultSeq = Math.max(0, Math.floor(postSeq));
   const lastSeq = Math.max(defaultSeq, Math.floor(maxSeq));
+  const wholeThreadRange = getReportWholeThreadRange(lastSeq);
   const [fromSeq, setFromSeq] = useState<ReportSeq>(defaultSeq);
   const [toSeq, setToSeq] = useState<ReportSeq>(defaultSeq);
   const [reason, setReason] = useState<ReportReason | "">("");
@@ -62,8 +65,8 @@ export const ReportModal: React.FunctionComponent<ReportModalProps> = ({
   };
 
   const handleWholeThread = (): void => {
-    setFromSeq(0);
-    setToSeq(lastSeq);
+    setFromSeq(wholeThreadRange.fromSeq);
+    setToSeq(wholeThreadRange.toSeq);
     setSubmitError(null);
   };
 
@@ -162,7 +165,15 @@ export const ReportModal: React.FunctionComponent<ReportModalProps> = ({
           </div>
           <div className="flex items-center justify-between gap-2">
             <p className="text-xs text-muted-foreground">
-              最大50レスまで。既定はNo.{defaultSeq}単体です。
+              最大{REPORT_RANGE_LIMIT}レスまで。既定はNo.{defaultSeq}単体です。
+              {wholeThreadRange.usesRecentRange && (
+                <>
+                  <br />
+                  スレ全体は直近{REPORT_RANGE_LIMIT}レス（No.
+                  {wholeThreadRange.fromSeq}〜{wholeThreadRange.toSeq}
+                  ）に調整されます。
+                </>
+              )}
             </p>
             <Button
               type="button"
@@ -171,7 +182,7 @@ export const ReportModal: React.FunctionComponent<ReportModalProps> = ({
               onClick={handleWholeThread}
               disabled={isPending}
             >
-              スレ全体（0〜{lastSeq}）
+              スレ全体（{wholeThreadRange.fromSeq}〜{wholeThreadRange.toSeq}）
             </Button>
           </div>
         </fieldset>

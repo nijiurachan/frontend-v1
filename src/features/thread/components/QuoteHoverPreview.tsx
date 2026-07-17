@@ -75,7 +75,7 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
             >
               <span className="quote-preview-number">No.{target.seq}</span>
               <span className="quote-preview-body">
-                {target.status === "unavailable"
+                {target.status !== "public"
                   ? "このレスは表示できません"
                   : target.body || "（本文なし）"}
               </span>

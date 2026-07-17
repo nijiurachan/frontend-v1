@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
-import { memo, useMemo, useState } from "react";
+import { memo, type RefObject, useMemo, useState } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { MdBlock } from "react-icons/md";
 import noImage from "@/assets/img/no-image.svg";
@@ -11,6 +11,7 @@ import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { useLongPress } from "@/shared/hooks";
 import { decorateTitle, isVideoAttachment } from "@/shared/lib";
+import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
 import { VideoBadge } from "@/shared/ui/media";
 import { TagBadges } from "@/shared/ui/navigation";
 import { useCatalogStore } from "../../stores/catalogStore";
@@ -22,7 +23,38 @@ interface CatalogItemProps {
 }
 
 export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
-  function CatalogItem({ thread, isNew }: CatalogItemProps) {
+  function CatalogItem(props: CatalogItemProps) {
+    const renderedThread = useAimogeBeforeRender(
+      "catalog:beforeRender",
+      props.thread,
+    );
+    const elementRef = useAimogeRendered(
+      "catalog",
+      renderedThread,
+      renderedThread?.id,
+    );
+
+    if (!renderedThread) return null;
+    return (
+      <CatalogItemContent
+        thread={renderedThread}
+        isNew={props.isNew}
+        elementRef={elementRef}
+      />
+    );
+  },
+);
+
+interface CatalogItemContentProps extends CatalogItemProps {
+  elementRef: RefObject<HTMLDivElement | null>;
+}
+
+const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
+  memo(function CatalogItemContent({
+    thread,
+    isNew,
+    elementRef,
+  }: CatalogItemContentProps) {
     const {
       showNew,
       showCount,
@@ -130,6 +162,7 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
     return (
       <>
         <div
+          ref={elementRef}
           className={clsx(
             "group relative bg-card/50 rounded-lg overflow-hidden hover:bg-card transition-colors",
             borderClass,
@@ -237,5 +270,4 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
         />
       </>
     );
-  },
-);
+  });

@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { validateReportRange } from "./reportValidation";
+import {
+  getReportWholeThreadRange,
+  validateReportRange,
+} from "./reportValidation";
 
 describe("validateReportRange", () => {
   test("accepts a single post", () => {
@@ -20,5 +23,18 @@ describe("validateReportRange", () => {
 
   test("rejects missing values", () => {
     expect(validateReportRange("", 1)).toContain("入力してください");
+  });
+
+  test("adjusts whole-thread reports to the latest 50 posts", () => {
+    expect(getReportWholeThreadRange(49)).toEqual({
+      fromSeq: 0,
+      toSeq: 49,
+      usesRecentRange: false,
+    });
+    expect(getReportWholeThreadRange(100)).toEqual({
+      fromSeq: 51,
+      toSeq: 100,
+      usesRecentRange: true,
+    });
   });
 });

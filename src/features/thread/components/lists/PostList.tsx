@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
+import {
+  runAimogeBeforeRender,
+  useAimogeHookGeneration,
+} from "@/shared/lib/aimoge";
 import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
 import { PostItem } from "./PostItem";
 
@@ -96,6 +100,7 @@ interface Props {
   onJumpToPost?: (postIndex: number) => void;
   onPostFullyVisible?: (replyNumberInThread: number) => void;
   isArchived?: boolean;
+  postContentVersion?: number;
 }
 
 export const PostList: React.FunctionComponent<Props> = ({
@@ -106,6 +111,7 @@ export const PostList: React.FunctionComponent<Props> = ({
   onJumpToPost,
   onPostFullyVisible,
   isArchived = false,
+  postContentVersion,
 }: Props) => {
   const {
     isPostHidden,
@@ -116,11 +122,17 @@ export const PostList: React.FunctionComponent<Props> = ({
     // ngRegexes,
   } = useNgStore();
 
+  const aimogeGeneration = useAimogeHookGeneration();
   const visiblePosts = useMemo(() => {
-    // showNgContentがtrueの場合はフィルタリングしない
-    if (showNgContent) return posts;
-    return posts.filter((post) => !isPostHidden(post));
-  }, [posts, isPostHidden, showNgContent]);
+    void aimogeGeneration;
+    const ngFilteredPosts = showNgContent
+      ? posts
+      : posts.filter((post) => !isPostHidden(post));
+    return ngFilteredPosts.flatMap((post) => {
+      const preparedPost = runAimogeBeforeRender("post:beforeRender", post);
+      return preparedPost ? [preparedPost] : [];
+    });
+  }, [aimogeGeneration, isPostHidden, posts, showNgContent]);
 
   const observePostRead = usePostReadObserver(onPostFullyVisible, visiblePosts);
 
@@ -153,6 +165,8 @@ export const PostList: React.FunctionComponent<Props> = ({
             onJumpToPost={onJumpToPost}
             isSubView={false}
             isArchived={isArchived}
+            postContentVersion={postContentVersion}
+            postAlreadyPrepared
           />
           <span
             ref={observePostRead(post.seq)}

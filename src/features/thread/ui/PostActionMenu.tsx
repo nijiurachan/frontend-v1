@@ -80,64 +80,64 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
     alert("本文をNGワードに追加しました");
     onClose();
   };
-  const actions: ActionItem[] = [
-    {
-      icon: FiArrowLeft,
-      label: "本文返信",
-      onClick: () => handleReply("body"),
+  const reportAction: ActionItem = {
+    icon: FiFlag,
+    label: "通報",
+    onClick: () => {
+      setIsReportModalOpen(true);
+      onClose();
     },
-    {
-      icon: FiHash,
-      label: "No返信",
-      onClick: () => handleReply("no"),
-    },
-    {
-      icon: FiThumbsUp,
-      label: "そうだね",
-      onClick: isArchived
-        ? undefined
-        : () => {
+  };
+  const ngAction: ActionItem = {
+    icon: FiSlash,
+    label: "本文NG",
+    variant: "destructive" as const,
+    onClick: handleNgBody,
+  };
+  const actions: ActionItem[] = isArchived
+    ? [ngAction, reportAction]
+    : [
+        {
+          icon: FiArrowLeft,
+          label: "本文返信",
+          onClick: () => handleReply("body"),
+        },
+        {
+          icon: FiHash,
+          label: "No返信",
+          onClick: () => handleReply("no"),
+        },
+        {
+          icon: FiThumbsUp,
+          label: "そうだね",
+          onClick: () => {
             soudane(post.id);
             onClose();
           },
-    },
-    {
-      icon: FiTrash2,
-      label: "削除",
-      variant: "destructive" as const,
-      onClick: () => {
-        deletePostOrThread({ postId: post.id, password: deleteKey });
-        onClose();
-      },
-    },
-    {
-      icon: FiSlash,
-      label: "本文NG",
-      variant: "destructive" as const,
-      onClick: handleNgBody,
-    },
-    {
-      icon: FiThumbsDown,
-      label: post.delCount == null ? "del" : `del (${post.delCount})`,
-      variant: "destructive" as const,
-      onClick: isArchived
-        ? undefined
-        : () => {
+        },
+        {
+          icon: FiTrash2,
+          label: "削除",
+          variant: "destructive" as const,
+          onClick: () => {
+            deletePostOrThread({ postId: post.id, password: deleteKey });
+            onClose();
+          },
+        },
+        ngAction,
+        {
+          icon: FiThumbsDown,
+          label: post.delCount == null ? "del" : `del (${post.delCount})`,
+          variant: "destructive" as const,
+          onClick: () => {
             del(post.id);
             onClose();
           },
-    },
-    {
-      icon: FiFlag,
-      label: "通報",
-      onClick: () => {
-        setIsReportModalOpen(true);
-        onClose();
-      },
-    },
-  ];
+        },
+        reportAction,
+      ];
 
-  if (post.seq === 0) {
+  if (!isArchived && post.seq === 0) {
     actions.push({
       icon: FiTrash2,
       label: "スレを閉じる",

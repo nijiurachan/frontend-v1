@@ -72,12 +72,14 @@ export const DisplayIdMenu: React.FunctionComponent<DisplayIdMenuProps> = ({
       variant: "destructive",
       onClick: handleNg,
     },
-    {
+  ];
+  if (!isArchived) {
+    actions.push({
       icon: FiHash,
       label: "ID引用",
       onClick: handleQuote,
-    },
-  ];
+    });
+  }
 
   return (
     <>

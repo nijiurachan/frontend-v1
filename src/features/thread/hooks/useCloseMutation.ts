@@ -17,11 +17,9 @@ export function useCloseMutation(
 
   return useMutation({
     mutationFn: (deleteKey: string): Promise<CloseResponse> =>
-      apiPost<CloseResponse>(
-        `/threads/${encodeURIComponent(threadId)}/close`,
-        { deleteKey },
-        { requiresToken: true },
-      ),
+      apiPost<CloseResponse>(`/threads/${encodeURIComponent(threadId)}/close`, {
+        deleteKey,
+      }),
     onSuccess: (): void => {
       void queryClient.invalidateQueries({ queryKey: ["thread", threadId] });
       void queryClient.invalidateQueries({ queryKey: ["threads"] });

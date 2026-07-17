@@ -22,6 +22,8 @@ export const ReplyModal: React.FunctionComponent<Props> = ({
   contentKey,
   isArchived = false,
 }: Props) => {
+  if (isArchived) return null;
+
   return (
     <PersistentModal
       isOpen={isOpen}

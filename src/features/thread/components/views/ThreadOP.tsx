@@ -6,6 +6,7 @@ import type { Post } from "@/entities/post";
 import type { ThreadTag } from "@/entities/thread";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
 import { TagBadges } from "@/shared/ui/navigation";
 import type { QuoteReferencesMap } from "../../utils";
 import { PostDisplay } from "../PostDisplay";
@@ -29,16 +30,32 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
   onJumpToPost,
   isArchived = false,
 }: Props) => {
+  const renderedPost = useAimogeBeforeRender("post:beforeRender", post);
+  const elementRef = useAimogeRendered("post", renderedPost, post.threadId);
   const { isPostHidden, showNgContent } = useNgStore();
-  const isNg = isPostHidden(post);
+  const isNg = renderedPost ? isPostHidden(renderedPost) : false;
   const spaceMode = useSettingsStore((s) => s.spaceMode);
   const showSpaceButton = spaceMode && !(isNg && !showNgContent);
   const [expanded, setExpanded] = useState(false);
+
+  if (!renderedPost) return null;
+  if (renderedPost.status !== "public") {
+    return (
+      <div
+        ref={elementRef}
+        id="post-0"
+        className="m-2 rounded border border-border bg-muted p-3 text-sm text-muted-foreground"
+      >
+        No.{renderedPost.seq} このレスは表示できません
+      </div>
+    );
+  }
 
   // NGかつshowNgContentがfalseの場合のみ非表示メッセージを表示
   if (isNg && !showNgContent) {
     return (
       <div
+        ref={elementRef}
         id="post-0"
         className="p-8 text-center text-muted-foreground border-b border-border"
       >
@@ -52,6 +69,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
     return (
       // biome-ignore lint: <label>＆非表示<button>に乗り換え予定
       <div
+        ref={elementRef}
         id="post-0"
         className="p-4 border-b border-border bg-card/50 cursor-pointer hover:bg-card/80 transition-colors"
         onClick={(): void => setExpanded(true)}
@@ -79,7 +97,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
 
   const handleOpenSpaceMode = (e: React.MouseEvent): void => {
     e.stopPropagation();
-    const url = `${import.meta.env.BASE_PATH}/space/${post.threadId}`;
+    const url = `${import.meta.env.BASE_PATH}/space/${renderedPost.threadId}`;
     const win = window.open(url, "_blank");
     if (!win || win.closed) {
       window.location.href = url;
@@ -87,7 +105,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
   };
 
   return (
-    <div id="post-0" className="relative">
+    <div ref={elementRef} id="post-0" className="relative">
       <div className="px-4 pt-4">
         <TagBadges tags={tags} />
       </div>
@@ -116,7 +134,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
         </button>
       )}
       <PostDisplay
-        post={post}
+        post={renderedPost}
         className={clsx("p-4", isNg && showNgContent && "opacity-70")}
         onQuoteClick={onQuoteClick}
         quoteReferencesMap={quoteReferencesMap}
