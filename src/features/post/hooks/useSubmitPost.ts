@@ -13,6 +13,7 @@ interface SubmitParams {
   deleteKey: string;
   file: File | null;
   r18?: boolean;
+  allowImageReplies?: boolean;
 }
 
 export function useSubmitPost(): UseMutationResult<
@@ -30,6 +31,7 @@ export function useSubmitPost(): UseMutationResult<
       deleteKey,
       file,
       r18 = false,
+      allowImageReplies = true,
     }: SubmitParams): Promise<CreatePostResult> => {
       if (mode === "reply" && !threadId) {
         throw new Error("スレッドIDがありません");
@@ -41,7 +43,7 @@ export function useSubmitPost(): UseMutationResult<
         altcha,
         deleteKey,
         ...(attachmentId ? { attachmentId } : {}),
-        ...(mode === "thread" ? { r18 } : {}),
+        ...(mode === "thread" ? { r18, allowImageReplies } : {}),
       };
       const path =
         mode === "thread" ? "/threads" : `/threads/${threadId}/posts`;

@@ -67,7 +67,8 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
           </div>
           <PostForm
             threadId={thread.id}
-            allowImage
+            allowImageReplies={thread.allowImageReplies ?? true}
+            closedAt={thread.closedAt}
             initialComment={initialComment}
             openCount={openCount}
             onSuccess={onCloseComment}

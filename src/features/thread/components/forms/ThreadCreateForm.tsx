@@ -25,6 +25,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
   const deleteKey = useSettingsStore((state) => state.deleteKey);
   const [body, setBody] = useState("");
   const [r18, setR18] = useState(false);
+  const [allowImageReplies, setAllowImageReplies] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
   const isPaintPopupOpen =
     useEventLatest(
@@ -54,10 +55,12 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
         deleteKey,
         file: getAttachedFile(form),
         r18,
+        allowImageReplies,
       });
       setShowSuccess(true);
       setBody("");
       setR18(false);
+      setAllowImageReplies(true);
       window.setTimeout(() => {
         setShowSuccess(false);
         onSuccess?.();
@@ -91,6 +94,11 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
       <p className="text-xs text-muted-foreground">
         R18を指定したスレッドにはR18タグが付き、画像は初期状態でぼかして表示されます。
       </p>
+      <Checkbox
+        checked={allowImageReplies}
+        onChange={setAllowImageReplies}
+        label="画像レスを許可"
+      />
       <Button
         type="submit"
         variant="primary"

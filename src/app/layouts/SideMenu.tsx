@@ -1,15 +1,23 @@
-import { useParams } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { Link, useParams } from "@tanstack/react-router";
 import { AnimatePresence, motion, type PanInfo } from "motion/react";
+import type { SyntheticEvent } from "react";
 import {
   FiGrid,
   FiMonitor,
   FiMusic,
+  FiRefreshCw,
   FiSettings,
   FiShieldOff,
   FiWatch,
   FiX,
 } from "react-icons/fi";
+import noImage from "@/assets/img/no-image.svg";
+import type { ThreadSummary } from "@/entities/thread";
+import { getImageUrl, getThreadTitle } from "@/entities/thread";
+import { useHistoryStore } from "@/features/history/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { apiGet } from "@/shared/api";
 import { MenuItem } from "./MenuItem";
 
 interface Props {
@@ -21,8 +29,27 @@ export const SideMenu: React.FunctionComponent<Props> = ({
   isOpen,
   onClose,
 }: Props) => {
+  const { getUnreadCount, getViewedIds } = useHistoryStore();
+  const viewedIds = getViewedIds().slice(0, 20);
   const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
   const params = useParams({ strict: false });
+
+  const {
+    data: historyThreads = [],
+    isError: isHistoryError,
+    isFetching: isHistoryFetching,
+    refetch: refetchHistory,
+  } = useQuery({
+    queryKey: ["history-threads", viewedIds],
+    queryFn: async (): Promise<ThreadSummary[]> => {
+      if (viewedIds.length === 0) return [];
+      return apiGet<ThreadSummary[]>(
+        `/threads?ids=${viewedIds.map(encodeURIComponent).join(",")}`,
+      );
+    },
+    enabled: isOpen && viewedIds.length > 0,
+    staleTime: 60_000,
+  });
 
   const makePcVersionUrl = (): string =>
     params.threadId && !/\D/.test(params.threadId)
@@ -120,12 +147,82 @@ export const SideMenu: React.FunctionComponent<Props> = ({
 
             {/* 履歴 */}
             <div className="flex-1">
-              <header className="px-4 py-2 text-sm font-medium text-muted-foreground bg-card sticky top-14 w-full">
-                閲覧履歴
+              <header className="flex items-center justify-between px-4 py-2 text-sm font-medium text-muted-foreground bg-card sticky top-14 w-full">
+                <span>閲覧履歴</span>
+                {viewedIds.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={(): void => void refetchHistory()}
+                    disabled={isHistoryFetching}
+                    aria-label="閲覧履歴を再取得"
+                    className="rounded p-1 hover:bg-muted disabled:opacity-50"
+                  >
+                    <FiRefreshCw
+                      className={isHistoryFetching ? "animate-spin" : ""}
+                      aria-hidden="true"
+                    />
+                  </button>
+                )}
               </header>
-              <div className="px-4 py-8 text-center text-muted-foreground text-sm">
-                閲覧履歴のスレッド再取得は backend-v1 の公開 API 未対応です
-              </div>
+              {viewedIds.length === 0 ? (
+                <div className="px-4 py-8 text-center text-muted-foreground text-sm">
+                  閲覧履歴がありません
+                </div>
+              ) : isHistoryError ? (
+                <div className="px-4 py-8 text-center text-muted-foreground text-sm">
+                  閲覧履歴を取得できませんでした
+                </div>
+              ) : historyThreads.length === 0 && isHistoryFetching ? (
+                <div className="px-4 py-8 text-center text-muted-foreground text-sm">
+                  閲覧履歴を読み込み中...
+                </div>
+              ) : (
+                <div className="space-y-1 px-2 pb-4">
+                  {viewedIds.map((threadId) => {
+                    const thread = historyThreads.find(
+                      (candidate) => candidate.id === threadId,
+                    );
+                    if (!thread) return null;
+                    const unreadCount = getUnreadCount(
+                      thread.id,
+                      thread.replyCount,
+                    );
+                    return (
+                      <Link
+                        key={thread.id}
+                        to="/thread/$threadId"
+                        params={{ threadId: thread.id }}
+                        onClick={onClose}
+                        className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-muted"
+                      >
+                        <img
+                          src={getImageUrl(thread.opPost.attachment, false)}
+                          alt=""
+                          className="h-12 w-12 rounded bg-muted object-cover"
+                          onError={(
+                            event: SyntheticEvent<HTMLImageElement>,
+                          ): void => {
+                            event.currentTarget.src = noImage;
+                          }}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm text-foreground">
+                            {getThreadTitle(thread)}
+                          </span>
+                          <span className="block text-xs text-muted-foreground">
+                            {thread.replyCount}レス
+                            {unreadCount && (
+                              <span className="mx-1 text-primary">
+                                未読{unreadCount}レス
+                              </span>
+                            )}
+                          </span>
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </motion.aside>
         </>

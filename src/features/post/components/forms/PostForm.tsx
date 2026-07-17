@@ -7,6 +7,7 @@ import { getAttachedFile } from "@/features/otegaki-upfile/lib/attachUpfileImage
 import { useSettingsStore } from "@/features/settings/hooks";
 import { Button, Textarea } from "@/shared/ui/form";
 import { PostNotice } from "@/shared/ui/navigation";
+import { OnlineUsersIndicator } from "@/shared/ui/navigation/OnlineUsersIndicator";
 import { ConfirmDialog } from "@/shared/ui/overlay";
 import type { CloseReason } from "@/shared/ui/overlay/ConfirmDialog";
 import { useSubmitPost } from "../../hooks/useSubmitPost";
@@ -17,7 +18,8 @@ interface PostFormData {
 
 interface Props {
   threadId: string;
-  allowImage: boolean;
+  allowImageReplies?: boolean;
+  closedAt?: string | null;
   initialComment?: string;
   openCount?: number;
   isArchived?: boolean;
@@ -32,7 +34,8 @@ const selectIsPaintPopupOpen = (state: UpfileStateFlags): boolean =>
 
 export const PostForm: React.FunctionComponent<Props> = ({
   threadId,
-  allowImage,
+  allowImageReplies = true,
+  closedAt = null,
   initialComment = "",
   openCount,
   isArchived = false,
@@ -89,6 +92,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
     const form = event.currentTarget;
     if (
       isArchived ||
+      closedAt ||
       isPreparingSubmit ||
       isPending ||
       isPaintPopupOpen ||
@@ -110,7 +114,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
         threadId,
         body: formData.comment.trim(),
         deleteKey,
-        file: allowImage ? getAttachedFile(form) : null,
+        file: allowImageReplies ? getAttachedFile(form) : null,
       });
       setShowSuccess(true);
       updateFormData({ comment: "" });
@@ -135,6 +139,14 @@ export const PostForm: React.FunctionComponent<Props> = ({
     setQuoteDialogOpen(false);
   };
 
+  if (closedAt) {
+    return (
+      <output className="rounded-lg border border-border bg-muted px-4 py-5 text-center text-muted-foreground">
+        このスレッドは閉鎖されています。返信できません。
+      </output>
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <Textarea
@@ -147,8 +159,9 @@ export const PostForm: React.FunctionComponent<Props> = ({
         required
       />
       <Scope name={SCOPE_NAME}>
-        <UpfileInput fullKey={UPFILE_FULL_KEY} allowImage={allowImage} />
+        <UpfileInput fullKey={UPFILE_FULL_KEY} allowImage={allowImageReplies} />
       </Scope>
+      <OnlineUsersIndicator className="block text-center text-xs text-muted-foreground" />
       <Button
         type="submit"
         variant="primary"
