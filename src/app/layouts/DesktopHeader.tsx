@@ -1,13 +1,25 @@
-import { useLocation } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 import mascot from "@/assets/img/icon_aimoge.webp";
 import { SearchBar } from "@/features/catalog/components";
 
-interface HeaderLink {
+type AppPath = "/" | "/archive" | "/jukebox";
+
+interface AppHeaderLink {
+  label: string;
+  to: AppPath;
+  href?: never;
+  external?: never;
+}
+
+interface AnchorHeaderLink {
   label: string;
   href: string;
   external?: boolean;
+  to?: never;
 }
+
+type HeaderLink = AppHeaderLink | AnchorHeaderLink;
 
 const NAV_LINKS: HeaderLink[] = [
   { label: "FANBOX", href: "https://aimoge.fanbox.cc/", external: true },
@@ -16,14 +28,14 @@ const NAV_LINKS: HeaderLink[] = [
     href: "https://vote.nijiurachan.net/",
     external: true,
   },
-  { label: "🎵ジュークボックス", href: "/jukebox", external: false },
+  { label: "🎵ジュークボックス", to: "/jukebox" },
 ];
 
 const UTILITY_LINKS: HeaderLink[] = [
-  { label: "🏛️過去ログ", href: "/archive" },
-  { label: "Wiki", href: "https://wiki.nijiurachan.net/" },
+  { label: "🏛️過去ログ", to: "/archive" },
+  { label: "Wiki", href: "https://wiki.nijiurachan.net/", external: true },
   { label: "📡API", href: "/api-docs" },
-  { label: "ホーム", href: "/" },
+  { label: "ホーム", to: "/" },
 ];
 
 export const DesktopHeader: React.FunctionComponent = () => {
@@ -35,11 +47,9 @@ export const DesktopHeader: React.FunctionComponent = () => {
     <header className="desktop-header">
       <nav className="desktop-header-links" aria-label="外部サービス">
         {NAV_LINKS.map((link) => (
-          <a
+          <HeaderLinkItem
             key={link.label}
-            href={link.href}
-            target={link.external ? "_blank" : undefined}
-            rel={link.external ? "noopener noreferrer" : undefined}
+            link={link}
             onClick={
               link.label.startsWith("🎵")
                 ? (event: React.MouseEvent<HTMLAnchorElement>): void => {
@@ -48,9 +58,7 @@ export const DesktopHeader: React.FunctionComponent = () => {
                   }
                 : undefined
             }
-          >
-            [{link.label}]
-          </a>
+          />
         ))}
       </nav>
 
@@ -69,28 +77,49 @@ export const DesktopHeader: React.FunctionComponent = () => {
           <span className="desktop-header-current">スレッド</span>
         )}
         {UTILITY_LINKS.map((link) => (
-          <a
-            key={link.label}
-            href={link.href}
-            target={link.href.startsWith("http") ? "_blank" : undefined}
-            rel={
-              link.href.startsWith("http") ? "noopener noreferrer" : undefined
-            }
-          >
-            [{link.label}]
-          </a>
+          <HeaderLinkItem key={link.label} link={link} />
         ))}
         <SearchBar />
       </nav>
 
       {isJukeboxOpen && (
         <div className="desktop-jukebox-notice" aria-live="polite">
-          ジュークボックスは別ページで開きます。<a href="/jukebox">開く</a>
+          ジュークボックスは別ページで開きます。
+          <Link to="/jukebox">開く</Link>
           <button type="button" onClick={(): void => setIsJukeboxOpen(false)}>
             閉じる
           </button>
         </div>
       )}
     </header>
+  );
+};
+
+interface HeaderLinkItemProps {
+  link: HeaderLink;
+  onClick?: (event: React.MouseEvent<HTMLAnchorElement>) => void;
+}
+
+const HeaderLinkItem: React.FunctionComponent<HeaderLinkItemProps> = ({
+  link,
+  onClick,
+}: HeaderLinkItemProps) => {
+  if (link.to) {
+    return (
+      <Link to={link.to} onClick={onClick}>
+        [{link.label}]
+      </Link>
+    );
+  }
+
+  return (
+    <a
+      href={link.href}
+      target={link.external ? "_blank" : undefined}
+      rel={link.external ? "noopener noreferrer" : undefined}
+      onClick={onClick}
+    >
+      [{link.label}]
+    </a>
   );
 };
