@@ -17,10 +17,14 @@ import {
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
 import { mergeThreadPosts } from "../utils/threadPosts";
+import {
+  getThreadChunkStaleTime,
+  THREAD_CHUNK_QUERY_BEHAVIOR,
+  THREAD_CHUNK_SIZE,
+} from "./threadChunkQuery";
 
-export const THREAD_CHUNK_SIZE = 100;
+export { THREAD_CHUNK_SIZE } from "./threadChunkQuery";
 export const THREAD_STATE_POLL_INTERVAL = 15_000;
-const THREAD_TAIL_STALE_TIME = 15_000;
 
 export interface UseThreadResult
   extends Omit<UseQueryResult<ThreadView>, "data" | "refetch" | "promise"> {
@@ -147,10 +151,8 @@ export function useThread(
       enabled: Boolean(threadId) && Boolean(stateData) && !isArchiveView,
       staleTime: (query: {
         state: { data: ThreadChunkElement[] | undefined };
-      }) =>
-        query.state.data?.length === THREAD_CHUNK_SIZE
-          ? Infinity
-          : THREAD_TAIL_STALE_TIME,
+      }) => getThreadChunkStaleTime(query.state.data),
+      ...THREAD_CHUNK_QUERY_BEHAVIOR,
     })),
   });
 
