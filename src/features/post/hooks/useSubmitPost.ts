@@ -5,6 +5,7 @@ import {
 } from "@tanstack/react-query";
 import type { CreatePostResult } from "@/shared/api";
 import { apiPost, getAltchaSolution, uploadAttachment } from "@/shared/api";
+import { toast } from "@/shared/ui/toast";
 
 interface SubmitParams {
   mode: "thread" | "reply";
@@ -57,7 +58,9 @@ export function useSubmitPost(): UseMutationResult<
       }
     },
     onError: (error: unknown): void => {
-      alert(error instanceof Error ? error.message : "投稿に失敗しました");
+      toast.error(
+        error instanceof Error ? error.message : "投稿に失敗しました",
+      );
     },
   });
 }

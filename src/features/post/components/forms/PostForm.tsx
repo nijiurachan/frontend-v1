@@ -10,6 +10,7 @@ import { PostNotice } from "@/shared/ui/navigation";
 import { OnlineUsersIndicator } from "@/shared/ui/navigation/OnlineUsersIndicator";
 import { ConfirmDialog } from "@/shared/ui/overlay";
 import type { CloseReason } from "@/shared/ui/overlay/ConfirmDialog";
+import { toast } from "@/shared/ui/toast";
 import { useSubmitPost } from "../../hooks/useSubmitPost";
 
 interface PostFormData {
@@ -103,18 +104,21 @@ export const PostForm: React.FunctionComponent<Props> = ({
     }
 
     setIsPreparingSubmit(true);
+    let mutationStarted = false;
     try {
       const prepareEvent = new CustomEvent("aimg:prepare-submit", {
         detail: {} as { preparing?: Promise<void> },
       });
       form.dispatchEvent(prepareEvent);
       await prepareEvent.detail.preparing;
+      const file = allowImageReplies ? getAttachedFile(form) : null;
+      mutationStarted = true;
       await submitPost({
         mode: "reply",
         threadId,
         body: formData.comment.trim(),
         deleteKey,
-        file: allowImageReplies ? getAttachedFile(form) : null,
+        file,
       });
       setShowSuccess(true);
       updateFormData({ comment: "" });
@@ -123,7 +127,8 @@ export const PostForm: React.FunctionComponent<Props> = ({
         onSuccess?.();
       }, 200);
     } catch (error) {
-      if (error instanceof Error) alert(error.message);
+      if (!mutationStarted && error instanceof Error)
+        toast.error(error.message);
     } finally {
       setIsPreparingSubmit(false);
     }
