@@ -7,8 +7,14 @@ import {
 
 describe("readAttachmentForUpload", () => {
   test("既定上限を使用する", () => {
-    expect(MAX_ATTACHMENT_BYTES).toBe(DEFAULT_MAX_ATTACHMENT_BYTES);
-    expect(MAX_ATTACHMENT_BYTES).toBe(20 * 1024 * 1024);
+    // VITE_MAX_ATTACHMENT_BYTES 上書き時は設定値、未設定時は既定20MiBを使う
+    const configured = Number(import.meta.env?.VITE_MAX_ATTACHMENT_BYTES);
+    if (Number.isFinite(configured) && configured > 0) {
+      expect(MAX_ATTACHMENT_BYTES).toBe(configured);
+    } else {
+      expect(MAX_ATTACHMENT_BYTES).toBe(DEFAULT_MAX_ATTACHMENT_BYTES);
+      expect(MAX_ATTACHMENT_BYTES).toBe(20 * 1024 * 1024);
+    }
   });
 
   test("クライアント上限超過はArrayBuffer化より前に拒否する", async () => {
