@@ -94,7 +94,9 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
                 aria-label={`No.${target.seq}へ移動`}
               >
                 {previewContent}
-                <span className="quote-preview-hint">クリックでレスへ移動</span>
+                <span className="quote-preview-hint">
+                  引用行は返信に引用・プレビューはレスへ移動
+                </span>
               </button>
             ) : (
               // biome-ignore lint/a11y/noStaticElementInteractions: hover preview stays open while pointer is over it
