@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import type { Post } from "@/entities/post";
+import { type Post, postNo } from "@/entities/post";
 import {
   clearQuotePreviewCloseTimer,
   getQuotePreviewMode,
@@ -90,7 +90,7 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
       role={previewMode === "interactive" ? "link" : undefined}
       tabIndex={previewMode === "interactive" ? 0 : undefined}
       aria-label={
-        previewMode === "interactive" ? `No.${target.seq}へ移動` : undefined
+        previewMode === "interactive" ? `No.${postNo(target)}へ移動` : undefined
       }
       onMouseEnter={(): void => {
         cancelClose();
@@ -117,7 +117,7 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
                 onFocus={cancelClose}
                 onBlur={scheduleClose}
                 onClick={(): void => onJumpToPost(target.seq)}
-                aria-label={`No.${target.seq}へ移動`}
+                aria-label={`No.${postNo(target)}へ移動`}
               >
                 {previewContent}
                 <span className="quote-preview-hint">

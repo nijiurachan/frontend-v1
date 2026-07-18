@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import type { Post } from "@/entities/post";
+import { type Post, postNo } from "@/entities/post";
 import { PostListDisplay } from "@/features/thread/ui";
 import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
 import type { SearchResult } from "@/features/thread/utils/searchPosts";
@@ -50,7 +50,7 @@ export const QuoteSearchModal: React.FunctionComponent<
       // 全レス・ファイル名・レスNoから検索
       // TODO QuoteReferenceMapを利用
       const content = [
-        `No.${post.seq}`,
+        `No.${postNo(post)}`,
         post.attachment?.originalUrl,
         post.body,
       ]

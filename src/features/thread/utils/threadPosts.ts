@@ -14,6 +14,7 @@ export function normalizeThreadPost(
       id: `unavailable-${threadId}-${element.seq}`,
       threadId,
       seq: element.seq,
+      boardNo: null,
       status: "unavailable",
       body: "",
       createdAt: "",

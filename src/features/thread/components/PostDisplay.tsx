@@ -2,7 +2,7 @@ import clsx from "clsx";
 import { Fragment, memo, useMemo, useState } from "react";
 import { FiMessageCircle } from "react-icons/fi";
 import { HiOutlineDotsVertical } from "react-icons/hi";
-import { getPostBodyLines, type Post } from "@/entities/post";
+import { getPostBodyLines, type Post, postNo } from "@/entities/post";
 import { getImageUrl, resolveUploadPath } from "@/entities/thread";
 import { PlayerTrigger } from "@/features/player/components";
 import { SoudaneButton } from "@/features/thread/components/actions/SoudaneButton";
@@ -149,7 +149,7 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
                 post.attachment?.kind === "animated" && "text-otegaki",
               )}
             >
-              No.{post.seq}
+              No.{postNo(post)}
             </button>
             {!isArchived && (
               <SoudaneButton

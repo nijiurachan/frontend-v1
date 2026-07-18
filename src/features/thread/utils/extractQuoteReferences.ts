@@ -1,4 +1,4 @@
-import type { Post } from "@/entities/post";
+import { type Post, postNo } from "@/entities/post";
 import { extractQuoteTexts, stripQuoteLines } from "@/shared/lib";
 
 /**
@@ -23,7 +23,7 @@ export function extractQuoteReferences(posts: Post[]): QuoteReferencesMap {
   const processedPosts = posts.map((post) => {
     // 全レス・ファイル名・レスNoから検索
     const plainText = [
-      `No.${post.seq}`,
+      `No.${postNo(post)}`,
       post.attachment?.originalUrl,
       post.body,
     ].join("\n");

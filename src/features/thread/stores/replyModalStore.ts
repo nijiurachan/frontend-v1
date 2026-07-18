@@ -1,4 +1,5 @@
 import { create, type StoreApi, type UseBoundStore } from "zustand";
+import { postNo } from "@/entities/post";
 
 export interface ReplyModalState {
   isOpen: boolean;
@@ -12,12 +13,12 @@ export interface ReplyModalState {
 export type ReplyQuoteType = "body" | "no";
 
 export function createReplyInitialComment(
-  post: { body: string; seq: number },
+  post: { body: string; seq: number; boardNo: number | null },
   type: ReplyQuoteType,
 ): string {
   const quote =
     type === "no"
-      ? `>No.${post.seq}`
+      ? `>No.${postNo(post)}`
       : post.body
           .split(/\r?\n/)
           .map((line) => `>${line}`)

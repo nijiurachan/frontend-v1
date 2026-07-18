@@ -26,6 +26,7 @@ export interface ThreadSummary {
 export interface ThreadChunkPost {
   id: string;
   seq: number;
+  boardNo: number | null;
   body: string;
   createdAt: string;
   displayId: string | null;

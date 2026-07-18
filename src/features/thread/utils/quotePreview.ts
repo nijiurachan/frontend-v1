@@ -1,4 +1,4 @@
-import type { Post } from "@/entities/post";
+import { type Post, postNo } from "@/entities/post";
 import { stripQuoteLines } from "@/shared/lib/quoteUtils";
 
 interface IndexedPost {
@@ -71,7 +71,7 @@ export function resolveQuotedPostFromIndex(
 
 function getSearchText(post: Post): string {
   return stripQuoteLines(
-    [`No.${post.seq}`, post.attachment?.originalUrl ?? "", post.body].join(
+    [`No.${postNo(post)}`, post.attachment?.originalUrl ?? "", post.body].join(
       "\n",
     ),
   ).toLowerCase();
