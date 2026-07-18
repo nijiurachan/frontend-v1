@@ -51,19 +51,9 @@
         {
           "pattern": "dev.nijiurachan.net/ts-test/*",
           "zone_name": "nijiurachan.net"
-        },
-        {
-          "pattern": "test.nijiurachan.net/ts-test",
-          "zone_name": "nijiurachan.net"
-        },
-        {
-          "pattern": "test.nijiurachan.net/ts-test/*",
-          "zone_name": "nijiurachan.net"
-        },
-        {
-          "pattern": "test.nijiurachan.net/assets/klecks/*",
-          "zone_name": "nijiurachan.net"
         }
+        // test.nijiurachan.net は nginx (Origin_Server:3000) がルート直下で
+        // 配信する (VITE_BASE_PATH="" ビルド)。Worker ルートは張らない。
       ]
     }
   },
