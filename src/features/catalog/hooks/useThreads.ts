@@ -11,6 +11,7 @@ import {
 
 export function useThreads(): UseQueryResult<Catalog> {
   const { currentSort } = useCatalogStore();
+  const catalogPath = getCatalogPath(currentSort);
   const aimogeGeneration = useAimogeHookGeneration();
   const transformCatalog = useCallback(
     (catalog: Catalog): Catalog => {
@@ -27,8 +28,8 @@ export function useThreads(): UseQueryResult<Catalog> {
   );
 
   const query = useQuery({
-    queryKey: ["threads", currentSort],
-    queryFn: () => apiGet<Catalog>(getCatalogPath(currentSort)),
+    queryKey: ["threads", catalogPath],
+    queryFn: () => apiGet<Catalog>(catalogPath),
     select: transformCatalog,
     staleTime: 30_000,
     refetchOnWindowFocus: true,

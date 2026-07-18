@@ -1,19 +1,21 @@
 import { useMemo } from "react";
 import type { Thread } from "@/entities/thread";
 import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
+import { sortCatalogThreads } from "@/features/catalog/utils/catalogSort";
 import { useNgStore } from "@/features/ng-filter/stores/ngStore";
 
 /**
  * スレッド一覧に検索フィルターとNGフィルターを適用
  */
 export function useFilteredThreads(threads: Thread[] | undefined): Thread[] {
-  const { searchQuery, selectedTag } = useCatalogStore();
+  const { currentSort, sortDirection, searchQuery, selectedTag } =
+    useCatalogStore();
   const { isThreadHidden, showNgContent } = useNgStore();
 
   return useMemo(() => {
     if (!threads) return [];
 
-    return threads.filter((thread) => {
+    const filteredThreads = threads.filter((thread) => {
       // 1. NGフィルター適用（showNgContentがtrueの場合はNGでもフィルタリングしない）
       if (!showNgContent && isThreadHidden(thread)) return false;
 
@@ -31,5 +33,15 @@ export function useFilteredThreads(threads: Thread[] | undefined): Thread[] {
 
       return true;
     });
-  }, [threads, searchQuery, selectedTag, isThreadHidden, showNgContent]);
+
+    return sortCatalogThreads(filteredThreads, currentSort, sortDirection);
+  }, [
+    threads,
+    currentSort,
+    sortDirection,
+    searchQuery,
+    selectedTag,
+    isThreadHidden,
+    showNgContent,
+  ]);
 }

@@ -16,6 +16,8 @@ export const CatalogPage: React.FunctionComponent = () => {
   const updateLastCatalogIds = useCatalogStore(
     (state) => state.updateLastCatalogIds,
   );
+  const currentSort = useCatalogStore((state) => state.currentSort);
+  const sortDirection = useCatalogStore((state) => state.sortDirection);
   const setSort = useCatalogStore((state) => state.setSort);
   const isOpen = useThreadCreateModalStore((s) => s.isOpen);
   const open = useThreadCreateModalStore((s) => s.open);
@@ -51,25 +53,39 @@ export const CatalogPage: React.FunctionComponent = () => {
           className="desktop-catalog-nav"
           aria-label="カタログナビゲーション"
         >
-          [<a href="/">掲示板に戻る</a>]<a href="/">カタログ</a>
+          [<a href="/">掲示板に戻る</a>]
+          <a
+            href="/"
+            aria-current={
+              currentSort === "bump" && sortDirection === "desc"
+                ? "true"
+                : undefined
+            }
+            onClick={(): void => setSort("bump", "desc")}
+          >
+            カタログ
+          </a>
           <button
             className="desktop-nav-link"
             type="button"
-            onClick={(): void => setSort("created")}
+            aria-pressed={currentSort === "date" && sortDirection === "desc"}
+            onClick={(): void => setSort("date", "desc")}
           >
             新順
           </button>
           <button
             className="desktop-nav-link"
             type="button"
-            onClick={(): void => setSort("old")}
+            aria-pressed={currentSort === "date" && sortDirection === "asc"}
+            onClick={(): void => setSort("date", "asc")}
           >
             古順
           </button>
           <button
             className="desktop-nav-link"
             type="button"
-            onClick={(): void => setSort("replies")}
+            aria-pressed={currentSort === "replies" && sortDirection === "desc"}
+            onClick={(): void => setSort("replies", "desc")}
           >
             多順
           </button>
