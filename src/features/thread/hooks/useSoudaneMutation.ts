@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiPut } from "@/shared/api";
 import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
 import { toast } from "@/shared/ui/toast";
+import { isDuplicateSoudaneError } from "./soudaneError";
 
 interface ReactionResponse {
   postId: string;
@@ -18,9 +19,14 @@ export function useSoudaneMutation(): UseMutationResult<
 
   return useMutation({
     mutationFn: async (postId: string) => {
-      return apiPut<ReactionResponse>(`/posts/${postId}/reactions/up`, {
-        requiresToken: true,
-      });
+      try {
+        return await apiPut<ReactionResponse>(`/posts/${postId}/reactions/up`, {
+          requiresToken: true,
+        });
+      } catch (error) {
+        if (isDuplicateSoudaneError(error)) return { postId, type: "up" };
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["thread"] });
