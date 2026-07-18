@@ -14,6 +14,7 @@ import { PostItem } from "@/features/thread/components/lists/PostItem";
 import { usePostReadObserver } from "@/features/thread/hooks/usePostReadObserver";
 import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
 import { resolvePostSeqFromHash } from "@/features/thread/utils/threadHash";
+import { isPostVisible } from "@/features/thread/utils/threadPosts";
 import {
   runAimogeBeforeRender,
   useAimogeHookGeneration,
@@ -52,15 +53,19 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   const { isPostHidden, ngImages, showNgContent } = useNgStore();
   const aimogeGeneration = useAimogeHookGeneration();
   const { hash } = useLocation();
+  const hasPublicPosts = posts.some((post) => isPostVisible(post.status));
   const visiblePosts = useMemo(() => {
     void aimogeGeneration;
     void ngImages;
+    const publicPosts = posts.filter((post) => isPostVisible(post.status));
     const ngFilteredPosts = showNgContent
-      ? posts
-      : posts.filter((post) => !isPostHidden(post));
+      ? publicPosts
+      : publicPosts.filter((post) => !isPostHidden(post));
     return ngFilteredPosts.flatMap((post) => {
       const preparedPost = runAimogeBeforeRender("post:beforeRender", post);
-      return preparedPost ? [preparedPost] : [];
+      return preparedPost && isPostVisible(preparedPost.status)
+        ? [preparedPost]
+        : [];
     });
   }, [aimogeGeneration, posts, isPostHidden, ngImages, showNgContent]);
   const observePostRead = usePostReadObserver(onPostFullyVisible, visiblePosts);
@@ -130,9 +135,10 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   }, [allPosts, hash, rowVirtualizer, scrollElementRef, visiblePosts]);
 
   if (visiblePosts.length === 0) {
+    if (posts.length > 0 && !hasPublicPosts) return null;
     return (
       <div className="p-8 text-center text-muted-foreground">
-        {posts.length > 0
+        {hasPublicPosts
           ? "NGフィルターにより、すべてのレスが非表示になっています"
           : "まだレスがありません"}
       </div>

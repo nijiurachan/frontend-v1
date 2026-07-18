@@ -4,6 +4,7 @@ import { useNgStore } from "@/features/ng-filter/stores";
 import { PostItem } from "@/features/thread/components/lists/PostItem";
 import { usePostReadObserver } from "@/features/thread/hooks/usePostReadObserver";
 import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
+import { isPostVisible } from "@/features/thread/utils/threadPosts";
 import {
   runAimogeBeforeRender,
   useAimogeHookGeneration,
@@ -41,22 +42,26 @@ export const PostList: React.FunctionComponent<Props> = ({
   } = useNgStore();
 
   const aimogeGeneration = useAimogeHookGeneration();
+  const hasPublicPosts = posts.some((post) => isPostVisible(post.status));
   const visiblePosts = useMemo(() => {
     void aimogeGeneration;
     void ngImages;
+    const publicPosts = posts.filter((post) => isPostVisible(post.status));
     const ngFilteredPosts = showNgContent
-      ? posts
-      : posts.filter((post) => !isPostHidden(post));
+      ? publicPosts
+      : publicPosts.filter((post) => !isPostHidden(post));
     return ngFilteredPosts.flatMap((post) => {
       const preparedPost = runAimogeBeforeRender("post:beforeRender", post);
-      return preparedPost ? [preparedPost] : [];
+      return preparedPost && isPostVisible(preparedPost.status)
+        ? [preparedPost]
+        : [];
     });
   }, [aimogeGeneration, isPostHidden, ngImages, posts, showNgContent]);
 
   const observePostRead = usePostReadObserver(onPostFullyVisible, visiblePosts);
 
   // showNgContentがfalseで、すべてのレスがフィルタリングされた場合
-  if (!showNgContent && visiblePosts.length === 0 && posts.length > 0) {
+  if (!showNgContent && visiblePosts.length === 0 && hasPublicPosts) {
     return (
       <div className="p-8 text-center text-muted-foreground">
         NGフィルターにより、すべてのレスが非表示になっています
@@ -65,6 +70,7 @@ export const PostList: React.FunctionComponent<Props> = ({
   }
 
   if (visiblePosts.length === 0) {
+    if (posts.length > 0) return null;
     return (
       <div className="p-8 text-center text-muted-foreground">
         まだレスがありません

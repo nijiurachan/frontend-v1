@@ -39,17 +39,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
   const [expanded, setExpanded] = useState(false);
 
   if (!renderedPost) return null;
-  if (renderedPost.status !== "public") {
-    return (
-      <div
-        ref={elementRef}
-        id="post-0"
-        className="m-2 rounded border border-border bg-muted p-3 text-sm text-muted-foreground"
-      >
-        No.{renderedPost.seq} このレスは表示できません
-      </div>
-    );
-  }
+  if (renderedPost.status !== "public") return null;
 
   // NGかつshowNgContentがfalseの場合のみ非表示メッセージを表示
   if (isNg && !showNgContent) {

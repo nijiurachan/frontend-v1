@@ -3,7 +3,10 @@ import type {
   ThreadChunkElement,
   ThreadPostState,
 } from "@/entities/thread/types";
-import { mergeThreadPosts } from "@/features/thread/utils/threadPosts";
+import {
+  isPostVisible,
+  mergeThreadPosts,
+} from "@/features/thread/utils/threadPosts";
 
 function makeElement(seq: number): ThreadChunkElement {
   return {
@@ -25,6 +28,13 @@ function makeState(
 }
 
 describe("mergeThreadPosts", () => {
+  test("非公開レスは表示対象にせず番号だけを欠番にする", () => {
+    expect(isPostVisible("public")).toBe(true);
+    expect(isPostVisible("shadowed")).toBe(false);
+    expect(isPostVisible("trash")).toBe(false);
+    expect(isPostVisible("unavailable")).toBe(false);
+  });
+
   test("1000レスのstate更新で変更されたseqだけ参照を置き換える", () => {
     const elements = Array.from({ length: 1000 }, (_, seq) => makeElement(seq));
     const initial = mergeThreadPosts(

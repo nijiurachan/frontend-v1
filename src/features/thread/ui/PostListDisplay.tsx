@@ -1,6 +1,7 @@
 import type { Post } from "@/entities/post";
 import { PostItem } from "@/features/thread/components/lists/PostItem";
 import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
+import { isPostVisible } from "@/features/thread/utils/threadPosts";
 
 interface PostListDisplayProps {
   posts: Array<{ post: Post; index: number }>;
@@ -28,18 +29,20 @@ export const PostListDisplay: React.FunctionComponent<PostListDisplayProps> = ({
   return (
     <div className="bg-muted/30">
       {header}
-      {posts.map(({ post }) => (
-        <PostItem
-          key={post.id}
-          post={post}
-          isSubView
-          quoteReferencesMap={quoteReferencesMap}
-          allPosts={allPosts}
-          onQuoteClick={onQuoteClick}
-          onJumpToPost={onJumpToPost}
-          isArchived={isArchived}
-        />
-      ))}
+      {posts
+        .filter(({ post }) => isPostVisible(post.status))
+        .map(({ post }) => (
+          <PostItem
+            key={post.id}
+            post={post}
+            isSubView
+            quoteReferencesMap={quoteReferencesMap}
+            allPosts={allPosts}
+            onQuoteClick={onQuoteClick}
+            onJumpToPost={onJumpToPost}
+            isArchived={isArchived}
+          />
+        ))}
     </div>
   );
 };
