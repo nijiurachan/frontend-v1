@@ -727,6 +727,11 @@ select option {
   min-width: 0;
 }
 
+.desktop-thread-op figure,
+.desktop-thread-post-row figure {
+  margin-left: 20px;
+}
+
 .desktop-thread-op article > figure,
 .desktop-thread-post-row article > figure {
   grid-column: 1;
@@ -736,11 +741,6 @@ select option {
 .desktop-thread-post-row article > figure + blockquote {
   grid-column: 2;
   margin-left: 0;
-}
-
-.desktop-thread-op figure,
-.desktop-thread-post-row figure {
-  margin-left: 20px;
 }
 
 .desktop-thread-op .text-foreground,
