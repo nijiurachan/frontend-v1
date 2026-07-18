@@ -1,7 +1,9 @@
 import { useState } from "react";
+import { MdDragHandle } from "react-icons/md";
 import type { Thread } from "@/entities/thread";
 import { PostForm } from "@/features/post/components/forms";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { DesktopPanelGrip } from "@/features/thread/components/desktop/DesktopPanelGrip";
 import { useDraggablePanel } from "@/shared/hooks";
 
 interface Props {
@@ -46,6 +48,7 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
       </button>
       <div className="desktop-floating-content">
         <div className="desktop-floating-heading" {...handleProps}>
+          <MdDragHandle aria-hidden="true" size={18} />
           返信フォーム
         </div>
         <div className="desktop-floating-form">
@@ -85,6 +88,7 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
             onSuccess={onCloseComment}
           />
         </div>
+        <DesktopPanelGrip handleProps={handleProps} />
       </div>
     </aside>
   );

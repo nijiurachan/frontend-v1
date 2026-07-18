@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { MdDragHandle } from "react-icons/md";
+import { DesktopPanelGrip } from "@/features/thread/components/desktop/DesktopPanelGrip";
 import { ThreadCreateForm } from "@/features/thread/components/forms/ThreadCreateForm";
 import { getDesktopThreadCreatePanelAction } from "@/features/thread/utils/desktopThreadCreatePanelState";
 import { useDraggablePanel } from "@/shared/hooks";
@@ -42,6 +44,7 @@ export const DesktopThreadCreatePanel: React.FunctionComponent<Props> = ({
       </button>
       <div className="desktop-floating-content">
         <div className="desktop-floating-heading" {...handleProps}>
+          <MdDragHandle aria-hidden="true" size={18} />
           新規スレッド
         </div>
         <div className="desktop-floating-form">
@@ -52,6 +55,7 @@ export const DesktopThreadCreatePanel: React.FunctionComponent<Props> = ({
             }}
           />
         </div>
+        <DesktopPanelGrip handleProps={handleProps} />
       </div>
     </aside>
   );

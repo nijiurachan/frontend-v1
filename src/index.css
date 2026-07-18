@@ -610,11 +610,27 @@ select option {
 }
 
 .desktop-floating-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
   padding: 4px;
   background: #d0d0d0;
   color: #666;
-  text-align: center;
   /* タイトルバーを掴んでパネルを移動できる */
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+
+/* フォーム下端の「三」型ドラッグハンドル */
+.desktop-floating-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: #d0d0d0;
+  color: #666;
   cursor: move;
   user-select: none;
   touch-action: none;
