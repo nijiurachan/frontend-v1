@@ -35,6 +35,24 @@ describe("getApiErrorMessage", () => {
       getApiErrorMessage(new ApiError("HTTP 500", 500), "削除に失敗しました"),
     ).toBe("削除に失敗しました");
   });
+
+  test("INVALID_REQUESTは投稿以外でも使える汎用文言を返す", () => {
+    expect(
+      getApiErrorMessage(
+        new ApiError("Bad Request", 400, "INVALID_REQUEST"),
+        "操作に失敗しました",
+      ),
+    ).toBe("リクエスト内容を確認してください");
+  });
+
+  test("prototype由来のコードをエラーコード表として参照しない", () => {
+    expect(
+      getApiErrorMessage(
+        new ApiError("server reason", 400, "toString"),
+        "操作に失敗しました",
+      ),
+    ).toBe("server reason");
+  });
 });
 
 describe("isMissingThreadError", () => {

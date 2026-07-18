@@ -3,8 +3,7 @@ import { ApiError } from "../../api/errors";
 const API_ERROR_MESSAGES: Readonly<Record<string, string>> = {
   VALIDATION_ERROR:
     "入力内容を確認してください。投稿本文は4000文字以内で入力してください",
-  INVALID_REQUEST:
-    "入力内容を確認してください。投稿本文は4000文字以内で入力してください",
+  INVALID_REQUEST: "リクエスト内容を確認してください",
   SPAM_REJECTED:
     "スパム判定により投稿を受け付けられませんでした。内容を変更してお試しください",
   ROLE_FORBIDDEN:
@@ -16,8 +15,10 @@ export function getApiErrorMessage(
   fallbackMessage: string,
 ): string {
   if (error instanceof ApiError && error.code) {
-    const mappedMessage = API_ERROR_MESSAGES[error.code];
-    if (mappedMessage) return mappedMessage;
+    if (Object.hasOwn(API_ERROR_MESSAGES, error.code)) {
+      const mappedMessage = API_ERROR_MESSAGES[error.code];
+      if (mappedMessage) return mappedMessage;
+    }
   }
   if (
     error instanceof Error &&
