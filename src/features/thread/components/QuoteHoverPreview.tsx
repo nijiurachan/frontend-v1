@@ -35,6 +35,19 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
     closeTimerRef.current = window.setTimeout(() => setIsOpen(false), 150);
   };
 
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLSpanElement>): void => {
+    if (
+      event.target === event.currentTarget &&
+      event.key === "Enter" &&
+      previewMode === "interactive" &&
+      onJumpToPost &&
+      target
+    ) {
+      event.preventDefault();
+      onJumpToPost(target.seq);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) return;
     const updatePosition = (): void => {
@@ -70,15 +83,26 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
   );
 
   return (
-    // biome-ignore lint/a11y/noStaticElementInteractions: hover-only preview anchor
+    // biome-ignore lint/a11y/noStaticElementInteractions lint/a11y/useAriaPropsSupportedByRole: interactive mode conditionally supplies link semantics; a native anchor cannot wrap child links
     <span
       ref={anchorRef}
       className="quote-preview-anchor"
+      role={previewMode === "interactive" ? "link" : undefined}
+      tabIndex={previewMode === "interactive" ? 0 : undefined}
+      aria-label={
+        previewMode === "interactive" ? `No.${target.seq}へ移動` : undefined
+      }
       onMouseEnter={(): void => {
         cancelClose();
         setIsOpen(true);
       }}
       onMouseLeave={scheduleClose}
+      onFocus={(): void => {
+        cancelClose();
+        setIsOpen(true);
+      }}
+      onBlur={scheduleClose}
+      onKeyDown={handleKeyDown}
     >
       {children}
       {isOpen && typeof document !== "undefined"
@@ -90,6 +114,8 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
                 style={{ left: position.left, top: position.top }}
                 onMouseEnter={cancelClose}
                 onMouseLeave={scheduleClose}
+                onFocus={cancelClose}
+                onBlur={scheduleClose}
                 onClick={(): void => onJumpToPost(target.seq)}
                 aria-label={`No.${target.seq}へ移動`}
               >

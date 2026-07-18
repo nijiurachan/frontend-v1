@@ -17,5 +17,12 @@ describe("getCatalogThreadClickAction", () => {
         isR18Hidden: true,
       }),
     ).toBe("reveal-r18");
+    expect(
+      getCatalogThreadClickAction({
+        isNg: true,
+        ngRevealed: true,
+        isR18Hidden: false,
+      }),
+    ).toBe("view");
   });
 });

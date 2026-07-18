@@ -9,6 +9,7 @@ const API_ERROR_MESSAGES: Readonly<Record<string, string>> = {
   ROLE_FORBIDDEN:
     "この操作には参加期間が足りません。参加期間を満たしてからお試しください",
 };
+const BAD_REQUEST_MESSAGE = "入力内容を確認してください";
 
 export function getApiErrorMessage(
   error: unknown,
@@ -19,6 +20,9 @@ export function getApiErrorMessage(
       const mappedMessage = API_ERROR_MESSAGES[error.code];
       if (mappedMessage) return mappedMessage;
     }
+  }
+  if (error instanceof ApiError && error.status === 400) {
+    return BAD_REQUEST_MESSAGE;
   }
   if (
     error instanceof Error &&
@@ -31,7 +35,5 @@ export function getApiErrorMessage(
 }
 
 export function isMissingThreadError(error: unknown): boolean {
-  return (
-    error instanceof ApiError && (error.status === 400 || error.status === 404)
-  );
+  return error instanceof ApiError && error.status === 404;
 }

@@ -1,6 +1,5 @@
 // biome-ignore-all lint/suspicious/noArrayIndexKey: ここで扱うセグメント配列は変化しない
 
-import clsx from "clsx";
 import { Fragment, useMemo } from "react";
 import type { Post, PostBodyLine } from "@/entities/post";
 import { PlayerTrigger } from "@/features/player/components";
@@ -136,19 +135,17 @@ export const LineDisplay: React.FunctionComponent<Props> = ({
               );
             }
             // 虹色モードでも引用行は従来の quote 色 (緑) を維持
-            return (
-              // biome-ignore lint/a11y/noStaticElementInteractions: TODO label＆buttonで置き換え予定
-              // biome-ignore lint/a11y/useKeyWithClickEvents: TODO label＆buttonで置き換え予定
-              <span
+            return onQuoteClick ? (
+              <button
                 key={i}
-                className={clsx(
-                  "text-quote",
-                  onQuoteClick && "cursor-pointer hover:underline",
-                )}
-                onClick={
-                  onQuoteClick ? (): void => onQuoteClick(line.text) : undefined
-                }
+                type="button"
+                className="inline cursor-pointer border-0 bg-transparent p-0 text-left text-quote hover:underline"
+                onClick={(): void => onQuoteClick(line.text)}
               >
+                {seg.content}
+              </button>
+            ) : (
+              <span key={i} className="text-quote">
                 {seg.content}
               </span>
             );

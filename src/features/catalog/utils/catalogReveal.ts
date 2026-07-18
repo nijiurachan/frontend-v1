@@ -7,6 +7,5 @@ export function getCatalogThreadClickAction(options: {
 }): CatalogThreadClickAction {
   if (options.isNg && !options.ngRevealed) return "toggle-ng";
   if (options.isR18Hidden) return "reveal-r18";
-  if (options.isNg) return "toggle-ng";
   return "view";
 }

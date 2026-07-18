@@ -45,6 +45,10 @@ describe("layout accessibility markup", () => {
 
     expect(source).toContain('href="#main-content"');
     expect(mobileSource).toContain('href="#main-content"');
+    expect(mobileSource).toContain("focus:fixed");
+    expect(mobileSource.indexOf('href="#main-content"')).toBeLessThan(
+      mobileSource.indexOf("<header"),
+    );
     expect(mobileLayoutSource).toContain('id="main-content"');
     expect(mobileLayoutSource).toContain("tabIndex={-1}");
     const desktopLayoutSource = await readSource("./DesktopLayout.tsx");

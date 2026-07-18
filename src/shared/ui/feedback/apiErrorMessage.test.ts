@@ -48,16 +48,25 @@ describe("getApiErrorMessage", () => {
   test("prototype由来のコードをエラーコード表として参照しない", () => {
     expect(
       getApiErrorMessage(
-        new ApiError("server reason", 400, "toString"),
+        new ApiError("server reason", 422, "toString"),
         "操作に失敗しました",
       ),
     ).toBe("server reason");
   });
+
+  test("コード無しのHTTP 400は汎用バリデーション文言を返す", () => {
+    expect(
+      getApiErrorMessage(
+        new ApiError("Bad Request", 400),
+        "スレッドの読み込みに失敗しました",
+      ),
+    ).toBe("入力内容を確認してください");
+  });
 });
 
 describe("isMissingThreadError", () => {
-  test("400と404だけを存在しないスレッド向けエラーとして扱う", () => {
-    expect(isMissingThreadError(new ApiError("invalid", 400))).toBe(true);
+  test("404だけを存在しないスレッド向けエラーとして扱う", () => {
+    expect(isMissingThreadError(new ApiError("invalid", 400))).toBe(false);
     expect(isMissingThreadError(new ApiError("not found", 404))).toBe(true);
     expect(isMissingThreadError(new ApiError("server error", 500))).toBe(false);
   });
