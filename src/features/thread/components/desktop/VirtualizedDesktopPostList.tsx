@@ -102,7 +102,10 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   }, [onRegisterScrollToPost, rowVirtualizer, visiblePosts]);
 
   useEffect(() => {
-    if (!hash) return;
+    if (!hash) {
+      handledHashRef.current = null;
+      return;
+    }
     const postSeq = resolvePostSeqFromHash(hash, allPosts);
     if (postSeq === null) return;
     const hashKey = `${allPosts[0]?.threadId ?? "unknown"}:${hash}:${postSeq}`;

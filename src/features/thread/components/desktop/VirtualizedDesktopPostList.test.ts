@@ -22,4 +22,12 @@ describe("virtualized desktop hash navigation", () => {
       /requestAnimationFrame\([\s\S]*?rowVirtualizer\.scrollToIndex\(index,[\s\S]*?align: "center"[\s\S]*?behavior: "auto"/,
     );
   });
+
+  test("hash解除後は同じ投稿への再遷移を再処理する", async () => {
+    const source = await Bun.file(sourceUrl).text();
+
+    expect(source).toMatch(
+      /if \(!hash\) \{[\s\S]*?handledHashRef\.current = null;[\s\S]*?return;/,
+    );
+  });
 });

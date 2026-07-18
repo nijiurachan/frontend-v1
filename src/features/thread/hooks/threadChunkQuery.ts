@@ -1,3 +1,5 @@
+import type { Query, QueryFilters } from "@tanstack/react-query";
+
 export const THREAD_CHUNK_SIZE = 100;
 const THREAD_TAIL_STALE_TIME = 15_000;
 
@@ -11,4 +13,25 @@ export function getThreadChunkStaleTime(
   return data?.length === THREAD_CHUNK_SIZE
     ? Number.POSITIVE_INFINITY
     : THREAD_TAIL_STALE_TIME;
+}
+
+export function createFailedThreadChunkRefetchFilters(
+  threadId: string,
+): QueryFilters {
+  return {
+    queryKey: ["thread", threadId, "chunk"],
+    type: "active",
+    predicate: (query: Query) => query.state.status === "error",
+  };
+}
+
+export function resolveThreadQueryError(
+  activeError: Error | null,
+  chunkError: Error | null,
+  isArchiveView: boolean,
+  hasData: boolean,
+): Error | null {
+  if (activeError) return activeError;
+  if (!isArchiveView && !hasData) return chunkError;
+  return null;
 }

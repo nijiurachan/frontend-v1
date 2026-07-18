@@ -478,7 +478,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
   }
 
   return isDesktop ? (
-    <DesktopThreadView threadId={threadId} archivedAt={archivedAt} />
+    <DesktopThreadView threadId={threadId} threadQuery={threadQuery} />
   ) : (
     <MobileThreadView threadId={threadId} threadQuery={threadQuery} />
   );

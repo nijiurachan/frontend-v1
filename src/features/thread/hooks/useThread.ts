@@ -20,7 +20,9 @@ import { isThreadInitialLoading } from "@/shared/ui/feedback/threadLoadingState"
 import { mergeThreadChunkElements } from "../utils/threadChunks";
 import { mergeThreadPosts } from "../utils/threadPosts";
 import {
+  createFailedThreadChunkRefetchFilters,
   getThreadChunkStaleTime,
+  resolveThreadQueryError,
   THREAD_CHUNK_QUERY_BEHAVIOR,
   THREAD_CHUNK_SIZE,
 } from "./threadChunkQuery";
@@ -289,8 +291,13 @@ export function useThread(
       await fullThreadRefetch();
       return;
     }
-    await stateRefetch();
-  }, [fullThreadRefetch, isArchiveView, stateRefetch]);
+    await Promise.all([
+      stateRefetch(),
+      queryClient.refetchQueries(
+        createFailedThreadChunkRefetchFilters(threadId),
+      ),
+    ]);
+  }, [fullThreadRefetch, isArchiveView, queryClient, stateRefetch, threadId]);
 
   const isChunkLoading = chunkQueries.some((query) => query.isLoading);
   const chunkError = chunkQueries.find((query) => query.error)?.error;
@@ -305,7 +312,12 @@ export function useThread(
   return {
     ...activeQuery,
     data,
-    error: activeQuery.error ?? (isArchiveView ? null : chunkError) ?? null,
+    error: resolveThreadQueryError(
+      activeQuery.error,
+      chunkError ?? null,
+      isArchiveView,
+      Boolean(data),
+    ),
     isLoading,
     isPending: isLoading,
     isFetching:

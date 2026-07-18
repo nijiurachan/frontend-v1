@@ -9,7 +9,7 @@ import { NewRepliesBanner } from "@/features/thread/ui";
 import { BmgBanner } from "@/shared/ui/ad";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
 import { useReadReplyNumber } from "../../hooks/useReadReplyNumber";
-import { useThread } from "../../hooks/useThread";
+import type { UseThreadResult } from "../../hooks/useThread";
 import {
   selectReplyInitialComment,
   selectReplyOpenCount,
@@ -24,12 +24,12 @@ import { VirtualizedDesktopPostList } from "./VirtualizedDesktopPostList";
 
 interface Props {
   threadId: string;
-  archivedAt?: string | null;
+  threadQuery: UseThreadResult;
 }
 
 export const DesktopThreadView: React.FunctionComponent<Props> = ({
   threadId,
-  archivedAt,
+  threadQuery,
 }: Props) => {
   const {
     data,
@@ -41,7 +41,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     acceptNewPosts,
     isArchived,
     postsContentVersion,
-  } = useThread(threadId, { archivedAt });
+  } = threadQuery;
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const addViewed = useHistoryStore((state) => state.addViewed);
@@ -59,6 +59,9 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     null,
   );
   const pendingPostSeqRef = useRef<number | null>(null);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: スレ切替時にPC返信パネルの共有状態を閉じる
+  useEffect(() => (): void => resetReplyPanel(), [resetReplyPanel, threadId]);
 
   const quoteReferencesMap = useMemo(() => {
     return data ? extractQuoteReferences(data.posts) : new Map();
