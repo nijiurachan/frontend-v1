@@ -6,10 +6,10 @@
   "packageManager": "bun@1.3.11",
   "scripts": {
     "dev": "vite",
-    "dev:prod": "VITE_BASE_URL=https://nijiurachan.net vite",
+    "dev:prod": "VITE_BASE_URL=https://api.nijiurachan.net vite",
     "build": "tsr generate && vite build",
     "build:local": "VITE_BASE_URL=http://localhost:8080 bun run build",
-    "build:prod": "VITE_BASE_URL=https://nijiurachan.net bun run build",
+    "build:prod": "VITE_BASE_URL=https://api.nijiurachan.net bun run build",
     "clean": "git clean -fdX .bun node_modules src dist",
     "tsc": "tsc --build",
     "lint": "eslint . && biome check",
