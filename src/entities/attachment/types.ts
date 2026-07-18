@@ -9,4 +9,5 @@ export interface Attachment {
   height: number | null;
   originalUrl: string;
   thumbnailUrl: string;
+  ngHash: string | null;
 }

@@ -46,13 +46,14 @@ export const SpacePage: React.FunctionComponent = () => {
   }, []);
 
   const { data, isLoading, error } = useThread(threadId);
-  const { isPostHidden } = useNgStore();
+  const { isPostHidden, ngImages } = useNgStore();
 
   // 宇宙モードは没入体験のため `showNgContent` を無視し常に NG を除外する（spec §10）
   const visiblePosts = useMemo(() => {
+    void ngImages;
     if (!data) return [];
     return data.posts.filter((post) => !isPostHidden(post));
-  }, [data, isPostHidden]);
+  }, [data, isPostHidden, ngImages]);
 
   const handleClose = (): void => {
     window.close();

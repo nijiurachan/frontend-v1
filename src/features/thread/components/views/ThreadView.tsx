@@ -199,14 +199,15 @@ const MobileThreadView: React.FunctionComponent<MobileThreadViewProps> = ({
     [threadId],
   );
 
-  const { isPostHidden, showNgContent } = useNgStore();
+  const { isPostHidden, ngImages, showNgContent } = useNgStore();
   const images = useMemo(() => {
+    void ngImages;
     if (!data) return [];
     const posts = showNgContent
       ? data.posts
       : data.posts.filter((post) => !isPostHidden(post));
     return extractImages(posts);
-  }, [data, isPostHidden, showNgContent]);
+  }, [data, isPostHidden, ngImages, showNgContent]);
 
   const popularPosts = useMemo(
     () => (data ? extractPopularPosts(data.posts) : []),

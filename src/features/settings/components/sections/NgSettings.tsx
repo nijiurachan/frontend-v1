@@ -33,6 +33,7 @@ export const NgSettings: React.FunctionComponent = () => {
     removeNgRegex,
     addNgImage,
     removeNgImage,
+    clearNgImages,
   } = useNgStore();
 
   const [ngDisplayIdInput, setNgDisplayIdInput] = useState("");
@@ -40,6 +41,7 @@ export const NgSettings: React.FunctionComponent = () => {
   const [ngWordInput, setNgWordInput] = useState("");
   const [ngRegexInput, setNgRegexInput] = useState("");
   const [ngImageInput, setNgImageInput] = useState("");
+  const [ngImageNoteInput, setNgImageNoteInput] = useState("");
 
   const handleAddNgDisplayId = (): void => {
     const displayId = ngDisplayIdInput.trim();
@@ -93,8 +95,12 @@ export const NgSettings: React.FunctionComponent = () => {
       alert("画像ハッシュを入力してください");
       return;
     }
-    addNgImage(hash);
-    setNgImageInput("");
+    const result = addNgImage(hash, ngImageNoteInput);
+    alert(result.message);
+    if (result.success) {
+      setNgImageInput("");
+      setNgImageNoteInput("");
+    }
   };
 
   return (
@@ -299,18 +305,48 @@ export const NgSettings: React.FunctionComponent = () => {
             追加
           </Button>
         </SettingRow>
+        <SettingRow>
+          <Input
+            type="text"
+            placeholder="メモ（任意）"
+            className="w-full"
+            value={ngImageNoteInput}
+            onChange={(e: InputChangeEvent): void =>
+              setNgImageNoteInput(e.target.value)
+            }
+          />
+          {ngImages.length > 0 && (
+            <Button
+              variant="ghost"
+              onClick={(): void => {
+                if (confirm("画像NGをすべて削除しますか？")) clearNgImages();
+              }}
+            >
+              全削除
+            </Button>
+          )}
+        </SettingRow>
         {ngImages.length > 0 ? (
           <div className="space-y-2">
-            {ngImages.map((bits) => (
-              <SettingRow key={bits}>
+            {ngImages.map((entry) => (
+              <SettingRow key={entry.hash}>
                 <div className="flex items-center justify-between w-full gap-2">
-                  <HashBitmap bits={bits} />
-                  <code className="text-foreground text-sm truncate flex-1">
-                    {bits}
-                  </code>
+                  <HashBitmap bits={entry.hash} />
+                  <div className="min-w-0 flex-1">
+                    <code className="block text-foreground text-sm truncate">
+                      {entry.hash}
+                    </code>
+                    {(entry.note || entry.addedAt > 0) && (
+                      <span className="block text-xs text-muted-foreground truncate">
+                        {entry.note || "メモなし"}
+                        {entry.addedAt > 0 &&
+                          ` · ${new Date(entry.addedAt).toLocaleString()}`}
+                      </span>
+                    )}
+                  </div>
                   <Button
                     variant="ghost"
-                    onClick={(): void => removeNgImage(bits)}
+                    onClick={(): void => removeNgImage(entry.hash)}
                     icon={<FiX size={16} />}
                   >
                     削除

@@ -49,11 +49,12 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   isArchived = false,
   postContentVersion,
 }: Props) => {
-  const { isPostHidden, showNgContent } = useNgStore();
+  const { isPostHidden, ngImages, showNgContent } = useNgStore();
   const aimogeGeneration = useAimogeHookGeneration();
   const { hash } = useLocation();
   const visiblePosts = useMemo(() => {
     void aimogeGeneration;
+    void ngImages;
     const ngFilteredPosts = showNgContent
       ? posts
       : posts.filter((post) => !isPostHidden(post));
@@ -61,7 +62,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
       const preparedPost = runAimogeBeforeRender("post:beforeRender", post);
       return preparedPost ? [preparedPost] : [];
     });
-  }, [aimogeGeneration, posts, isPostHidden, showNgContent]);
+  }, [aimogeGeneration, posts, isPostHidden, ngImages, showNgContent]);
   const observePostRead = usePostReadObserver(onPostFullyVisible, visiblePosts);
   const listRef = useRef<HTMLDivElement>(null);
   const handledHashRef = useRef<string | null>(null);

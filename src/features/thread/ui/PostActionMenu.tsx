@@ -32,7 +32,7 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
   maxSeq = post.seq,
 }: PostActionMenuProps) => {
   const openReplyModal = useReplyModalStore((s) => s.open);
-  const { addNgWord } = useNgStore();
+  const { addNgImage, addNgWord } = useNgStore();
   const { mutate: soudane } = useSoudaneMutation();
   const { mutate: del } = useDelMutation();
   const { mutate: deletePostOrThread } = useDeleteMutation();
@@ -54,6 +54,14 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
     alert("本文をNGワードに追加しました");
     onClose();
   };
+  const handleNgImage = (): void => {
+    const hash = post.attachment?.ngHash;
+    const result = hash
+      ? addNgImage(hash, post.seq === 0 ? "スレ画像" : "レス画像")
+      : { success: false, message: "画像ハッシュが取得できませんでした" };
+    alert(result.message);
+    onClose();
+  };
   const actions = createPostActionItems(isArchived, post, {
     onReply: handleReply,
     onSoudane: (): void => {
@@ -69,6 +77,7 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
       onClose();
     },
     onNgBody: handleNgBody,
+    onNgImage: handleNgImage,
     onReport: (): void => {
       setIsReportModalOpen(true);
       onClose();

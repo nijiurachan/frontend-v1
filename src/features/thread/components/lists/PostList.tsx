@@ -32,6 +32,7 @@ export const PostList: React.FunctionComponent<Props> = ({
 }: Props) => {
   const {
     isPostHidden,
+    ngImages,
     showNgContent,
     // enabled,
     // ngDisplayIds,
@@ -42,6 +43,7 @@ export const PostList: React.FunctionComponent<Props> = ({
   const aimogeGeneration = useAimogeHookGeneration();
   const visiblePosts = useMemo(() => {
     void aimogeGeneration;
+    void ngImages;
     const ngFilteredPosts = showNgContent
       ? posts
       : posts.filter((post) => !isPostHidden(post));
@@ -49,7 +51,7 @@ export const PostList: React.FunctionComponent<Props> = ({
       const preparedPost = runAimogeBeforeRender("post:beforeRender", post);
       return preparedPost ? [preparedPost] : [];
     });
-  }, [aimogeGeneration, isPostHidden, posts, showNgContent]);
+  }, [aimogeGeneration, isPostHidden, ngImages, posts, showNgContent]);
 
   const observePostRead = usePostReadObserver(onPostFullyVisible, visiblePosts);
 

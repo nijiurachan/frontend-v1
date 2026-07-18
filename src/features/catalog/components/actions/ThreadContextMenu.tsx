@@ -25,7 +25,7 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
   isOpen,
   onClose,
 }: Props) => {
-  const { hiddenThreadIds, hideThread, unhideThread, addNgTitle } =
+  const { hiddenThreadIds, hideThread, unhideThread, addNgImage, addNgTitle } =
     useNgStore();
   const { removeFromHistory } = useHistoryStore();
   const { mutate: del } = useDelMutation();
@@ -51,6 +51,15 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
     const title = getThreadTitle(thread);
     addNgTitle(title);
     alert(`「${title.slice(0, 20)}...」をNGスレ文に追加しました`);
+    onClose();
+  };
+
+  const handleNgImage = (): void => {
+    const hash = thread.opPost.attachment?.ngHash;
+    const result = hash
+      ? addNgImage(hash, "スレ画像")
+      : { success: false, message: "画像ハッシュが取得できませんでした" };
+    alert(result.message);
     onClose();
   };
 
@@ -126,6 +135,15 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
         >
           NGスレ文追加
         </Button>
+        {thread.opPost.attachment?.ngHash && (
+          <Button
+            variant="menu"
+            onClick={handleNgImage}
+            icon={<MdBlock className="w-5 h-5" />}
+          >
+            画像をNG
+          </Button>
+        )}
         <Button
           variant="menu"
           onClick={handleRemoveHistory}

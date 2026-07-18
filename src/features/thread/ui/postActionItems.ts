@@ -3,6 +3,7 @@ import {
   FiArrowLeft,
   FiFlag,
   FiHash,
+  FiImage,
   FiSlash,
   FiThumbsDown,
   FiThumbsUp,
@@ -19,6 +20,7 @@ export interface PostActionItem {
 export interface PostActionPost {
   seq: number;
   delCount?: number | null;
+  attachment?: { ngHash: string | null } | null;
 }
 
 export interface PostActionHandlers {
@@ -27,6 +29,7 @@ export interface PostActionHandlers {
   onDelete: () => void;
   onDel: () => void;
   onNgBody: () => void;
+  onNgImage: () => void;
   onReport: () => void;
   onCloseThread: () => void;
 }
@@ -47,8 +50,16 @@ export function createPostActionItems(
     variant: "destructive",
     onClick: handlers.onNgBody,
   };
+  const imageNgAction: PostActionItem | null = post.attachment?.ngHash
+    ? {
+        icon: FiImage,
+        label: "画像をNG",
+        variant: "destructive",
+        onClick: handlers.onNgImage,
+      }
+    : null;
   const actions: PostActionItem[] = isArchived
-    ? [ngAction, reportAction]
+    ? [ngAction, ...(imageNgAction ? [imageNgAction] : []), reportAction]
     : [
         {
           icon: FiArrowLeft,
@@ -72,6 +83,7 @@ export function createPostActionItems(
           onClick: handlers.onDelete,
         },
         ngAction,
+        ...(imageNgAction ? [imageNgAction] : []),
         {
           icon: FiThumbsDown,
           label: post.delCount == null ? "del" : `del (${post.delCount})`,

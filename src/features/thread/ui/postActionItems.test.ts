@@ -10,6 +10,7 @@ const handlers: PostActionHandlers = {
   onDelete: (): void => {},
   onDel: (): void => {},
   onNgBody: (): void => {},
+  onNgImage: (): void => {},
   onReport: (): void => {},
   onCloseThread: (): void => {},
 };
@@ -17,7 +18,7 @@ const handlers: PostActionHandlers = {
 function labels(isArchived: boolean): string[] {
   return createPostActionItems(
     isArchived,
-    { seq: 0, delCount: null },
+    { seq: 0, delCount: null, attachment: { ngHash: "AAAAAAAAAAA" } },
     handlers,
   ).map((action) => action.label);
 }
@@ -30,6 +31,7 @@ describe("createPostActionItems", () => {
       "そうだね",
       "削除",
       "本文NG",
+      "画像をNG",
       "del",
       "スレを閉じる",
     ]);
@@ -37,6 +39,6 @@ describe("createPostActionItems", () => {
   });
 
   it("アーカイブスレのメニューには通報を表示する", () => {
-    expect(labels(true)).toEqual(["本文NG", "通報"]);
+    expect(labels(true)).toEqual(["本文NG", "画像をNG", "通報"]);
   });
 });

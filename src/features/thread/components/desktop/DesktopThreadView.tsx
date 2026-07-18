@@ -52,6 +52,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const addViewed = useHistoryStore((state) => state.addViewed);
   const fontSize = useSettingsStore((state) => `${state.fontScalePosts}%`);
   const isPostHidden = useNgStore((state) => state.isPostHidden);
+  const ngImages = useNgStore((state) => state.ngImages);
   const showNgContent = useNgStore((state) => state.showNgContent);
   const [isImageListOpen, setIsImageListOpen] = useState(false);
   const [isPopularPostsOpen, setIsPopularPostsOpen] = useState(false);
@@ -75,12 +76,13 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     return data ? extractQuoteReferences(data.posts) : new Map();
   }, [data]);
   const images = useMemo(() => {
+    void ngImages;
     if (!data) return [];
     const posts = showNgContent
       ? data.posts
       : data.posts.filter((post) => !isPostHidden(post));
     return extractImages(posts);
-  }, [data, isPostHidden, showNgContent]);
+  }, [data, isPostHidden, ngImages, showNgContent]);
   const popularPosts = useMemo(
     () => (data ? extractPopularPosts(data.posts) : []),
     [data],
