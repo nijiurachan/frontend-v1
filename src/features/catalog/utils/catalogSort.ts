@@ -9,6 +9,11 @@ interface MobileSortPresentation {
   ariaLabel: string;
 }
 
+interface SortSelection {
+  sort: SortType;
+  direction: SortDirection;
+}
+
 const MOBILE_SORT_PRESENTATIONS: Record<
   SortType,
   Record<SortDirection, MobileSortPresentation>
@@ -48,6 +53,16 @@ export function getMobileSortPresentation(
   direction: SortDirection,
 ): MobileSortPresentation {
   return MOBILE_SORT_PRESENTATIONS[sort][direction];
+}
+
+/** PC版が従来から提供する並び順だけへ、共有ストアの選択を正規化する。 */
+export function getDesktopSortSelection(
+  sort: SortType,
+  direction: SortDirection,
+): SortSelection {
+  if (sort === "date") return { sort, direction };
+  if (sort === "replies") return { sort, direction: "desc" };
+  return { sort: "bump", direction: "desc" };
 }
 
 /**

@@ -59,6 +59,16 @@ describe("resolveQuotedPost", () => {
     expect(resolveQuotedPost(">No.7", 8, allPosts)?.seq).toBe(7);
   });
 
+  test("boardNoとseq fallbackが衝突してもboardNoを優先する", () => {
+    const allPosts = [
+      makePost(0, "通し番号の引用元", 10),
+      makePost(10, "seq fallbackの候補"),
+      makePost(11, "引用レス", 20),
+    ];
+
+    expect(resolveQuotedPost(">No.10", 11, allPosts)?.seq).toBe(0);
+  });
+
   test("No.引用の前後判定はスレ内seqで行う", () => {
     const allPosts = [
       makePost(0, "現在のレス", 115496),

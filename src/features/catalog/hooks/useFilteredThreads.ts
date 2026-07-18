@@ -3,6 +3,7 @@ import type { Thread } from "@/entities/thread";
 import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { sortCatalogThreads } from "@/features/catalog/utils/catalogSort";
 import { useNgStore } from "@/features/ng-filter/stores/ngStore";
+import { useIsDesktop } from "@/shared/hooks";
 
 /**
  * スレッド一覧に検索フィルターとNGフィルターを適用
@@ -11,6 +12,7 @@ export function useFilteredThreads(threads: Thread[] | undefined): Thread[] {
   const { currentSort, sortDirection, searchQuery, selectedTag } =
     useCatalogStore();
   const { isThreadHidden, showNgContent } = useNgStore();
+  const isDesktop = useIsDesktop();
 
   return useMemo(() => {
     if (!threads) return [];
@@ -34,11 +36,14 @@ export function useFilteredThreads(threads: Thread[] | undefined): Thread[] {
       return true;
     });
 
-    return sortCatalogThreads(filteredThreads, currentSort, sortDirection);
+    return isDesktop
+      ? filteredThreads
+      : sortCatalogThreads(filteredThreads, currentSort, sortDirection);
   }, [
     threads,
     currentSort,
     sortDirection,
+    isDesktop,
     searchQuery,
     selectedTag,
     isThreadHidden,

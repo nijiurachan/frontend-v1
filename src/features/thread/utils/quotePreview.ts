@@ -7,7 +7,8 @@ interface IndexedPost {
 }
 
 export interface QuotePostIndex {
-  byNo: ReadonlyMap<number, Post>;
+  byBoardNo: ReadonlyMap<number, Post>;
+  bySeqFallback: ReadonlyMap<number, Post>;
   descending: readonly IndexedPost[];
 }
 
@@ -20,7 +21,16 @@ export function getQuotePostIndex(allPosts: Post[]): QuotePostIndex {
     .sort((left, right) => right.seq - left.seq)
     .map((post) => ({ post, searchText: getSearchText(post) }));
   const index: QuotePostIndex = {
-    byNo: new Map(allPosts.map((post) => [postNo(post), post])),
+    byBoardNo: new Map(
+      allPosts.flatMap((post) =>
+        post.boardNo === null ? [] : [[post.boardNo, post] as const],
+      ),
+    ),
+    bySeqFallback: new Map(
+      allPosts.flatMap((post) =>
+        post.boardNo === null ? [[post.seq, post] as const] : [],
+      ),
+    ),
     descending,
   };
   quotePostIndexCache.set(allPosts, index);
@@ -56,7 +66,8 @@ export function resolveQuotedPostFromIndex(
 
   const directNo = quoteText.match(/^No\.(\d+)$/i)?.[1];
   if (directNo !== undefined) {
-    const post = index.byNo.get(Number(directNo));
+    const no = Number(directNo);
+    const post = index.byBoardNo.get(no) ?? index.bySeqFallback.get(no);
     return post && post.seq < currentSeq ? post : null;
   }
 

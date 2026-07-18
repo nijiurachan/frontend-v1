@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import type { Thread } from "@/entities/thread";
 import {
+  getDesktopSortSelection,
   getMobileSortPresentation,
   sortCatalogThreads,
 } from "@/features/catalog/utils/catalogSort";
@@ -76,4 +77,23 @@ describe("getMobileSortPresentation", () => {
       "そうだね少△",
     );
   });
+});
+
+describe("getDesktopSortSelection", () => {
+  test.each([
+    ["bump", "asc", "bump", "desc"],
+    ["date", "desc", "date", "desc"],
+    ["date", "asc", "date", "asc"],
+    ["replies", "asc", "replies", "desc"],
+    ["sodane", "desc", "bump", "desc"],
+    ["sodane", "asc", "bump", "desc"],
+  ] as const)(
+    "%s/%sをPCの%s/%sとして扱う",
+    (sort, direction, expectedSort, expectedDirection) => {
+      expect(getDesktopSortSelection(sort, direction)).toEqual({
+        sort: expectedSort,
+        direction: expectedDirection,
+      });
+    },
+  );
 });

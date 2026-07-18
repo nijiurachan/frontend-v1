@@ -4,14 +4,20 @@ import type { Catalog } from "@/entities/thread";
 import { getCatalogPath } from "@/features/catalog/hooks/catalogPath";
 import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { apiGet } from "@/shared/api";
+import { useIsDesktop } from "@/shared/hooks";
 import {
   runAimogeDataHook,
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
 
 export function useThreads(): UseQueryResult<Catalog> {
-  const { currentSort } = useCatalogStore();
-  const catalogPath = getCatalogPath(currentSort);
+  const { currentSort, sortDirection } = useCatalogStore();
+  const isDesktop = useIsDesktop();
+  const catalogPath = getCatalogPath(
+    currentSort,
+    sortDirection,
+    isDesktop ? "desktop" : "mobile",
+  );
   const aimogeGeneration = useAimogeHookGeneration();
   const transformCatalog = useCallback(
     (catalog: Catalog): Catalog => {

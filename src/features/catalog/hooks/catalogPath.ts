@@ -1,7 +1,27 @@
-import type { SortType } from "@/features/catalog/stores/catalogStore";
+import type {
+  SortDirection,
+  SortType,
+} from "@/features/catalog/stores/catalogStore";
+import { getDesktopSortSelection } from "@/features/catalog/utils/catalogSort";
 
-export function getCatalogPath(sortType: SortType): string {
+export type CatalogLayout = "mobile" | "desktop";
+
+export function getCatalogPath(
+  sortType: SortType,
+  direction: SortDirection = "desc",
+  layout: CatalogLayout = "mobile",
+): string {
+  const selection =
+    layout === "desktop"
+      ? getDesktopSortSelection(sortType, direction)
+      : { sort: sortType, direction };
   const sort =
-    sortType === "date" ? "new" : sortType === "replies" ? "replies" : "bump";
+    selection.sort === "date"
+      ? layout === "desktop" && selection.direction === "asc"
+        ? "old"
+        : "new"
+      : selection.sort === "replies"
+        ? "replies"
+        : "bump";
   return `/catalog?sort=${sort}`;
 }

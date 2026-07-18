@@ -5,6 +5,7 @@ import { SortNav } from "@/features/catalog/components/navigation";
 import { TagFilter } from "@/features/catalog/components/TagFilter";
 import { useThreads } from "@/features/catalog/hooks";
 import { useCatalogStore } from "@/features/catalog/stores";
+import { getDesktopSortSelection } from "@/features/catalog/utils/catalogSort";
 import { DesktopThreadCreatePanel } from "@/features/thread/components/desktop";
 import { ThreadCreateModal } from "@/features/thread/components/modals";
 import { useThreadCreateModalStore } from "@/features/thread/stores/threadCreateModalStore";
@@ -24,6 +25,7 @@ export const CatalogPage: React.FunctionComponent = () => {
   const close = useThreadCreateModalStore((s) => s.close);
   const { data, refetch } = useThreads();
   const isDesktop = useIsDesktop();
+  const desktopSort = getDesktopSortSelection(currentSort, sortDirection);
 
   const onRefresh = useCallback(async () => {
     await refetch();
@@ -56,11 +58,7 @@ export const CatalogPage: React.FunctionComponent = () => {
           [<a href="/">掲示板に戻る</a>]
           <a
             href="/"
-            aria-current={
-              currentSort === "bump" && sortDirection === "desc"
-                ? "true"
-                : undefined
-            }
+            aria-current={desktopSort.sort === "bump" ? "true" : undefined}
             onClick={(): void => setSort("bump", "desc")}
           >
             カタログ
@@ -68,7 +66,9 @@ export const CatalogPage: React.FunctionComponent = () => {
           <button
             className="desktop-nav-link"
             type="button"
-            aria-pressed={currentSort === "date" && sortDirection === "desc"}
+            aria-pressed={
+              desktopSort.sort === "date" && desktopSort.direction === "desc"
+            }
             onClick={(): void => setSort("date", "desc")}
           >
             新順
@@ -76,7 +76,9 @@ export const CatalogPage: React.FunctionComponent = () => {
           <button
             className="desktop-nav-link"
             type="button"
-            aria-pressed={currentSort === "date" && sortDirection === "asc"}
+            aria-pressed={
+              desktopSort.sort === "date" && desktopSort.direction === "asc"
+            }
             onClick={(): void => setSort("date", "asc")}
           >
             古順
@@ -84,7 +86,7 @@ export const CatalogPage: React.FunctionComponent = () => {
           <button
             className="desktop-nav-link"
             type="button"
-            aria-pressed={currentSort === "replies" && sortDirection === "desc"}
+            aria-pressed={desktopSort.sort === "replies"}
             onClick={(): void => setSort("replies", "desc")}
           >
             多順
