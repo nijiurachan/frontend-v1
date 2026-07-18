@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link, useParams } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, type PanInfo } from "motion/react";
 import { type SyntheticEvent, useEffect } from "react";
 import {
@@ -19,6 +19,7 @@ import { getImageUrl, getThreadTitle } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { apiGet } from "@/shared/api";
+import { buildForcePcUrl } from "@/shared/lib/forcePc";
 import { useDialogFocusTrap } from "@/shared/ui/overlay/dialogFocus";
 
 interface Props {
@@ -33,7 +34,6 @@ export const SideMenu: React.FunctionComponent<Props> = ({
   const { getUnreadCount, getViewedIds } = useHistoryStore();
   const viewedIds = getViewedIds().slice(0, 20);
   const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
-  const params = useParams({ strict: false });
   const dialogRef = useDialogFocusTrap<HTMLElement>(isOpen);
 
   useEffect(() => {
@@ -63,11 +63,6 @@ export const SideMenu: React.FunctionComponent<Props> = ({
     enabled: isOpen && viewedIds.length > 0,
     staleTime: 60_000,
   });
-
-  const makePcVersionUrl = (): string =>
-    params.threadId && !/\D/.test(params.threadId)
-      ? `/pc/thread.php?id=${params.threadId}&pc=1`
-      : "/pc/catalog.php?pc=1";
 
   return (
     <AnimatePresence>
@@ -162,7 +157,7 @@ export const SideMenu: React.FunctionComponent<Props> = ({
               </MenuItem>
               <MenuItem
                 icon={<FiMonitor className="w-5 h-5" />}
-                href={makePcVersionUrl()}
+                href={buildForcePcUrl(window.location)}
                 isInternal
               >
                 PC版に切替

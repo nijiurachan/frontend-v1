@@ -1,4 +1,14 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
+import {
+  createForcePcCookie,
+  type ForcePcCookieAction,
+  type ForcePcPreference,
+  resolveDesktopDisplayMode,
+  resolveForcePcPreference,
+} from "@/shared/lib/forcePc";
+
+let cachedForcePcPreference: ForcePcPreference | undefined;
+let appliedCookieAction: ForcePcCookieAction = "none";
 
 /**
  * ブラウザのメディアクエリを購読する。
@@ -25,5 +35,40 @@ export function useMediaQuery(query: string): boolean {
 }
 
 export function useIsDesktop(): boolean {
-  return useMediaQuery("(min-width: 1024px)");
+  const viewportIsDesktop = useMediaQuery("(min-width: 1024px)");
+  const forcePc = useIsPcForced();
+  return resolveDesktopDisplayMode(viewportIsDesktop, forcePc) !== "mobile";
+}
+
+/** 現在の表示が幅ではなく利用者指定でPC版に固定されているかを返す。 */
+export function useIsPcForced(): boolean {
+  const preference = getInitialForcePcPreference();
+
+  useLayoutEffect(() => {
+    if (
+      preference.cookieAction === "none" ||
+      preference.cookieAction === appliedCookieAction
+    ) {
+      return;
+    }
+
+    // biome-ignore lint/suspicious/noDocumentCookie: 初回描画直後に互換cookieを同期反映し、即時reloadでも設定を失わないため
+    document.cookie = createForcePcCookie(preference.cookieAction);
+    appliedCookieAction = preference.cookieAction;
+  }, [preference]);
+
+  return preference.isForced;
+}
+
+function getInitialForcePcPreference(): ForcePcPreference {
+  if (cachedForcePcPreference) return cachedForcePcPreference;
+  if (typeof window === "undefined") {
+    return { isForced: false, cookieAction: "none" };
+  }
+
+  cachedForcePcPreference = resolveForcePcPreference(
+    window.location.search,
+    document.cookie,
+  );
+  return cachedForcePcPreference;
 }

@@ -2,6 +2,8 @@ import { Link, useLocation } from "@tanstack/react-router";
 import { useState } from "react";
 import mascot from "@/assets/img/icon_aimoge.webp";
 import { SearchBar } from "@/features/catalog/components";
+import { useIsPcForced } from "@/shared/hooks/useMediaQuery";
+import { buildMobileVersionUrl } from "@/shared/lib/forcePc";
 
 type AppPath = "/" | "/archive" | "/jukebox";
 
@@ -41,6 +43,7 @@ const UTILITY_LINKS: HeaderLink[] = [
 export const DesktopHeader: React.FunctionComponent = () => {
   const location = useLocation();
   const isThreadView = location.pathname.startsWith("/thread/");
+  const isPcForced = useIsPcForced();
   const [isJukeboxOpen, setIsJukeboxOpen] = useState(false);
 
   return (
@@ -79,6 +82,9 @@ export const DesktopHeader: React.FunctionComponent = () => {
         className="desktop-header-links col-start-1 row-start-1"
         aria-label="外部サービス"
       >
+        {isPcForced && (
+          <a href={buildMobileVersionUrl(window.location)}>[スマホ版に戻る]</a>
+        )}
         {NAV_LINKS.map((link) => (
           <HeaderLinkItem
             key={link.label}
