@@ -213,6 +213,8 @@ export function useThread(
       replyCount: stateData.replyCount,
       createdAt: firstPost?.createdAt ?? stateData.bumpedAt,
       bumpedAt: stateData.bumpedAt,
+      expiresAt: stateData.expiresAt,
+      isPermanent: stateData.isPermanent,
       tags: stateData.tags,
       posts,
       closedAt: stateData.closedAt,

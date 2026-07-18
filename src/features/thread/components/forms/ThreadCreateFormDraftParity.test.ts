@@ -20,4 +20,18 @@ describe("ThreadCreateForm draft persistence", () => {
     expect(source).toContain("state.hasSelectedFile");
     expect(source).toContain("hasPostContent(body, hasSelectedFile)");
   });
+
+  test("保持期間を送信し、公開UIから永久指定を送らない", async () => {
+    const formSource = await Bun.file(
+      new URL("./ThreadCreateForm.tsx", import.meta.url),
+    ).text();
+    const submitSource = await Bun.file(
+      new URL("../../../post/hooks/useSubmitPost.ts", import.meta.url),
+    ).text();
+
+    expect(formSource).toContain('name="duration"');
+    expect(formSource).toContain("duration,");
+    expect(formSource).not.toContain("isPermanent");
+    expect(submitSource).toContain("{ r18, allowImageReplies, duration }");
+  });
 });

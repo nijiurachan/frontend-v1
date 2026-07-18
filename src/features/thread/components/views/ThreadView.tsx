@@ -49,6 +49,7 @@ import {
 } from "@/features/thread/utils/latestSearchRequest";
 import type { SearchResult } from "@/features/thread/utils/searchPosts";
 import { searchPosts } from "@/features/thread/utils/searchPosts";
+import { formatThreadExpiry } from "@/features/thread/utils/threadExpiry";
 import { resolvePostSeqFromHash } from "@/features/thread/utils/threadHash";
 import { apiGet } from "@/shared/api";
 import { useIsDesktop } from "@/shared/hooks";
@@ -369,6 +370,8 @@ const MobileThreadView: React.FunctionComponent<MobileThreadViewProps> = ({
     tags: data.tags,
     closedAt: data.closedAt,
     allowImageReplies: data.allowImageReplies,
+    expiresAt: data.expiresAt,
+    isPermanent: data.isPermanent,
   };
 
   return (
@@ -387,6 +390,9 @@ const MobileThreadView: React.FunctionComponent<MobileThreadViewProps> = ({
               onJumpToPost={handleJumpToPost}
               isArchived={isArchived}
             />
+            <p className="px-3 pb-2 text-xs text-muted-foreground">
+              {formatThreadExpiry(data.expiresAt, data.isPermanent)}
+            </p>
             <PostList
               posts={remainingPosts}
               onQuoteClick={isArchived ? undefined : handleQuoteClick}

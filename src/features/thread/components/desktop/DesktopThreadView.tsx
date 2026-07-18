@@ -24,6 +24,7 @@ import { extractPopularPosts } from "@/features/thread/utils/extractPopularPosts
 import { extractQuoteReferences } from "@/features/thread/utils/extractQuoteReferences";
 import type { SearchResult } from "@/features/thread/utils/searchPosts";
 import { searchPosts } from "@/features/thread/utils/searchPosts";
+import { formatThreadExpiry } from "@/features/thread/utils/threadExpiry";
 import { BmgBanner } from "@/shared/ui/ad";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
 
@@ -208,6 +209,8 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     tags: data.tags,
     closedAt: data.closedAt,
     allowImageReplies: data.allowImageReplies,
+    expiresAt: data.expiresAt,
+    isPermanent: data.isPermanent,
   };
 
   return (
@@ -282,6 +285,9 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
             onJumpToPost={handleJumpToPost}
             isArchived={isArchived}
           />
+          <p className="mt-1 text-xs text-muted-foreground">
+            {formatThreadExpiry(data.expiresAt, data.isPermanent)}
+          </p>
         </section>
         <div style={{ fontSize }}>
           <VirtualizedDesktopPostList

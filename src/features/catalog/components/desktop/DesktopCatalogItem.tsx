@@ -11,6 +11,7 @@ import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { useHistoryStore } from "@/features/history/stores/historyStore";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { formatThreadExpiry } from "@/features/thread/utils/threadExpiry";
 import { isVideoAttachment } from "@/shared/lib";
 import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
 import { TagBadges } from "@/shared/ui/navigation";
@@ -158,6 +159,14 @@ const DesktopCatalogItemContent: React.FunctionComponent<ContentProps> = memo(
                 +{unreadCount}
               </span>
             )}
+          </div>
+          <div
+            className={clsx(
+              "px-1 text-xs text-muted-foreground",
+              isMasked && "blur-sm",
+            )}
+          >
+            {formatThreadExpiry(thread.expiresAt, thread.isPermanent)}
           </div>
         </Link>
         <TagBadges tags={thread.tags} className="px-1 pb-1" />

@@ -12,6 +12,7 @@ import { getCatalogThreadClickAction } from "@/features/catalog/utils/catalogRev
 import { useHistoryStore } from "@/features/history/stores/historyStore";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { formatThreadExpiry } from "@/features/thread/utils/threadExpiry";
 import { useLongPress } from "@/shared/hooks";
 import { decorateTitle, isVideoAttachment } from "@/shared/lib";
 import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
@@ -292,6 +293,14 @@ const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
               )}
             </div>
           )}
+          <p
+            className={clsx(
+              "px-2 pb-2 text-2xs text-muted-foreground",
+              ((isNg && !ngRevealed) || isR18Hidden) && "blur-sm",
+            )}
+          >
+            {formatThreadExpiry(thread.expiresAt, thread.isPermanent)}
+          </p>
           <TagBadges tags={thread.tags} className="px-2 pb-2" />
         </div>
 

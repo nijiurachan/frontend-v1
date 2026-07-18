@@ -17,6 +17,8 @@ export interface ThreadSummary {
   replyCount: number;
   createdAt: string;
   bumpedAt: string;
+  expiresAt: string | null;
+  isPermanent: boolean;
   tags: ThreadTag[];
   closedAt?: string | null;
   allowImageReplies?: boolean;
@@ -64,6 +66,8 @@ export interface ThreadState {
   closedAt: string | null;
   allowImageReplies: boolean;
   archivedAt?: string | null;
+  expiresAt: string | null;
+  isPermanent: boolean;
   postStates: ThreadPostState[];
   newPosts?: ThreadChunkElement[];
 }
@@ -74,6 +78,8 @@ export interface ThreadView {
   replyCount: number;
   createdAt: string;
   bumpedAt: string;
+  expiresAt: string | null;
+  isPermanent: boolean;
   tags: ThreadTag[];
   posts: Post[];
   closedAt: string | null;

@@ -17,14 +17,19 @@ import {
 import { createSubmissionLock } from "@/features/post/components/forms/submissionLock";
 import { useSubmitPost } from "@/features/post/hooks/useSubmitPost";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { useThreadLimits } from "@/features/thread/hooks/useThreadLimits";
 import {
   clearThreadCreateDraft,
   readThreadCreateDraft,
   saveThreadCreateDraft,
 } from "@/features/thread/stores/threadCreateDraftStore";
 import { prepareThreadCreateAttachment } from "@/features/thread/utils/threadCreateSubmission";
+import {
+  threadDurationHint,
+  validateThreadDuration,
+} from "@/features/thread/utils/threadExpiry";
 import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
-import { Button, Checkbox, Textarea } from "@/shared/ui/form";
+import { Button, Checkbox, Input, Textarea } from "@/shared/ui/form";
 import { OnlineUsersIndicator, PostNotice } from "@/shared/ui/navigation";
 import { toast } from "@/shared/ui/toast";
 
@@ -52,6 +57,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
   }, []);
   const [r18, setR18] = useState(false);
   const [allowImageReplies, setAllowImageReplies] = useState(true);
+  const [duration, setDuration] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
   const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -69,6 +75,15 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
       selectHasSelectedFile,
     ) ?? false;
   const { mutateAsync: submitPost, isPending } = useSubmitPost();
+  const { data: threadLimits, isError: isThreadLimitsError } =
+    useThreadLimits();
+  const durationError = threadLimits
+    ? validateThreadDuration(
+        duration,
+        threadLimits.durationHours,
+        threadLimits.minimumMinutes,
+      )
+    : null;
   const isSubmitting = isPreparingSubmit || isPending;
 
   const handleSubmit = async (
@@ -79,7 +94,8 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
       submissionLock.isLocked() ||
       isPaintPopupOpen ||
       !hasPostContent(body, hasSelectedFile) ||
-      body.length > POST_BODY_MAX_LENGTH
+      body.length > POST_BODY_MAX_LENGTH ||
+      durationError !== null
     ) {
       return;
     }
@@ -109,6 +125,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
         file,
         r18,
         allowImageReplies,
+        duration,
       });
       notifyUpfileSubmitted(form);
       setShowSuccess(true);
@@ -116,6 +133,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
       setBody("");
       setR18(false);
       setAllowImageReplies(true);
+      setDuration("");
       onSuccess?.();
       void router.navigate(getCreatedThreadRoute(result.threadId));
     } catch (error) {
@@ -163,6 +181,41 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
         onChange={setAllowImageReplies}
         label="画像レスを許可"
       />
+      <div className="space-y-1">
+        <label htmlFor="thread-duration" className="block text-sm font-medium">
+          保持期間
+        </label>
+        <Input
+          id="thread-duration"
+          name="duration"
+          value={duration}
+          onChange={(event: React.ChangeEvent<HTMLInputElement>): void =>
+            setDuration(event.target.value)
+          }
+          placeholder="H:M（空欄は現在の上限）"
+          inputMode="text"
+          autoComplete="off"
+          aria-describedby={`thread-duration-hint${durationError ? " thread-duration-error" : ""}`}
+          aria-invalid={durationError !== null}
+          error={durationError !== null}
+        />
+        <p id="thread-duration-hint" className="text-xs text-muted-foreground">
+          {threadLimits
+            ? threadDurationHint(threadLimits)
+            : isThreadLimitsError
+              ? "上限の取得に失敗しました。送信時にサーバーで検証します。"
+              : "現在の保持期間上限を取得中です…"}
+        </p>
+        {durationError && (
+          <p
+            id="thread-duration-error"
+            className="text-xs text-destructive"
+            role="alert"
+          >
+            {durationError}
+          </p>
+        )}
+      </div>
       <OnlineUsersIndicator className="block text-center text-xs text-muted-foreground" />
       <Button
         type="submit"
@@ -171,7 +224,8 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
           isSubmitting ||
           isPaintPopupOpen ||
           !hasPostContent(body, hasSelectedFile) ||
-          body.length > POST_BODY_MAX_LENGTH
+          body.length > POST_BODY_MAX_LENGTH ||
+          durationError !== null
         }
         className="w-full py-4 text-lg font-medium"
       >
