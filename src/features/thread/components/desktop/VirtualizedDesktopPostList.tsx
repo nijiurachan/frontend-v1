@@ -21,7 +21,7 @@ import {
 
 interface Props {
   posts: Post[];
-  scrollElementRef: RefObject<HTMLDivElement | null>;
+  scrollElementRef: RefObject<HTMLElement | null>;
   quoteReferencesMap: QuoteReferencesMap;
   allPosts: Post[];
   onQuoteClick?: (quoteText: string) => void;

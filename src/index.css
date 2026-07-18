@@ -218,7 +218,9 @@ select option {
 }
 
 .desktop-header-utilities input {
-  width: 90px;
+  flex: 0 1 110px;
+  width: 110px;
+  min-width: 50px;
   height: 22px;
   padding: 1px 4px;
   border: 1px solid #888;
@@ -339,16 +341,17 @@ select option {
 }
 
 .desktop-catalog-grid-wrap {
-  width: min(100%, 780px);
+  /* スレ立てパネル(325px)ぶん右へ寄り過ぎない範囲で広く使う */
+  width: min(100%, 1240px);
   margin: 0 auto;
 }
 
 .desktop-catalog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
-  gap: 2px;
-  border: 1px solid #ccc;
-  background: #fff;
+  /* auto-fit: アイテムが少ないときに空トラックを畳んで中央へ寄せる */
+  grid-template-columns: repeat(auto-fit, minmax(104px, 124px));
+  justify-content: center;
+  gap: 3px;
 }
 
 .desktop-catalog-item {
@@ -437,6 +440,15 @@ select option {
   overflow-y: auto;
   padding-right: 325px;
   scrollbar-color: #777 transparent;
+}
+
+.desktop-thread-scroll:focus {
+  outline: none;
+}
+
+.desktop-thread-scroll:focus-visible {
+  outline: 2px solid var(--desktop-link);
+  outline-offset: -2px;
 }
 
 .desktop-thread-intro {
@@ -583,6 +595,14 @@ select option {
   border-radius: 5px 0 0 5px;
   background: var(--desktop-card);
   box-shadow: -2px 2px 10px rgba(0, 0, 0, 0.3);
+  visibility: visible;
+  transition: visibility 0s 0s;
+}
+
+/* 折りたたみ中は画面右端にスクロールバー等がはみ出て見えないよう隠す */
+.desktop-floating-panel[data-collapsed="true"] .desktop-floating-content {
+  visibility: hidden;
+  transition: visibility 0s 0.2s;
 }
 
 .desktop-floating-panel[data-kind="thread"] .desktop-floating-content {

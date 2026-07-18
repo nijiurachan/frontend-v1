@@ -81,10 +81,16 @@ export const Route = createRootRoute({
 function useRenderSettings(): void {
   const darkMode = useSettingsStore((s) => s.darkMode);
   const fontSize = useSettingsStore((s) => s.fontSize);
+  const isDesktop = useIsDesktop();
 
   useLayoutEffect(() => {
-    document.documentElement.classList.toggle("light-mode", darkMode === false);
-  }, [darkMode]);
+    // PC版は旧AI_BBS再現のライト配色で固定する。共通コンポーネント
+    // (モーダル・フォーム等) もライト変数で描画しないと文字が溶ける。
+    document.documentElement.classList.toggle(
+      "light-mode",
+      isDesktop || darkMode === false,
+    );
+  }, [darkMode, isDesktop]);
 
   useLayoutEffect(() => {
     document.documentElement.style.setProperty(

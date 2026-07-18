@@ -80,7 +80,7 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
         position="bottom"
       >
         <div className="p-4">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             {images.map((image, index) => (
               <div key={image.id} className="relative">
                 <Link

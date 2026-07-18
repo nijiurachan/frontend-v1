@@ -42,7 +42,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     isArchived,
     postsContentVersion,
   } = threadQuery;
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollRef = useRef<HTMLElement>(null);
   const router = useRouter();
   const addViewed = useHistoryStore((state) => state.addViewed);
   const fontSize = useSettingsStore((state) => `${state.fontScalePosts}%`);
@@ -77,6 +77,11 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   useEffect(() => {
     addViewed(threadId);
   }, [addViewed, threadId]);
+
+  // 開いた直後からキーボードスクロールが効くようスクロール領域へフォーカスする
+  useEffect(() => {
+    scrollRef.current?.focus({ preventScroll: true });
+  }, []);
 
   const handleQuoteClick = useCallback(
     (quoteText: string): void => {
@@ -125,6 +130,28 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const goCatalog = useCallback((): void => {
     void router.navigate({ to: "/" });
   }, [router]);
+
+  // スレのスクロールはページ内コンテナが担うため、素の End/Home が
+  // window へ行っても何も起きない。入力中以外はスレ移動へ割り当てる。
+  useEffect(() => {
+    const handler = (event: KeyboardEvent): void => {
+      if (event.key !== "End" && event.key !== "Home") return;
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      if (event.key === "End") scrollToBottom();
+      else scrollToTop();
+    };
+    window.addEventListener("keydown", handler);
+    return (): void => window.removeEventListener("keydown", handler);
+  }, [scrollToBottom, scrollToTop]);
 
   const handleRefresh = useCallback(async (): Promise<void> => {
     recordReadReplyNumber();
@@ -182,7 +209,15 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
           {isFetching ? "更新中..." : "リロード"}
         </button>
       </nav>
-      <div ref={scrollRef} className="desktop-thread-scroll">
+      {/* スクロール可能領域: tabIndex=0 で PageUp/Down・Space等の
+          ネイティブスクロールキーがこのコンテナに効くようにする */}
+      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: スクロール領域をキーボード到達可能にする標準手法 */}
+      <section
+        ref={scrollRef}
+        className="desktop-thread-scroll"
+        tabIndex={0}
+        aria-label="スレッド本文"
+      >
         <div className="desktop-thread-intro">
           <BmgBanner />
           <div className="desktop-thread-notice">
@@ -225,7 +260,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
           />
         </div>
         <BmgBanner />
-      </div>
+      </section>
       <div className="desktop-thread-bottom-nav">
         <button type="button" onClick={scrollToTop}>
           ▲ 上へ
@@ -233,7 +268,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
         <button type="button" onClick={scrollToBottom}>
           ▼ 下へ
         </button>
-        <span>{data.replyCount}レス / 仮想化表示</span>
+        <span>全{data.replyCount}レス</span>
       </div>
       <DesktopReplyPanel
         thread={threadSummary}
