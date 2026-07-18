@@ -5,22 +5,22 @@ import type { ThreadSummary } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
-import { NewRepliesBanner } from "@/features/thread/ui";
-import { BmgBanner } from "@/shared/ui/ad";
-import { LoadingScreen, Message } from "@/shared/ui/feedback";
-import { useReadReplyNumber } from "../../hooks/useReadReplyNumber";
-import type { UseThreadResult } from "../../hooks/useThread";
+import { DesktopReplyPanel } from "@/features/thread/components/desktop/DesktopReplyPanel";
+import { VirtualizedDesktopPostList } from "@/features/thread/components/desktop/VirtualizedDesktopPostList";
+import { ImageListModal } from "@/features/thread/components/modals/ImageListModal";
+import { ThreadOP } from "@/features/thread/components/views/ThreadOP";
+import { useReadReplyNumber } from "@/features/thread/hooks/useReadReplyNumber";
+import type { UseThreadResult } from "@/features/thread/hooks/useThread";
 import {
   selectReplyInitialComment,
   selectReplyOpenCount,
   useReplyModalStore,
-} from "../../stores/replyModalStore";
-import { extractImages } from "../../utils/extractImages";
-import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
-import { ImageListModal } from "../modals/ImageListModal";
-import { ThreadOP } from "../views/ThreadOP";
-import { DesktopReplyPanel } from "./DesktopReplyPanel";
-import { VirtualizedDesktopPostList } from "./VirtualizedDesktopPostList";
+} from "@/features/thread/stores/replyModalStore";
+import { NewRepliesBanner } from "@/features/thread/ui";
+import { extractImages } from "@/features/thread/utils/extractImages";
+import { extractQuoteReferences } from "@/features/thread/utils/extractQuoteReferences";
+import { BmgBanner } from "@/shared/ui/ad";
+import { LoadingScreen, Message } from "@/shared/ui/feedback";
 
 interface Props {
   threadId: string;

@@ -1,5 +1,5 @@
-import type { Post } from "../../../entities/post";
-import { stripQuoteLines } from "../../../shared/lib/quoteUtils";
+import type { Post } from "@/entities/post";
+import { stripQuoteLines } from "@/shared/lib/quoteUtils";
 
 interface IndexedPost {
   post: Post;

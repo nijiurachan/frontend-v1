@@ -5,7 +5,13 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { getPostBodyLines, type Post } from "@/entities/post";
 import { getImageUrl, resolveUploadPath } from "@/entities/thread";
 import { PlayerTrigger } from "@/features/player/components";
+import { SoudaneButton } from "@/features/thread/components/actions/SoudaneButton";
+import { LineDisplay } from "@/features/thread/components/LineDisplay";
+import { QuoteSourcesModal } from "@/features/thread/components/modals/QuoteSourcesModal";
+import { OgpCardList } from "@/features/thread/components/OgpCardList";
+import { useSoudaneMutation } from "@/features/thread/hooks/useSoudaneMutation";
 import { DisplayIdMenu, PostActionMenu } from "@/features/thread/ui";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
 import {
   decoratePostBody,
   formatDate,
@@ -14,12 +20,6 @@ import {
   segmentize,
 } from "@/shared/lib";
 import { InlineVideoThumb } from "@/shared/ui/media";
-import { useSoudaneMutation } from "../hooks/useSoudaneMutation";
-import type { QuoteReferencesMap } from "../utils/extractQuoteReferences";
-import { SoudaneButton } from "./actions/SoudaneButton";
-import { LineDisplay } from "./LineDisplay";
-import { QuoteSourcesModal } from "./modals/QuoteSourcesModal";
-import { OgpCardList } from "./OgpCardList";
 
 interface Props {
   post: Post;

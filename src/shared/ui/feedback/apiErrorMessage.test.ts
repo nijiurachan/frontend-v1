@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { ApiError } from "../../api/errors";
-import { getApiErrorMessage, isMissingThreadError } from "./apiErrorMessage";
+import { ApiError } from "@/shared/api/errors";
+import {
+  getApiErrorMessage,
+  isMissingThreadError,
+} from "@/shared/ui/feedback/apiErrorMessage";
 
 describe("getApiErrorMessage", () => {
   test("投稿拒否コードを具体的な日本語へ変換する", () => {

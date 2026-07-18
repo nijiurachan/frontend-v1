@@ -1,5 +1,5 @@
+import { ThreadCreateForm } from "@/features/thread/components/forms/ThreadCreateForm";
 import { PersistentModal } from "@/shared/ui/overlay";
-import { ThreadCreateForm } from "../forms/ThreadCreateForm";
 
 interface Props {
   isOpen: boolean;

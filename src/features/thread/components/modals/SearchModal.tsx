@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import type { Post } from "@/entities/post";
+import { PostListDisplay } from "@/features/thread/ui";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
+import { isSearchPending } from "@/features/thread/utils/searchModalState";
+import type { SearchResult } from "@/features/thread/utils/searchPosts";
 import { Modal } from "@/shared/ui/overlay";
-import { PostListDisplay } from "../../ui";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
-import { isSearchPending } from "../../utils/searchModalState";
-import type { SearchResult } from "../../utils/searchPosts";
 
 interface SearchModalProps {
   isOpen: boolean;

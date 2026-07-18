@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getLatestVisibleReplyNumber } from "./usePostReadObserver";
+import { getLatestVisibleReplyNumber } from "@/features/thread/hooks/usePostReadObserver";
 
 describe("getLatestVisibleReplyNumber", () => {
   test("画面内のうち最大のレス番号を返す", () => {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getCreatedThreadRoute } from "./createdThreadRoute";
+import { getCreatedThreadRoute } from "@/features/post/components/forms/createdThreadRoute";
 
 describe("getCreatedThreadRoute", () => {
   test("作成結果のthreadIdをスレッド詳細ルートへ渡す", () => {

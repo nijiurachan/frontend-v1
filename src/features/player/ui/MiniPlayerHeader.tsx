@@ -5,7 +5,7 @@
 
 import { useCallback, useRef } from "react";
 import { FiX } from "react-icons/fi";
-import type { MiniPlayerPosition } from "../stores/playerStore";
+import type { MiniPlayerPosition } from "@/features/player/stores/playerStore";
 
 const SWIPE_THRESHOLD = 30;
 const SIZE_LABELS = ["小", "中", "大", "豆"] as const;

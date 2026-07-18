@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import type { Post } from "../../../entities/post";
+import type { Post } from "@/entities/post";
 import {
   clearQuotePreviewCloseTimer,
   getQuotePreviewMode,
-} from "./quoteHoverPreview";
+} from "@/features/thread/utils/quoteHoverPreview";
 
 function post(status: Post["status"]): Post {
   return { status } as Post;

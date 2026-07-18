@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { OgpCard } from "@/features/thread/components/OgpCard";
 import { useOgpProxy } from "@/shared/hooks/useOgpProxy";
 import { isDlafIdMismatch } from "@/shared/lib";
-import { OgpCard } from "./OgpCard";
 
 interface Props {
   urls: string[];

@@ -1,8 +1,8 @@
 import type { Post } from "@/entities/post";
+import { PostListDisplay } from "@/features/thread/ui";
+import type { PopularPost } from "@/features/thread/utils/extractPopularPosts";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
 import { Modal } from "@/shared/ui/overlay";
-import { PostListDisplay } from "../../ui";
-import type { PopularPost } from "../../utils/extractPopularPosts";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
 
 interface PopularPostsModalProps {
   isOpen: boolean;

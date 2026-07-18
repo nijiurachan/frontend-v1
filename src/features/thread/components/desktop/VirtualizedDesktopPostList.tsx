@@ -10,14 +10,14 @@ import {
 } from "react";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
+import { PostItem } from "@/features/thread/components/lists/PostItem";
+import { usePostReadObserver } from "@/features/thread/hooks/usePostReadObserver";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
+import { resolvePostSeqFromHash } from "@/features/thread/utils/threadHash";
 import {
   runAimogeBeforeRender,
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
-import { usePostReadObserver } from "../../hooks/usePostReadObserver";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
-import { resolvePostSeqFromHash } from "../../utils/threadHash";
-import { PostItem } from "../lists/PostItem";
 
 interface Props {
   posts: Post[];

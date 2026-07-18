@@ -1,4 +1,4 @@
-import type { Post } from "../../../entities/post";
+import type { Post } from "@/entities/post";
 
 export type QuotePreviewMode = "hidden" | "static" | "interactive";
 

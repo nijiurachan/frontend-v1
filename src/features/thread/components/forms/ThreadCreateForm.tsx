@@ -18,11 +18,11 @@ import {
   readThreadCreateDraft,
   saveThreadCreateDraft,
 } from "@/features/thread/stores/threadCreateDraftStore";
+import { prepareThreadCreateAttachment } from "@/features/thread/utils/threadCreateSubmission";
 import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
 import { Button, Checkbox, Textarea } from "@/shared/ui/form";
 import { OnlineUsersIndicator, PostNotice } from "@/shared/ui/navigation";
 import { toast } from "@/shared/ui/toast";
-import { prepareThreadCreateAttachment } from "../../utils/threadCreateSubmission";
 
 interface Props {
   onSuccess?: () => void;

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { Thread } from "@/entities/thread";
-import { floorOekakiThreads } from "../utils/floorOekakiThreads";
+import { floorOekakiThreads } from "@/features/catalog/utils/floorOekakiThreads";
 
 /**
  * そうだねが一定数以上のお絵描きスレをカタログの下半分に沈ませないよう並べ替える(カタログ専用)。

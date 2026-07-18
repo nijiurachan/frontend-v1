@@ -4,7 +4,7 @@ import {
   getReplyDraftStorageKey,
   readReplyDraft,
   saveReplyDraft,
-} from "./replyDraftStore";
+} from "@/features/post/stores/replyDraftStore";
 
 function createStorage(): Storage {
   const values = new Map<string, string>();

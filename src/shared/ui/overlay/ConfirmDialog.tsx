@@ -1,5 +1,5 @@
-import { Button } from "../form";
-import { Modal } from "./Modal";
+import { Button } from "@/shared/ui/form";
+import { Modal } from "@/shared/ui/overlay/Modal";
 
 export type CloseReason = "dismissed" | "pressed-cancel" | "pressed-confirm";
 

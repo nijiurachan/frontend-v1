@@ -1,7 +1,7 @@
 import { type ReactNode, useMemo, useState } from "react";
-import { Header } from "./Header";
-import { SideMenu } from "./SideMenu";
-import { SideMenuContext } from "./SideMenuContext";
+import { Header } from "@/app/layouts/Header";
+import { SideMenu } from "@/app/layouts/SideMenu";
+import { SideMenuContext } from "@/app/layouts/SideMenuContext";
 
 interface Props {
   children: ReactNode;

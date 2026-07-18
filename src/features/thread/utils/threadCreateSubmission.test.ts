@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { prepareThreadCreateAttachment } from "./threadCreateSubmission";
+import { prepareThreadCreateAttachment } from "@/features/thread/utils/threadCreateSubmission";
 
 function formWithPreparation(preparing?: Promise<void>): HTMLFormElement {
   return {

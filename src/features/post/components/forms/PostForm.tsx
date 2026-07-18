@@ -5,6 +5,12 @@ import { FiCheck } from "react-icons/fi";
 import { UpfileInput } from "@/features/otegaki-upfile/components";
 import { getAttachedFile } from "@/features/otegaki-upfile/lib/attachUpfileImage";
 import {
+  formatPostBodyLength,
+  POST_BODY_MAX_LENGTH,
+} from "@/features/post/components/forms/postFormConfig";
+import { createSubmissionLock } from "@/features/post/components/forms/submissionLock";
+import { useSubmitPost } from "@/features/post/hooks/useSubmitPost";
+import {
   clearReplyDraft,
   readReplyDraft,
   saveReplyDraft,
@@ -17,9 +23,6 @@ import { OnlineUsersIndicator } from "@/shared/ui/navigation/OnlineUsersIndicato
 import { ConfirmDialog } from "@/shared/ui/overlay";
 import type { CloseReason } from "@/shared/ui/overlay/ConfirmDialog";
 import { toast } from "@/shared/ui/toast";
-import { useSubmitPost } from "../../hooks/useSubmitPost";
-import { formatPostBodyLength, POST_BODY_MAX_LENGTH } from "./postFormConfig";
-import { createSubmissionLock } from "./submissionLock";
 
 interface PostFormData {
   comment: string;

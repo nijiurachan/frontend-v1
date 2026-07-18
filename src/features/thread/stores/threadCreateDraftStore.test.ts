@@ -3,7 +3,7 @@ import {
   clearThreadCreateDraft,
   readThreadCreateDraft,
   saveThreadCreateDraft,
-} from "./threadCreateDraftStore";
+} from "@/features/thread/stores/threadCreateDraftStore";
 
 function createStorage(): Storage {
   const values = new Map<string, string>();

@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { FiX } from "react-icons/fi";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { Input } from "@/shared/ui/form";
-import { useCatalogStore } from "../stores/catalogStore";
 
 export const SearchBar: React.FunctionComponent = () => {
   const { searchQuery, setSearchQuery } = useCatalogStore();

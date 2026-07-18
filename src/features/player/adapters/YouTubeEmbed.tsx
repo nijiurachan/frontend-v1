@@ -10,8 +10,8 @@
 
 import { useCallback, useEffect, useRef } from "react";
 import type {} from "youtube";
-import type { SlotId } from "../stores/playerStore";
-import { usePlayerStore } from "../stores/playerStore";
+import type { SlotId } from "@/features/player/stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
 
 /** ストア音量(0-1) を YouTube の音量(0-100 の整数)へ変換。
  *  永続化データの破損や将来の呼び出し元変更で範囲外になっても安全なようクランプ＋丸めする。 */

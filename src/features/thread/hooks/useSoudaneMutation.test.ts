@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { ApiError } from "../../../shared/api/errors";
-import { isDuplicateSoudaneError } from "./soudaneError";
+import { isDuplicateSoudaneError } from "@/features/thread/hooks/soudaneError";
+import { ApiError } from "@/shared/api/errors";
 
 describe("isDuplicateSoudaneError", () => {
   test("409 DUPLICATE_REACTIONだけを冪等成功として扱う", () => {

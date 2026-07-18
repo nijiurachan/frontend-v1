@@ -12,9 +12,12 @@
 
 import { useEffect, useMemo } from "react";
 import { MdFormatListBulleted, MdPictureInPicture } from "react-icons/md";
-import { isPlaylistProvider, usePlayerAPI } from "../hooks/usePlayerAPI";
-import { usePlayerStore } from "../stores/playerStore";
-import { analyzeUrl } from "../utils/providerDetect";
+import {
+  isPlaylistProvider,
+  usePlayerAPI,
+} from "@/features/player/hooks/usePlayerAPI";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
+import { analyzeUrl } from "@/features/player/utils/providerDetect";
 
 // ----------------------------------------------------------
 // Props

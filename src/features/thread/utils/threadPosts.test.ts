@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 import type {
   ThreadChunkElement,
   ThreadPostState,
-} from "../../../entities/thread/types";
-import { mergeThreadPosts } from "./threadPosts";
+} from "@/entities/thread/types";
+import { mergeThreadPosts } from "@/features/thread/utils/threadPosts";
 
 function makeElement(seq: number): ThreadChunkElement {
   return {

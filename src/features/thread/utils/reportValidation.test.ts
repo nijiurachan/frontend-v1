@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   getReportWholeThreadRange,
   validateReportRange,
-} from "./reportValidation";
+} from "@/features/thread/utils/reportValidation";
 
 describe("validateReportRange", () => {
   test("accepts a single post", () => {

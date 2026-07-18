@@ -1,9 +1,9 @@
-import type { Post } from "../../../entities/post";
+import type { Post } from "@/entities/post";
 import type {
   ThreadChunkElement,
   ThreadPostState,
-} from "../../../entities/thread/types";
-import { isThreadChunkPost } from "../../../entities/thread/types";
+} from "@/entities/thread/types";
+import { isThreadChunkPost } from "@/entities/thread/types";
 
 export function normalizeThreadPost(
   threadId: string,

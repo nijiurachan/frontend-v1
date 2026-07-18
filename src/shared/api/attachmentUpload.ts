@@ -1,4 +1,4 @@
-import { ApiError } from "./errors";
+import { ApiError } from "@/shared/api/errors";
 
 /** Mirrors backend-v1 DEFAULT_BOARD_CONFIG.limits.maxFileSizeBytes. */
 export const DEFAULT_MAX_ATTACHMENT_BYTES: number = 20 * 1024 * 1024;

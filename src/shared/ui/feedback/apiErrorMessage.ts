@@ -1,4 +1,4 @@
-import { ApiError } from "../../api/errors";
+import { ApiError } from "@/shared/api/errors";
 
 const API_ERROR_MESSAGES: Readonly<Record<string, string>> = {
   VALIDATION_ERROR:

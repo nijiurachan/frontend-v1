@@ -1,13 +1,13 @@
 import { useMemo } from "react";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
+import { PostItem } from "@/features/thread/components/lists/PostItem";
+import { usePostReadObserver } from "@/features/thread/hooks/usePostReadObserver";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
 import {
   runAimogeBeforeRender,
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
-import { usePostReadObserver } from "../../hooks/usePostReadObserver";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
-import { PostItem } from "./PostItem";
 
 interface Props {
   posts: Post[];

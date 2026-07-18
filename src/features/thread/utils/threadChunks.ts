@@ -1,4 +1,4 @@
-import type { ThreadChunkElement } from "../../../entities/thread";
+import type { ThreadChunkElement } from "@/entities/thread";
 
 /**
  * Accepted state.newPosts are provisional snapshots. When the same sequence is

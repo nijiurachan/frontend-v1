@@ -25,12 +25,31 @@ import type { SearchResponse, ThreadSummary } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { DesktopThreadView } from "@/features/thread/components/desktop/DesktopThreadView";
+import { PostList } from "@/features/thread/components/lists/PostList";
 import type * as modals from "@/features/thread/components/modals";
+import { ThreadOP } from "@/features/thread/components/views/ThreadOP";
+import { useReadReplyNumber } from "@/features/thread/hooks/useReadReplyNumber";
+import {
+  type UseThreadResult,
+  useThread,
+} from "@/features/thread/hooks/useThread";
+import { useReplyModalStore } from "@/features/thread/stores/replyModalStore";
 import {
   type ActionButton,
   BottomActionBar,
   NewRepliesBanner,
 } from "@/features/thread/ui";
+import { extractImages } from "@/features/thread/utils/extractImages";
+import { extractPopularPosts } from "@/features/thread/utils/extractPopularPosts";
+import { extractQuoteReferences } from "@/features/thread/utils/extractQuoteReferences";
+import {
+  isAbortError,
+  LatestSearchRequestGuard,
+} from "@/features/thread/utils/latestSearchRequest";
+import type { SearchResult } from "@/features/thread/utils/searchPosts";
+import { searchPosts } from "@/features/thread/utils/searchPosts";
+import { resolvePostSeqFromHash } from "@/features/thread/utils/threadHash";
 import { apiGet } from "@/shared/api";
 import { useIsDesktop } from "@/shared/hooks";
 import { useSwipeBack } from "@/shared/hooks/useSwipeBack";
@@ -48,47 +67,39 @@ import {
 } from "@/shared/ui/feedback/apiErrorMessage";
 import { shouldShowThreadLoadError } from "@/shared/ui/feedback/threadLoadingState";
 import { ModalContext } from "@/shared/ui/overlay/modal-context";
-import { useReadReplyNumber } from "../../hooks/useReadReplyNumber";
-import { type UseThreadResult, useThread } from "../../hooks/useThread";
-import { useReplyModalStore } from "../../stores/replyModalStore";
-import { extractImages } from "../../utils/extractImages";
-import { extractPopularPosts } from "../../utils/extractPopularPosts";
-import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
-import {
-  isAbortError,
-  LatestSearchRequestGuard,
-} from "../../utils/latestSearchRequest";
-import type { SearchResult } from "../../utils/searchPosts";
-import { searchPosts } from "../../utils/searchPosts";
-import { resolvePostSeqFromHash } from "../../utils/threadHash";
-import { DesktopThreadView } from "../desktop/DesktopThreadView";
-import { PostList } from "../lists/PostList";
-import { ThreadOP } from "./ThreadOP";
 
 // モーダルコンポーネントの遅延ロード
 const ReplyModal: LazyExoticComponent<typeof modals.ReplyModal> = lazy(() =>
-  import("../modals/ReplyModal").then((m) => ({ default: m.ReplyModal })),
+  import("@/features/thread/components/modals/ReplyModal").then((m) => ({
+    default: m.ReplyModal,
+  })),
 );
 const ImageListModal: LazyExoticComponent<typeof modals.ImageListModal> = lazy(
   () =>
-    import("../modals/ImageListModal").then((m) => ({
+    import("@/features/thread/components/modals/ImageListModal").then((m) => ({
       default: m.ImageListModal,
     })),
 );
 const PopularPostsModal: LazyExoticComponent<typeof modals.PopularPostsModal> =
   lazy(() =>
-    import("../modals/PopularPostsModal").then((m) => ({
-      default: m.PopularPostsModal,
-    })),
+    import("@/features/thread/components/modals/PopularPostsModal").then(
+      (m) => ({
+        default: m.PopularPostsModal,
+      }),
+    ),
   );
 const SearchModal: LazyExoticComponent<typeof modals.SearchModal> = lazy(() =>
-  import("../modals/SearchModal").then((m) => ({ default: m.SearchModal })),
+  import("@/features/thread/components/modals/SearchModal").then((m) => ({
+    default: m.SearchModal,
+  })),
 );
 const QuoteSearchModal: LazyExoticComponent<typeof modals.QuoteSearchModal> =
   lazy(() =>
-    import("../modals/QuoteSearchModal").then((m) => ({
-      default: m.QuoteSearchModal,
-    })),
+    import("@/features/thread/components/modals/QuoteSearchModal").then(
+      (m) => ({
+        default: m.QuoteSearchModal,
+      }),
+    ),
   );
 
 interface Props {
@@ -466,9 +477,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
   if (threadQuery.isLoading) {
     return <LoadingScreen message="スレッドを読み込み中..." />;
   }
-  if (
-    shouldShowThreadLoadError(threadQuery.error, Boolean(threadQuery.data))
-  ) {
+  if (shouldShowThreadLoadError(threadQuery.error, Boolean(threadQuery.data))) {
     return (
       <ThreadLoadError
         error={threadQuery.error}

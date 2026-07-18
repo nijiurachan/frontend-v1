@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   isThreadInitialLoading,
   shouldShowThreadLoadError,
-} from "../../../shared/ui/feedback/threadLoadingState";
+} from "@/shared/ui/feedback/threadLoadingState";
 
 describe("isThreadInitialLoading", () => {
   test("state取得失敗後のdisabled chunkをローディング扱いしない", () => {

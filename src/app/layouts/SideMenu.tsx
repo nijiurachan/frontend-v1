@@ -12,6 +12,7 @@ import {
   FiWatch,
   FiX,
 } from "react-icons/fi";
+import { MenuItem } from "@/app/layouts/MenuItem";
 import noImage from "@/assets/img/no-image.svg";
 import type { ThreadSummary } from "@/entities/thread";
 import { getImageUrl, getThreadTitle } from "@/entities/thread";
@@ -19,7 +20,6 @@ import { useHistoryStore } from "@/features/history/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { apiGet } from "@/shared/api";
 import { useDialogFocusTrap } from "@/shared/ui/overlay/dialogFocus";
-import { MenuItem } from "./MenuItem";
 
 interface Props {
   isOpen: boolean;

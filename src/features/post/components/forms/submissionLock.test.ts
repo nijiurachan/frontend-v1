@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { createSubmissionLock } from "./submissionLock";
+import { createSubmissionLock } from "@/features/post/components/forms/submissionLock";
 
 describe("createSubmissionLock", () => {
   test("送信開始から解放まで二重取得を拒否する", () => {

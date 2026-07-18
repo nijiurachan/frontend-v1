@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import type { Thread } from "@/entities/thread";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { useNgStore } from "@/features/ng-filter/stores/ngStore";
-import { useCatalogStore } from "../stores/catalogStore";
 
 /**
  * スレッド一覧に検索フィルターとNGフィルターを適用

@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { Post } from "@/entities/post";
-import { useIsDesktop } from "@/shared/hooks";
 import {
   clearQuotePreviewCloseTimer,
   getQuotePreviewMode,
-} from "../utils/quoteHoverPreview";
+} from "@/features/thread/utils/quoteHoverPreview";
+import { useIsDesktop } from "@/shared/hooks";
 
 interface Props {
   target: Post | null;

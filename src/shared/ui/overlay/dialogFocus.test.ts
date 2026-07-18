@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getFocusTrapTarget } from "./dialogFocus";
+import { getFocusTrapTarget } from "@/shared/ui/overlay/dialogFocus";
 
 const focusable = (): HTMLElement =>
   ({ focus: () => undefined }) as unknown as HTMLElement;

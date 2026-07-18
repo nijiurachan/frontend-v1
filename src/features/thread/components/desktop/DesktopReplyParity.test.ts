@@ -4,7 +4,7 @@ import {
   selectReplyInitialComment,
   selectReplyOpenCount,
   useReplyModalStore,
-} from "../../stores/replyModalStore";
+} from "@/features/thread/stores/replyModalStore";
 
 afterEach(() => {
   useReplyModalStore.getState().reset();

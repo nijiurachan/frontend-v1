@@ -1,13 +1,13 @@
 import { type UseQueryResult, useQuery } from "@tanstack/react-query";
 import { useCallback } from "react";
 import type { Catalog } from "@/entities/thread";
+import { getCatalogPath } from "@/features/catalog/hooks/catalogPath";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { apiGet } from "@/shared/api";
 import {
   runAimogeDataHook,
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
-import { useCatalogStore } from "../stores/catalogStore";
-import { getCatalogPath } from "./catalogPath";
 
 export function useThreads(): UseQueryResult<Catalog> {
   const { currentSort } = useCatalogStore();

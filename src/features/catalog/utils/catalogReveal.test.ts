@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getCatalogThreadClickAction } from "./catalogReveal";
+import { getCatalogThreadClickAction } from "@/features/catalog/utils/catalogReveal";
 
 describe("getCatalogThreadClickAction", () => {
   test("NGかつR18はNG解除後の次タップでR18を解除できる", () => {

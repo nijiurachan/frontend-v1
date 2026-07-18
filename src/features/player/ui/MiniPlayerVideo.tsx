@@ -4,13 +4,13 @@
 // ============================================================
 
 import { useEffect, useState } from "react";
-import { NativeVideoEmbed } from "../adapters/NativeVideoEmbed";
-import { NiconicoEmbed } from "../adapters/NiconicoEmbed";
-import { TwitchEmbed } from "../adapters/TwitchEmbed";
-import { YouTubeEmbed } from "../adapters/YouTubeEmbed";
-import type { SlotId, Track } from "../stores/playerStore";
-import { usePlayerStore } from "../stores/playerStore";
-import { getSyncedNow } from "../utils/serverTime";
+import { NativeVideoEmbed } from "@/features/player/adapters/NativeVideoEmbed";
+import { NiconicoEmbed } from "@/features/player/adapters/NiconicoEmbed";
+import { TwitchEmbed } from "@/features/player/adapters/TwitchEmbed";
+import { YouTubeEmbed } from "@/features/player/adapters/YouTubeEmbed";
+import type { SlotId, Track } from "@/features/player/stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
+import { getSyncedNow } from "@/features/player/utils/serverTime";
 
 interface MiniPlayerVideoProps {
   currentTrack: Track | null;

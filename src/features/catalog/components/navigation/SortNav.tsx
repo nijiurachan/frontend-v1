@@ -1,9 +1,12 @@
 import clsx from "clsx";
 import {
+  type SortType,
+  useCatalogStore,
+} from "@/features/catalog/stores/catalogStore";
+import {
   PrimaryActionButton,
   type PrimaryActionButtonProps,
 } from "@/shared/ui/navigation";
-import { type SortType, useCatalogStore } from "../../stores/catalogStore";
 
 const SORT_OPTIONS: { key: SortType; label: string }[] = [
   { key: "default", label: "カタ" },

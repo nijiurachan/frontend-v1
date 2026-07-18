@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { SortType } from "../stores/catalogStore";
-import { getCatalogPath } from "./catalogPath";
+import { getCatalogPath } from "@/features/catalog/hooks/catalogPath";
+import type { SortType } from "@/features/catalog/stores/catalogStore";
 
 describe("getCatalogPath", () => {
   test.each([

@@ -3,7 +3,7 @@ import {
   type AimogeApi,
   createAimogeRuntime,
   initializeAimoge,
-} from "./aimoge";
+} from "@/shared/lib/aimoge";
 
 describe("aimoge extension hooks", () => {
   test("data hooks form a value-transforming chain", () => {

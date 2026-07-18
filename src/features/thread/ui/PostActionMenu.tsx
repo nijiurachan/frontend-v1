@@ -2,18 +2,18 @@ import { useState } from "react";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { ReportModal } from "@/features/thread/components/modals/ReportModal";
 import { useCloseMutation } from "@/features/thread/hooks/useCloseMutation";
-import { useDeleteMutation } from "@/shared/hooks/useDeleteMutation";
-import { useDelMutation } from "@/shared/hooks/useDelMutation";
-import { ConfirmDialog, Modal } from "@/shared/ui/overlay";
-import { ReportModal } from "../components/modals/ReportModal";
-import { useSoudaneMutation } from "../hooks/useSoudaneMutation";
+import { useSoudaneMutation } from "@/features/thread/hooks/useSoudaneMutation";
 import {
   createReplyInitialComment,
   type ReplyQuoteType,
   useReplyModalStore,
-} from "../stores/replyModalStore";
-import { createPostActionItems } from "./postActionItems";
+} from "@/features/thread/stores/replyModalStore";
+import { createPostActionItems } from "@/features/thread/ui/postActionItems";
+import { useDeleteMutation } from "@/shared/hooks/useDeleteMutation";
+import { useDelMutation } from "@/shared/hooks/useDelMutation";
+import { ConfirmDialog, Modal } from "@/shared/ui/overlay";
 
 interface PostActionMenuProps {
   isOpen: boolean;

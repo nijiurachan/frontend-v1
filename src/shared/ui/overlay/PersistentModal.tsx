@@ -15,7 +15,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
-import { ModalContext } from "./modal-context";
+import { ModalContext } from "@/shared/ui/overlay/modal-context";
 
 export interface PersistentModalRenderProps {
   destroy: () => void;

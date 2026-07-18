@@ -3,7 +3,7 @@
 // URL からプロバイダーとIDを判定する
 // ============================================================
 
-import type { Provider } from "../stores/playerStore";
+import type { Provider } from "@/features/player/stores/playerStore";
 
 // ----------------------------------------------------------
 // パターン定義

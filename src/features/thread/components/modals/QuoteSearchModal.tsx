@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import type { Post } from "@/entities/post";
+import { PostListDisplay } from "@/features/thread/ui";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
+import type { SearchResult } from "@/features/thread/utils/searchPosts";
 import { Modal } from "@/shared/ui/overlay";
-import { PostListDisplay } from "../../ui";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
-import type { SearchResult } from "../../utils/searchPosts";
 
 interface QuoteSearchModalProps {
   isOpen: boolean;

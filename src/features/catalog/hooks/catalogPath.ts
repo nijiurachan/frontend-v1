@@ -1,4 +1,4 @@
-import type { SortType } from "../stores/catalogStore";
+import type { SortType } from "@/features/catalog/stores/catalogStore";
 
 export function getCatalogPath(sortType: SortType): string {
   const sort =

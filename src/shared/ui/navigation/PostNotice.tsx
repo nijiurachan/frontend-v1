@@ -1,4 +1,4 @@
-import { TextLink } from "./TextLink";
+import { TextLink } from "@/shared/ui/navigation/TextLink";
 
 /** 投稿欄下に置く注意書き */
 export const PostNotice: React.FunctionComponent = () => {

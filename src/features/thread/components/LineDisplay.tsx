@@ -3,13 +3,13 @@
 import { Fragment, useMemo } from "react";
 import type { Post, PostBodyLine } from "@/entities/post";
 import { PlayerTrigger } from "@/features/player/components";
-import { type Segment, segmentize } from "@/shared/lib";
-import { TextDiced, TextLink } from "@/shared/ui/navigation";
+import { QuoteHoverPreview } from "@/features/thread/components/QuoteHoverPreview";
 import {
   getQuotePostIndex,
   resolveQuotedPostFromIndex,
-} from "../utils/quotePreview";
-import { QuoteHoverPreview } from "./QuoteHoverPreview";
+} from "@/features/thread/utils/quotePreview";
+import { type Segment, segmentize } from "@/shared/lib";
+import { TextDiced, TextLink } from "@/shared/ui/navigation";
 
 interface Props {
   line: PostBodyLine;

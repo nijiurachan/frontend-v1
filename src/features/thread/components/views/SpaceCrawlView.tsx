@@ -1,9 +1,9 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Post } from "@/entities/post";
 import { resolveUploadPath } from "@/entities/thread";
+import { PostBlock } from "@/features/thread/components/views/space/PostBlock";
+import { useCrawlProgress } from "@/features/thread/components/views/space/useCrawlProgress";
 import { decorateTitle, isVideoAttachment } from "@/shared/lib";
-import { PostBlock } from "./space/PostBlock";
-import { useCrawlProgress } from "./space/useCrawlProgress";
 
 interface Props {
   posts: Post[];

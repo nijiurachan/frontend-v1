@@ -9,12 +9,12 @@ import {
 } from "react";
 import { FiArrowLeft, FiSearch, FiX } from "react-icons/fi";
 import { HiOutlineMenu } from "react-icons/hi";
+import { getInitialHeaderScrollY } from "@/app/layouts/headerScroll";
 import icon_aimoge from "@/assets/img/icon_aimoge.webp";
 import icon_aimoge_dark1 from "@/assets/img/icon_aimoge_dark1.webp";
 import icon_blumoge from "@/assets/img/icon_blumoge.webp";
 import icon_main from "@/assets/img/icon_main.webp";
 import { SearchBar } from "@/features/catalog/components";
-import { getInitialHeaderScrollY } from "./headerScroll";
 
 interface HeaderProps {
   onMenuClick: () => void;

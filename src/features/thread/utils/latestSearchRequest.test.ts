@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { isAbortError, LatestSearchRequestGuard } from "./latestSearchRequest";
+import {
+  isAbortError,
+  LatestSearchRequestGuard,
+} from "@/features/thread/utils/latestSearchRequest";
 
 describe("LatestSearchRequestGuard", () => {
   test("新しい検索開始時に旧検索をabortして結果更新権を失わせる", () => {

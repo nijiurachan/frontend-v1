@@ -1,6 +1,6 @@
 import type { Post } from "@/entities/post";
-import { PostItem } from "../components/lists/PostItem";
-import type { QuoteReferencesMap } from "../utils/extractQuoteReferences";
+import { PostItem } from "@/features/thread/components/lists/PostItem";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
 
 interface PostListDisplayProps {
   posts: Array<{ post: Post; index: number }>;

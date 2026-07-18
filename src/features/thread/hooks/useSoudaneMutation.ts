@@ -1,9 +1,9 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { isDuplicateSoudaneError } from "@/features/thread/hooks/soudaneError";
 import { apiPut } from "@/shared/api";
 import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
 import { toast } from "@/shared/ui/toast";
-import { isDuplicateSoudaneError } from "./soudaneError";
 
 interface ReactionResponse {
   postId: string;

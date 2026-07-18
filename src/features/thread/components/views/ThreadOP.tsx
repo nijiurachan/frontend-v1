@@ -6,10 +6,10 @@ import type { Post } from "@/entities/post";
 import type { ThreadTag } from "@/entities/thread";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { PostDisplay } from "@/features/thread/components/PostDisplay";
+import type { QuoteReferencesMap } from "@/features/thread/utils";
 import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
 import { TagBadges } from "@/shared/ui/navigation";
-import type { QuoteReferencesMap } from "../../utils";
-import { PostDisplay } from "../PostDisplay";
 
 interface Props {
   post: Post;

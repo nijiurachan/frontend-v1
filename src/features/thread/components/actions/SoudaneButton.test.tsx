@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { SoudaneButton } from "./SoudaneButton";
+import { SoudaneButton } from "@/features/thread/components/actions/SoudaneButton";
 
 describe("SoudaneButton accessibility", () => {
   test("count_zero_renders_a_sized_button_with_an_accessible_name", () => {

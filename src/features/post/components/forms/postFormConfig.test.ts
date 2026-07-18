@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { formatPostBodyLength, POST_BODY_MAX_LENGTH } from "./postFormConfig";
+import {
+  formatPostBodyLength,
+  POST_BODY_MAX_LENGTH,
+} from "@/features/post/components/forms/postFormConfig";
 
 describe("postFormConfig", () => {
   test("バックエンド既定値と同じ4000文字上限を表示する", () => {

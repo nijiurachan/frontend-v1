@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { ThreadChunkElement } from "../../../entities/thread";
-import { mergeThreadChunkElements } from "./threadChunks";
+import type { ThreadChunkElement } from "@/entities/thread";
+import { mergeThreadChunkElements } from "@/features/thread/utils/threadChunks";
 
 function chunkPost(seq: number, body: string): ThreadChunkElement {
   return {

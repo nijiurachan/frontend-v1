@@ -1,9 +1,9 @@
 import noImage from "@/assets/img/no-image.svg";
 import type { Attachment } from "@/entities/attachment";
 import type { Post } from "@/entities/post";
+import type { ThreadSummary, ThreadView } from "@/entities/thread/types";
 import { UPLOADS_BASE } from "@/shared/api";
 import { decodeHtmlEntities } from "@/shared/lib";
-import type { ThreadSummary, ThreadView } from "./types";
 
 type ThreadWithOp = Pick<ThreadSummary, "opPost"> | Pick<ThreadView, "posts">;
 

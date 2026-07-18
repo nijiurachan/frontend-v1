@@ -6,8 +6,8 @@
 // ============================================================
 
 import { useEffect } from "react";
-import type { SlotId } from "../stores/playerStore";
-import { usePlayerStore } from "../stores/playerStore";
+import type { SlotId } from "@/features/player/stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
 
 interface NiconicoEmbedProps {
   providerId: string;

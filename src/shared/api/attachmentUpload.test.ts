@@ -3,7 +3,7 @@ import {
   DEFAULT_MAX_ATTACHMENT_BYTES,
   MAX_ATTACHMENT_BYTES,
   readAttachmentForUpload,
-} from "./attachmentUpload";
+} from "@/shared/api/attachmentUpload";
 
 describe("readAttachmentForUpload", () => {
   test("既定上限を使用する", () => {

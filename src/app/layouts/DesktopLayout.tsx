@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { DesktopHeader } from "./DesktopHeader";
+import { DesktopHeader } from "@/app/layouts/DesktopHeader";
 
 interface Props {
   children: ReactNode;

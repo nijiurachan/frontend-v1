@@ -30,7 +30,8 @@ export function hasCompleteThreadChunkSnapshot(
   chunks: readonly (readonly ThreadChunkElement[] | undefined)[],
   requiredChunkCount: number,
 ): boolean {
-  if (requiredChunkCount < 1 || chunks.length < requiredChunkCount) return false;
+  if (requiredChunkCount < 1 || chunks.length < requiredChunkCount)
+    return false;
   if (!chunks[0]?.some((element) => element.seq === 0)) return false;
   return chunks
     .slice(0, requiredChunkCount)

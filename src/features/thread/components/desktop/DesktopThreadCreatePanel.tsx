@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { getDesktopThreadCreatePanelAction } from "../../utils/desktopThreadCreatePanelState";
-import { ThreadCreateForm } from "../forms/ThreadCreateForm";
+import { ThreadCreateForm } from "@/features/thread/components/forms/ThreadCreateForm";
+import { getDesktopThreadCreatePanelAction } from "@/features/thread/utils/desktopThreadCreatePanelState";
 
 interface Props {
   isOpen: boolean;

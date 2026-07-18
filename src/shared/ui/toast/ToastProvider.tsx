@@ -1,4 +1,4 @@
-import "./toast.css";
+import "@/shared/ui/toast/toast.css";
 
 import { Toaster } from "react-hot-toast";
 

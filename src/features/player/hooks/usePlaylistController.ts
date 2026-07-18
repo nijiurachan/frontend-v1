@@ -14,7 +14,7 @@
 // ============================================================
 
 import { useEffect } from "react";
-import { usePlayerStore } from "../stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
 
 export function usePlaylistController(): void {
   const mode = usePlayerStore((s) => s.playlist.mode);

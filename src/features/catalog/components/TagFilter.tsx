@@ -1,6 +1,6 @@
 import clsx from "clsx";
 import type { ThreadSummary } from "@/entities/thread";
-import { useCatalogStore } from "../stores/catalogStore";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 
 interface TagFilterProps {
   threads: ThreadSummary[];

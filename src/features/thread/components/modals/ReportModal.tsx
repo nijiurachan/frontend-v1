@@ -1,18 +1,18 @@
 import { useId, useState } from "react";
-import { ApiError } from "@/shared/api";
-import { Button, Input, Textarea } from "@/shared/ui/form";
-import { Modal } from "@/shared/ui/overlay";
-import { toast } from "@/shared/ui/toast";
 import {
   type ReportReason,
   useReportMutation,
-} from "../../hooks/useReportMutation";
+} from "@/features/thread/hooks/useReportMutation";
 import {
   getReportWholeThreadRange,
   REPORT_RANGE_LIMIT,
   type ReportSeq,
   validateReportRange,
-} from "../../utils/reportValidation";
+} from "@/features/thread/utils/reportValidation";
+import { ApiError } from "@/shared/api";
+import { Button, Input, Textarea } from "@/shared/ui/form";
+import { Modal } from "@/shared/ui/overlay";
+import { toast } from "@/shared/ui/toast";
 
 interface ReportModalProps {
   isOpen: boolean;

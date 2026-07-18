@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { type AltchaChallenge, solveAltcha } from "./altcha";
+import { type AltchaChallenge, solveAltcha } from "@/shared/api/altcha";
 
 describe("solveAltcha", () => {
   test("returns the base64 solution for the matching number", async () => {

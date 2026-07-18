@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test";
-import { AimgTokenManager, shouldRetryManagedToken } from "./tokenManager";
+import {
+  AimgTokenManager,
+  shouldRetryManagedToken,
+} from "@/shared/api/tokenManager";
 
 describe("AimgTokenManager", () => {
   test("同時に期限切れを検知してもtoken再発行は1回に集約する", async () => {

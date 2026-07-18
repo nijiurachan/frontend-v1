@@ -11,14 +11,6 @@ import type {
   ThreadState,
   ThreadView,
 } from "@/entities/thread";
-import { apiGet } from "@/shared/api";
-import {
-  runAimogeDataHook,
-  useAimogeHookGeneration,
-} from "@/shared/lib/aimoge";
-import { isThreadInitialLoading } from "@/shared/ui/feedback/threadLoadingState";
-import { mergeThreadChunkElements } from "../utils/threadChunks";
-import { mergeThreadPosts } from "../utils/threadPosts";
 import {
   createFailedThreadChunkRefetchFilters,
   getThreadChunkStaleTime,
@@ -26,9 +18,17 @@ import {
   resolveThreadQueryError,
   THREAD_CHUNK_QUERY_BEHAVIOR,
   THREAD_CHUNK_SIZE,
-} from "./threadChunkQuery";
+} from "@/features/thread/hooks/threadChunkQuery";
+import { mergeThreadChunkElements } from "@/features/thread/utils/threadChunks";
+import { mergeThreadPosts } from "@/features/thread/utils/threadPosts";
+import { apiGet } from "@/shared/api";
+import {
+  runAimogeDataHook,
+  useAimogeHookGeneration,
+} from "@/shared/lib/aimoge";
+import { isThreadInitialLoading } from "@/shared/ui/feedback/threadLoadingState";
 
-export { THREAD_CHUNK_SIZE } from "./threadChunkQuery";
+export { THREAD_CHUNK_SIZE } from "@/features/thread/hooks/threadChunkQuery";
 export const THREAD_STATE_POLL_INTERVAL = 15_000;
 
 export interface UseThreadResult

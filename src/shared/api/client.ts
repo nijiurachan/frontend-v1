@@ -1,11 +1,14 @@
+import { type AltchaChallenge, solveAltcha } from "@/shared/api/altcha";
+import { readAttachmentForUpload } from "@/shared/api/attachmentUpload";
+import { ApiError } from "@/shared/api/errors";
+import { md5 } from "@/shared/api/md5";
+import {
+  AimgTokenManager,
+  shouldRetryManagedToken,
+} from "@/shared/api/tokenManager";
 import { getFingerprint } from "@/shared/lib/fingerprint";
-import { type AltchaChallenge, solveAltcha } from "./altcha";
-import { readAttachmentForUpload } from "./attachmentUpload";
-import { ApiError } from "./errors";
-import { md5 } from "./md5";
-import { AimgTokenManager, shouldRetryManagedToken } from "./tokenManager";
 
-export { ApiError } from "./errors";
+export { ApiError } from "@/shared/api/errors";
 
 const BASE_URL: string = import.meta.env.VITE_BASE_URL || "";
 

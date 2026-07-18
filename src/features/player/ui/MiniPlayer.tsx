@@ -9,15 +9,15 @@
 import { AnimatePresence, motion } from "motion/react";
 import { useCallback, useState } from "react";
 import { FiX } from "react-icons/fi";
-import { usePlayerAPI } from "../hooks/usePlayerAPI";
-import { usePlaylistController } from "../hooks/usePlaylistController";
-import { useSyncController } from "../hooks/useSyncController";
-import type { Track } from "../stores/playerStore";
-import { usePlayerStore } from "../stores/playerStore";
-import { MiniPlayerControls } from "./MiniPlayerControls";
-import { MiniPlayerHeader } from "./MiniPlayerHeader";
-import { MiniPlayerStashHandle } from "./MiniPlayerStashHandle";
-import { MiniPlayerVideo } from "./MiniPlayerVideo";
+import { usePlayerAPI } from "@/features/player/hooks/usePlayerAPI";
+import { usePlaylistController } from "@/features/player/hooks/usePlaylistController";
+import { useSyncController } from "@/features/player/hooks/useSyncController";
+import type { Track } from "@/features/player/stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
+import { MiniPlayerControls } from "@/features/player/ui/MiniPlayerControls";
+import { MiniPlayerHeader } from "@/features/player/ui/MiniPlayerHeader";
+import { MiniPlayerStashHandle } from "@/features/player/ui/MiniPlayerStashHandle";
+import { MiniPlayerVideo } from "@/features/player/ui/MiniPlayerVideo";
 
 /** トラックがライブ配信かどうかを判定 */
 function isLiveTrack(track: Track | null): boolean {

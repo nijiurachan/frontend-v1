@@ -5,7 +5,7 @@ import {
   hasCompleteThreadChunkSnapshot,
   resolveThreadQueryError,
   THREAD_CHUNK_QUERY_BEHAVIOR,
-} from "./threadChunkQuery";
+} from "@/features/thread/hooks/threadChunkQuery";
 
 describe("thread chunk query behavior", () => {
   test("満杯チャンクは再取得対象にしない", () => {

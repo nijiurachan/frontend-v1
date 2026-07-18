@@ -6,6 +6,9 @@ import { MdBlock } from "react-icons/md";
 import noImage from "@/assets/img/no-image.svg";
 import type { Thread } from "@/entities/thread";
 import { getImageUrl, getThreadTitle } from "@/entities/thread";
+import { ThreadContextMenu } from "@/features/catalog/components/actions/ThreadContextMenu";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
+import { getCatalogThreadClickAction } from "@/features/catalog/utils/catalogReveal";
 import { useHistoryStore } from "@/features/history/stores/historyStore";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
@@ -14,9 +17,6 @@ import { decorateTitle, isVideoAttachment } from "@/shared/lib";
 import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
 import { VideoBadge } from "@/shared/ui/media";
 import { TagBadges } from "@/shared/ui/navigation";
-import { useCatalogStore } from "../../stores/catalogStore";
-import { getCatalogThreadClickAction } from "../../utils/catalogReveal";
-import { ThreadContextMenu } from "../actions/ThreadContextMenu";
 
 interface CatalogItemProps {
   thread: Thread;

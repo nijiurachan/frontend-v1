@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { getDesktopThreadCreatePanelAction } from "./desktopThreadCreatePanelState";
+import { getDesktopThreadCreatePanelAction } from "@/features/thread/utils/desktopThreadCreatePanelState";
 
 describe("getDesktopThreadCreatePanelAction", () => {
   test("外部操作で開いたpanelをtab操作で閉じる", () => {

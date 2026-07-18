@@ -1,13 +1,13 @@
 import { useMemo } from "react";
+import { DesktopCatalogGrid } from "@/features/catalog/components/desktop";
+import { CatalogItem } from "@/features/catalog/components/lists/CatalogItem";
+import { useFavoriteThreads } from "@/features/catalog/hooks/useFavoriteThreads";
+import { useFilteredThreads } from "@/features/catalog/hooks/useFilteredThreads";
+import { useOekakiFloor } from "@/features/catalog/hooks/useOekakiFloor";
+import { useThreads } from "@/features/catalog/hooks/useThreads";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { useIsDesktop } from "@/shared/hooks";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
-import { useFavoriteThreads } from "../../hooks/useFavoriteThreads";
-import { useFilteredThreads } from "../../hooks/useFilteredThreads";
-import { useOekakiFloor } from "../../hooks/useOekakiFloor";
-import { useThreads } from "../../hooks/useThreads";
-import { useCatalogStore } from "../../stores/catalogStore";
-import { DesktopCatalogGrid } from "../desktop";
-import { CatalogItem } from "./CatalogItem";
 
 export const CatalogGrid: React.FunctionComponent = () => {
   const isDesktop = useIsDesktop();

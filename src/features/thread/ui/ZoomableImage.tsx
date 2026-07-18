@@ -1,4 +1,4 @@
-import { useZoomableImage } from "../hooks/useZoomableImage";
+import { useZoomableImage } from "@/features/thread/hooks/useZoomableImage";
 
 export type ZoomableImageProps = {
   src: string;

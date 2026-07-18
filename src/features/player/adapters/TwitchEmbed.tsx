@@ -5,8 +5,8 @@
 // ============================================================
 
 import { useEffect, useRef } from "react";
-import type { SlotId } from "../stores/playerStore";
-import { usePlayerStore } from "../stores/playerStore";
+import type { SlotId } from "@/features/player/stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
 
 // ----------------------------------------------------------
 // Twitch Embed API ローダー（モジュールレベル・シングルトン）

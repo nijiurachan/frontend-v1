@@ -9,8 +9,8 @@ import {
 import { type ReactNode, useContext, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
-import { useDialogFocusTrap } from "./dialogFocus";
-import { ModalContext } from "./modal-context";
+import { useDialogFocusTrap } from "@/shared/ui/overlay/dialogFocus";
+import { ModalContext } from "@/shared/ui/overlay/modal-context";
 
 type ModalProps = {
   isOpen: boolean;

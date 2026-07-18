@@ -2,10 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import type { Post } from "@/entities/post";
+import { PostActionMenu } from "@/features/thread/ui";
+import type { ImageItem } from "@/features/thread/utils/extractImages";
 import { VideoPlayOverlay } from "@/shared/ui/media";
 import { Modal } from "@/shared/ui/overlay";
-import { PostActionMenu } from "../../ui";
-import type { ImageItem } from "../../utils/extractImages";
 
 interface ImageListModalProps {
   isOpen: boolean;

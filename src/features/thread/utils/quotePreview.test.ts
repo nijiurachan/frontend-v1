@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import type { Post } from "../../../entities/post";
-import { getQuotePostIndex, resolveQuotedPost } from "./quotePreview";
+import type { Post } from "@/entities/post";
+import {
+  getQuotePostIndex,
+  resolveQuotedPost,
+} from "@/features/thread/utils/quotePreview";
 
 function makePost(seq: number, body: string): Post {
   return {

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { md5 } from "./md5";
+import { md5 } from "@/shared/api/md5";
 
 const digest = (value: string): Promise<string> =>
   md5(new TextEncoder().encode(value).buffer);

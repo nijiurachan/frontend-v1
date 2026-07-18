@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createPostActionItems,
   type PostActionHandlers,
-} from "./postActionItems";
+} from "@/features/thread/ui/postActionItems";
 
 const handlers: PostActionHandlers = {
   onReply: (): void => {},

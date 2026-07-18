@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import type { Post } from "../../../entities/post";
-import { resolvePostSeqFromHash } from "./threadHash";
+import type { Post } from "@/entities/post";
+import { resolvePostSeqFromHash } from "@/features/thread/utils/threadHash";
 
 const posts = [
   { id: "op-id", seq: 0 },

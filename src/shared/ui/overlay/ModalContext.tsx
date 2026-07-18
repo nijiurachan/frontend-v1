@@ -1,5 +1,5 @@
 import { type ReactNode, useCallback, useRef } from "react";
-import { ModalContext } from "./modal-context";
+import { ModalContext } from "@/shared/ui/overlay/modal-context";
 
 export const ModalProvider: React.FunctionComponent<{
   children: ReactNode;

@@ -2,9 +2,9 @@ import { useMemo, useState } from "react";
 import { FiHash, FiSearch, FiSlash } from "react-icons/fi";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
+import { DisplayIdSearchModal } from "@/features/thread/components/modals/DisplayIdSearchModal";
+import { useReplyModalStore } from "@/features/thread/stores/replyModalStore";
 import { Modal } from "@/shared/ui/overlay";
-import { DisplayIdSearchModal } from "../components/modals/DisplayIdSearchModal";
-import { useReplyModalStore } from "../stores/replyModalStore";
 
 interface DisplayIdMenuProps {
   isOpen: boolean;

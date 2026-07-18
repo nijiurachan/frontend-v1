@@ -1,11 +1,11 @@
 import { useMemo } from "react";
+import { DesktopCatalogItem } from "@/features/catalog/components/desktop/DesktopCatalogItem";
+import { useFavoriteThreads } from "@/features/catalog/hooks/useFavoriteThreads";
+import { useFilteredThreads } from "@/features/catalog/hooks/useFilteredThreads";
+import { useOekakiFloor } from "@/features/catalog/hooks/useOekakiFloor";
+import { useThreads } from "@/features/catalog/hooks/useThreads";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
-import { useFavoriteThreads } from "../../hooks/useFavoriteThreads";
-import { useFilteredThreads } from "../../hooks/useFilteredThreads";
-import { useOekakiFloor } from "../../hooks/useOekakiFloor";
-import { useThreads } from "../../hooks/useThreads";
-import { useCatalogStore } from "../../stores/catalogStore";
-import { DesktopCatalogItem } from "./DesktopCatalogItem";
 
 export const DesktopCatalogGrid: React.FunctionComponent = () => {
   const { data, isLoading, error } = useThreads();
