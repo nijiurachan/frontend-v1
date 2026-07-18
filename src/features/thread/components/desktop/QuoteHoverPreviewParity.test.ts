@@ -7,6 +7,7 @@ describe("quote hover preview guidance", () => {
     const source = await Bun.file(sourceUrl).text();
 
     expect(source).toContain("引用行は返信に引用・プレビューはレスへ移動");
+    expect(source).toContain("No.{postNo(target)}");
     expect(source).toContain("onJumpToPost(target.seq)");
     expect(source).toContain('event.key === "Enter"');
     expect(source).toContain('role={previewMode === "interactive" ? "link"');

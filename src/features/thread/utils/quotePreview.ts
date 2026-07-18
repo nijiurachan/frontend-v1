@@ -7,7 +7,7 @@ interface IndexedPost {
 }
 
 export interface QuotePostIndex {
-  bySeq: ReadonlyMap<number, Post>;
+  byNo: ReadonlyMap<number, Post>;
   descending: readonly IndexedPost[];
 }
 
@@ -20,7 +20,7 @@ export function getQuotePostIndex(allPosts: Post[]): QuotePostIndex {
     .sort((left, right) => right.seq - left.seq)
     .map((post) => ({ post, searchText: getSearchText(post) }));
   const index: QuotePostIndex = {
-    bySeq: new Map(allPosts.map((post) => [post.seq, post])),
+    byNo: new Map(allPosts.map((post) => [postNo(post), post])),
     descending,
   };
   quotePostIndexCache.set(allPosts, index);
@@ -54,9 +54,9 @@ export function resolveQuotedPostFromIndex(
     .trim();
   if (!quoteText) return null;
 
-  const directSeq = quoteText.match(/^No\.(\d+)$/i)?.[1];
-  if (directSeq !== undefined) {
-    const post = index.bySeq.get(Number(directSeq));
+  const directNo = quoteText.match(/^No\.(\d+)$/i)?.[1];
+  if (directNo !== undefined) {
+    const post = index.byNo.get(Number(directNo));
     return post && post.seq < currentSeq ? post : null;
   }
 

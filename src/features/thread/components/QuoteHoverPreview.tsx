@@ -75,7 +75,7 @@ export const QuoteHoverPreview: React.FunctionComponent<Props> = ({
 
   const previewContent = (
     <>
-      <span className="quote-preview-number">No.{target.seq}</span>
+      <span className="quote-preview-number">No.{postNo(target)}</span>
       <span className="quote-preview-body">
         {target.body || "（本文なし）"}
       </span>
