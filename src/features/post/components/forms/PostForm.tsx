@@ -4,7 +4,13 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { UpfileInput } from "@/features/otegaki-upfile/components";
 import { getAttachedFile } from "@/features/otegaki-upfile/lib/attachUpfileImage";
+import {
+  clearReplyDraft,
+  readReplyDraft,
+  saveReplyDraft,
+} from "@/features/post/stores/replyDraftStore";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
 import { Button, Textarea } from "@/shared/ui/form";
 import { PostNotice } from "@/shared/ui/navigation";
 import { OnlineUsersIndicator } from "@/shared/ui/navigation/OnlineUsersIndicator";
@@ -12,6 +18,8 @@ import { ConfirmDialog } from "@/shared/ui/overlay";
 import type { CloseReason } from "@/shared/ui/overlay/ConfirmDialog";
 import { toast } from "@/shared/ui/toast";
 import { useSubmitPost } from "../../hooks/useSubmitPost";
+import { formatPostBodyLength, POST_BODY_MAX_LENGTH } from "./postFormConfig";
+import { createSubmissionLock } from "./submissionLock";
 
 interface PostFormData {
   comment: string;
@@ -43,26 +51,28 @@ export const PostForm: React.FunctionComponent<Props> = ({
   onSuccess,
 }: Props) => {
   const deleteKey = useSettingsStore((state) => state.deleteKey);
-  const [formData, setFormData] = useState<PostFormData>({
-    comment: initialComment,
-  });
-  const formDataRef = useRef<PostFormData>({ comment: initialComment });
+  const [formData, setFormData] = useState<PostFormData>(() => ({
+    comment: readReplyDraft(threadId),
+  }));
+  const formDataRef = useRef<PostFormData>(formData);
   const updateFormData = useCallback(
     (
       update: PostFormData | ((previous: PostFormData) => PostFormData),
     ): void => {
-      setFormData((previous) => {
-        const next = typeof update === "function" ? update(previous) : update;
-        formDataRef.current = next;
-        return next;
-      });
+      const next =
+        typeof update === "function" ? update(formDataRef.current) : update;
+      formDataRef.current = next;
+      setFormData(next);
+      saveReplyDraft(threadId, next.comment);
     },
-    [],
+    [threadId],
   );
   const [showSuccess, setShowSuccess] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [pendingQuote, setPendingQuote] = useState("");
   const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const submissionLock = useRef(createSubmissionLock()).current;
   const isPaintPopupOpen =
     useEventLatest(
       UPFILE_FULL_KEY,
@@ -85,6 +95,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
   }, [initialComment, openCount, updateFormData]);
 
   const { mutateAsync: submitPost, isPending } = useSubmitPost();
+  const isSubmitting = isPreparingSubmit || isPending;
 
   const handleSubmit = async (
     event: React.SubmitEvent<HTMLFormElement>,
@@ -94,15 +105,17 @@ export const PostForm: React.FunctionComponent<Props> = ({
     if (
       isArchived ||
       closedAt ||
-      isPreparingSubmit ||
-      isPending ||
+      submissionLock.isLocked() ||
       isPaintPopupOpen ||
-      !formData.comment.trim()
+      !formData.comment.trim() ||
+      formData.comment.length > POST_BODY_MAX_LENGTH
     ) {
       if (isArchived) alert("このスレッドは過去ログ化されています。");
       return;
     }
+    if (!submissionLock.acquire()) return;
 
+    setSubmitError(null);
     setIsPreparingSubmit(true);
     let mutationStarted = false;
     try {
@@ -121,15 +134,18 @@ export const PostForm: React.FunctionComponent<Props> = ({
         file,
       });
       setShowSuccess(true);
+      clearReplyDraft(threadId);
       updateFormData({ comment: "" });
       window.setTimeout(() => {
         setShowSuccess(false);
         onSuccess?.();
       }, 200);
     } catch (error) {
-      if (!mutationStarted && error instanceof Error)
-        toast.error(error.message);
+      const message = getApiErrorMessage(error, "投稿に失敗しました");
+      setSubmitError(message);
+      if (!mutationStarted) toast.error(message);
     } finally {
+      submissionLock.release();
       setIsPreparingSubmit(false);
     }
   };
@@ -161,8 +177,16 @@ export const PostForm: React.FunctionComponent<Props> = ({
         }
         placeholder="ｷﾀ━━━━(ﾟ∀ﾟ)━━━━!!"
         rows={6}
+        maxLength={POST_BODY_MAX_LENGTH}
+        aria-describedby="post-comment-counter"
         required
       />
+      <p
+        id="post-comment-counter"
+        className="text-right text-xs text-muted-foreground"
+      >
+        {formatPostBodyLength(formData.comment.length)}
+      </p>
       <Scope name={SCOPE_NAME}>
         <UpfileInput fullKey={UPFILE_FULL_KEY} allowImage={allowImageReplies} />
       </Scope>
@@ -170,11 +194,21 @@ export const PostForm: React.FunctionComponent<Props> = ({
       <Button
         type="submit"
         variant="primary"
-        disabled={isPreparingSubmit || isPending || isPaintPopupOpen}
+        disabled={
+          isSubmitting ||
+          isPaintPopupOpen ||
+          !formData.comment.trim() ||
+          formData.comment.length > POST_BODY_MAX_LENGTH
+        }
         className="w-full py-4 text-lg font-medium"
       >
-        {isPending ? "書き込み中..." : "返信"}
+        {isSubmitting ? "書き込み中..." : "返信"}
       </Button>
+      {submitError && (
+        <p className="text-sm text-destructive" role="alert">
+          {submitError}
+        </p>
+      )}
       <PostNotice />
       {showSuccess && (
         <div className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-white">

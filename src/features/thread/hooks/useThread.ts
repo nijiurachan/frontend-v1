@@ -16,6 +16,7 @@ import {
   runAimogeDataHook,
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
+import { isThreadInitialLoading } from "@/shared/ui/feedback/threadLoadingState";
 import { mergeThreadChunkElements } from "../utils/threadChunks";
 import { mergeThreadPosts } from "../utils/threadPosts";
 import {
@@ -291,16 +292,22 @@ export function useThread(
     await stateRefetch();
   }, [fullThreadRefetch, isArchiveView, stateRefetch]);
 
-  const isChunkLoading = chunkQueries.some((query) => query.isPending);
+  const isChunkLoading = chunkQueries.some((query) => query.isLoading);
   const chunkError = chunkQueries.find((query) => query.error)?.error;
   const activeQuery = isArchiveView ? fullThreadQuery : stateQuery;
+  const isLoading = isThreadInitialLoading(
+    activeQuery.isLoading,
+    isArchiveView,
+    Boolean(stateData),
+    isChunkLoading,
+  );
 
   return {
     ...activeQuery,
     data,
     error: activeQuery.error ?? (isArchiveView ? null : chunkError) ?? null,
-    isLoading: activeQuery.isPending || (!isArchiveView && isChunkLoading),
-    isPending: activeQuery.isPending || (!isArchiveView && isChunkLoading),
+    isLoading,
+    isPending: isLoading,
     isFetching:
       activeQuery.isFetching ||
       (!isArchiveView && chunkQueries.some((query) => query.isFetching)),

@@ -4,6 +4,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { apiDelete } from "@/shared/api";
+import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
+import { toast } from "@/shared/ui/toast";
 
 interface DeleteResponse {
   postId: string;
@@ -45,7 +47,7 @@ export function useDeleteMutation(): UseMutationResult<
       }
     },
     onError: (error: unknown): void => {
-      alert(error instanceof Error ? error.message : "削除に失敗しました");
+      toast.error(getApiErrorMessage(error, "削除に失敗しました"));
     },
   });
 }

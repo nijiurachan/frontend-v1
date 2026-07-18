@@ -1,4 +1,4 @@
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { Link, useLocation, useRouter } from "@tanstack/react-router";
 import {
   type LazyExoticComponent,
   lazy,
@@ -42,9 +42,13 @@ import {
   PULL_ZONE_HEIGHT,
   PullRefresh,
 } from "@/shared/ui/feedback";
+import {
+  getApiErrorMessage,
+  isMissingThreadError,
+} from "@/shared/ui/feedback/apiErrorMessage";
 import { ModalContext } from "@/shared/ui/overlay/modal-context";
 import { useReadReplyNumber } from "../../hooks/useReadReplyNumber";
-import { useThread } from "../../hooks/useThread";
+import { type UseThreadResult, useThread } from "../../hooks/useThread";
 import { useReplyModalStore } from "../../stores/replyModalStore";
 import { extractImages } from "../../utils/extractImages";
 import { extractPopularPosts } from "../../utils/extractPopularPosts";
@@ -91,21 +95,56 @@ interface Props {
   archivedAt?: string | null;
 }
 
-const MobileThreadView: React.FunctionComponent<Props> = ({
+interface MobileThreadViewProps extends Props {
+  threadQuery: UseThreadResult;
+}
+
+const ThreadLoadError: React.FunctionComponent<{
+  error: unknown;
+  onRetry: () => void;
+}> = ({ error, onRetry }: { error: unknown; onRetry: () => void }) => {
+  const isMissing = isMissingThreadError(error);
+  return (
+    <Message variant="error" className="flex-col gap-4 px-4 text-center">
+      <p>
+        {isMissing
+          ? "スレッドが見つかりません"
+          : getApiErrorMessage(error, "スレッドの読み込みに失敗しました")}
+      </p>
+      {isMissing ? (
+        <Link
+          to="/"
+          className="rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+        >
+          カタログへ戻る
+        </Link>
+      ) : (
+        <button
+          type="button"
+          className="rounded-lg bg-primary px-4 py-2 text-primary-foreground"
+          onClick={onRetry}
+        >
+          再読み込み
+        </button>
+      )}
+    </Message>
+  );
+};
+
+const MobileThreadView: React.FunctionComponent<MobileThreadViewProps> = ({
   threadId,
-  archivedAt,
-}: Props) => {
+  threadQuery,
+}: MobileThreadViewProps) => {
   const {
     data,
     isLoading,
-    error,
     refetch,
     isFetching,
     newPostsCount,
     acceptNewPosts,
     isArchived,
     postsContentVersion,
-  } = useThread(threadId, { archivedAt });
+  } = threadQuery;
   const router = useRouter();
   const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
@@ -303,11 +342,7 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
     }
   }, [data, hash, isLoading, scrollToPost]);
 
-  if (isLoading) return <LoadingScreen />;
-  if (error) {
-    return <Message variant="error">スレッドの読み込みに失敗しました</Message>;
-  }
-  if (!data) return null;
+  if (!data) return <LoadingScreen message="スレッドを表示しています..." />;
 
   const [firstPost, ...remainingPosts] = data.posts;
   if (!firstPost) return <Message variant="info">レスがありません</Message>;
@@ -423,9 +458,28 @@ const MobileThreadView: React.FunctionComponent<Props> = ({
 export const ThreadView: React.FunctionComponent<Props> = ({
   threadId,
   archivedAt,
-}: Props) =>
-  useIsDesktop() ? (
+}: Props) => {
+  const isDesktop = useIsDesktop();
+  const threadQuery = useThread(threadId, { archivedAt });
+
+  if (threadQuery.isLoading) {
+    return <LoadingScreen message="スレッドを読み込み中..." />;
+  }
+  if (threadQuery.error) {
+    return (
+      <ThreadLoadError
+        error={threadQuery.error}
+        onRetry={(): void => void threadQuery.refetch()}
+      />
+    );
+  }
+  if (!threadQuery.data) {
+    return <LoadingScreen message="スレッドを表示しています..." />;
+  }
+
+  return isDesktop ? (
     <DesktopThreadView threadId={threadId} archivedAt={archivedAt} />
   ) : (
-    <MobileThreadView threadId={threadId} archivedAt={archivedAt} />
+    <MobileThreadView threadId={threadId} threadQuery={threadQuery} />
   );
+};

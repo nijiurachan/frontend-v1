@@ -4,6 +4,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { apiPut } from "@/shared/api";
+import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
+import { toast } from "@/shared/ui/toast";
 
 interface ReactionResponse {
   postId: string;
@@ -30,6 +32,7 @@ export function useDelMutation(): UseMutationResult<
     },
     onError: (error: unknown, postId: string) => {
       console.warn("delに失敗しました", { error, postId });
+      toast.error(getApiErrorMessage(error, "delの送信に失敗しました"));
     },
   });
 }

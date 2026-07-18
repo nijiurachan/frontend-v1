@@ -1,6 +1,7 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiPut } from "@/shared/api";
+import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
 import { toast } from "@/shared/ui/toast";
 
 interface ReactionResponse {
@@ -27,14 +28,7 @@ export function useSoudaneMutation(): UseMutationResult<
     },
     onError: (error: unknown, postId: string) => {
       console.warn("そうだねに失敗しました", { error, postId });
-      const message = error instanceof Error ? error.message : undefined;
-      if (message === "すでに投票済みです") {
-        toast.success(`そうだね済みです`);
-      } else if (message) {
-        toast.error(`エラー: ${message}`);
-      } else {
-        toast.error("そうだねの送信に失敗しました");
-      }
+      toast.error(getApiErrorMessage(error, "そうだねの送信に失敗しました"));
     },
   });
 }
