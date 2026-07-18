@@ -34,8 +34,7 @@ export const ExternalEmbedCard: React.FunctionComponent<Props> = ({
   }, [scriptProvider]);
 
   const hostname =
-    parentHostname ??
-    (typeof window === "undefined" ? "localhost" : window.location.hostname);
+    parentHostname ?? globalThis.location?.hostname ?? "localhost";
   const iframe = buildExternalIframe(match, hostname);
 
   return (
