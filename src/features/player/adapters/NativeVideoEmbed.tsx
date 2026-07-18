@@ -9,8 +9,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { FiPlayCircle } from "react-icons/fi";
-import type { PlayerStore, SlotId } from "../stores/playerStore";
-import { usePlayerStore } from "../stores/playerStore";
+import type { PlayerStore, SlotId } from "@/features/player/stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
 
 const getStore = (): PlayerStore => usePlayerStore.getState();
 

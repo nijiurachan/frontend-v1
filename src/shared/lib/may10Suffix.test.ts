@@ -12,7 +12,7 @@ import {
   decoratePostBody,
   decorateTitle,
   isMay10JST,
-} from "./may10Suffix";
+} from "@/shared/lib/may10Suffix";
 
 describe("isMay10JST", () => {
   test("returns true for May 10 JST (UTC May 9 16:00 = JST May 10 01:00)", () => {

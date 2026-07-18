@@ -1,163 +1,140 @@
-import { BsImage } from "react-icons/bs";
-import {
-  FiArrowLeft,
-  FiHash,
-  FiSlash,
-  FiThumbsDown,
-  FiThumbsUp,
-  FiTrash2,
-} from "react-icons/fi";
+import { useState } from "react";
 import type { Post } from "@/entities/post";
-import {
-  addNgImageFromAttachment,
-  useNgStore,
-} from "@/features/ng-filter/stores";
+import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { ReportModal } from "@/features/thread/components/modals/ReportModal";
+import { useCloseMutation } from "@/features/thread/hooks/useCloseMutation";
+import { useSoudaneMutation } from "@/features/thread/hooks/useSoudaneMutation";
+import {
+  createReplyInitialComment,
+  type ReplyQuoteType,
+  useReplyModalStore,
+} from "@/features/thread/stores/replyModalStore";
+import { createPostActionItems } from "@/features/thread/ui/postActionItems";
 import { useDeleteMutation } from "@/shared/hooks/useDeleteMutation";
 import { useDelMutation } from "@/shared/hooks/useDelMutation";
-import { Modal } from "@/shared/ui/overlay";
-import { useSoudaneMutation } from "../hooks/useSoudaneMutation";
-import { useReplyModalStore } from "../stores/replyModalStore";
+import { ConfirmDialog, Modal } from "@/shared/ui/overlay";
 
 interface PostActionMenuProps {
   isOpen: boolean;
   onClose: () => void;
   post: Post;
-  onJumpToPost?: () => void;
+  onJumpToPost?: (postSeq: number) => void;
+  isArchived?: boolean;
+  maxSeq?: number;
 }
-
-interface ActionItem {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  onClick?: () => void;
-  variant?: "default" | "destructive";
-}
-
-type QuoteType = "body" | "no";
 
 export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
   isOpen,
   onClose,
   post,
+  isArchived = false,
+  maxSeq = post.seq,
 }: PostActionMenuProps) => {
   const openReplyModal = useReplyModalStore((s) => s.open);
-  const { addNgWord } = useNgStore();
+  const { addNgImage, addNgWord } = useNgStore();
   const { mutate: soudane } = useSoudaneMutation();
   const { mutate: del } = useDelMutation();
   const { mutate: deletePostOrThread } = useDeleteMutation();
+  const { mutate: closeThread } = useCloseMutation(post.threadId);
   const { deleteKey } = useSettingsStore();
-
-  // 引用テキストを生成
-  const getQuoteText = (type: QuoteType): string => {
-    if (type === "no") {
-      return `>No.${post.id}`;
-    } else {
-      // 本文引用の場合
-      return post.body.map((line) => `>${line.text}`).join("\n");
-    }
-  };
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
 
   // 返信モーダルを開く共通処理
-  const handleReply = (type: QuoteType): void => {
-    openReplyModal(`${getQuoteText(type)}\n`);
+  const handleReply = (type: ReplyQuoteType): void => {
+    openReplyModal(createReplyInitialComment(post, type));
     onClose();
   };
 
   // 本文NGハンドラー
   const handleNgBody = (): void => {
-    const plainText = post.plainBody.trim();
+    const plainText = post.body.trim();
     addNgWord(plainText);
     alert("本文をNGワードに追加しました");
     onClose();
   };
-  const attachment = post.attachment;
-
-  const actions: ActionItem[] = [
-    {
-      icon: FiArrowLeft,
-      label: "本文返信",
-      onClick: () => handleReply("body"),
+  const handleNgImage = (): void => {
+    const hash = post.attachment?.ngHash;
+    const result = hash
+      ? addNgImage(hash, post.seq === 0 ? "スレ画像" : "レス画像")
+      : { success: false, message: "画像ハッシュが取得できませんでした" };
+    alert(result.message);
+    onClose();
+  };
+  const actions = createPostActionItems(isArchived, post, {
+    onReply: handleReply,
+    onSoudane: (): void => {
+      soudane(post.id);
+      onClose();
     },
-    {
-      icon: FiHash,
-      label: "No返信",
-      onClick: () => handleReply("no"),
+    onDelete: (): void => {
+      deletePostOrThread({ postId: post.id, password: deleteKey });
+      onClose();
     },
-    {
-      icon: FiThumbsUp,
-      label: "そうだね",
-      onClick: () => {
-        soudane(post.id);
-        onClose();
-      },
+    onDel: (): void => {
+      del(post.id);
+      onClose();
     },
-    {
-      icon: FiTrash2,
-      label: "削除",
-      variant: "destructive" as const,
-      onClick: () => {
-        deletePostOrThread({ postId: post.id, password: deleteKey });
-        onClose();
-      },
+    onNgBody: handleNgBody,
+    onNgImage: handleNgImage,
+    onReport: (): void => {
+      setIsReportModalOpen(true);
+      onClose();
     },
-    {
-      icon: FiSlash,
-      label: "本文NG",
-      variant: "destructive" as const,
-      onClick: handleNgBody,
+    onCloseThread: (): void => {
+      setIsCloseDialogOpen(true);
+      onClose();
     },
-    // 画像NG
-    {
-      icon: BsImage,
-      label: "画像NG",
-      variant: "destructive" as const,
-      onClick: attachment
-        ? () => {
-            addNgImageFromAttachment(attachment);
-            onClose();
-          }
-        : undefined,
-    },
-    {
-      icon: FiThumbsDown,
-      label: "del",
-      variant: "destructive" as const,
-      onClick: () => {
-        del(post.id);
-        onClose();
-      },
-    },
-  ];
+  });
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="アクション"
-      position="bottom"
-    >
-      <div className="p-4">
-        <div className="grid grid-cols-3 gap-3">
-          {actions.map((action) => (
-            <button
-              type="button"
-              key={action.label}
-              disabled={!action.onClick}
-              onClick={action.onClick}
-              className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors"
-            >
-              <action.icon
-                className={
-                  action.variant === "destructive"
-                    ? "w-6 h-6 text-destructive"
-                    : "w-6 h-6 text-primary"
-                }
-              />
-              <span className="text-sm text-foreground">{action.label}</span>
-            </button>
-          ))}
+    <>
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="アクション"
+        position="bottom"
+      >
+        <div className="p-4">
+          <div className="grid grid-cols-3 gap-3">
+            {actions.map((action) => (
+              <button
+                type="button"
+                key={action.label}
+                disabled={!action.onClick}
+                onClick={action.onClick}
+                className="flex flex-col items-center justify-center gap-2 p-4 rounded-lg border border-border bg-card hover:bg-accent transition-colors"
+              >
+                <action.icon
+                  className={
+                    action.variant === "destructive"
+                      ? "w-6 h-6 text-destructive"
+                      : "w-6 h-6 text-primary"
+                  }
+                />
+                <span className="text-sm text-foreground">{action.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-    </Modal>
+      </Modal>
+      <ReportModal
+        isOpen={isReportModalOpen}
+        onClose={(): void => setIsReportModalOpen(false)}
+        threadId={post.threadId}
+        postSeq={post.seq}
+        maxSeq={maxSeq}
+      />
+      <ConfirmDialog
+        isOpen={isCloseDialogOpen}
+        onClose={(): void => setIsCloseDialogOpen(false)}
+        onConfirm={(): void => closeThread(deleteKey)}
+        title="スレを閉じる"
+        message={"このスレッドを閉じますか？\n返信を受け付けなくなります。"}
+        confirmText="閉じる"
+        variant="destructive"
+      />
+    </>
   );
 };

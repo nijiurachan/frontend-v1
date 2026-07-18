@@ -1,29 +1,5 @@
-import {
-  type Context,
-  createContext,
-  type ReactNode,
-  useCallback,
-  useRef,
-} from "react";
-
-interface ModalContextValue {
-  registerModal: () => number;
-  unregisterModal: () => void;
-  registerCloseHandler: (handler: () => void) => void;
-  unregisterCloseHandler: (handler: () => void) => void;
-  closeAllModals: () => void;
-}
-
-const defaultValue: ModalContextValue = {
-  registerModal: (): number => 0,
-  unregisterModal: (): void => {},
-  registerCloseHandler: (): void => {},
-  unregisterCloseHandler: (): void => {},
-  closeAllModals: (): void => {},
-};
-
-export const ModalContext: Context<ModalContextValue> =
-  createContext(defaultValue);
+import { type ReactNode, useCallback, useRef } from "react";
+import { ModalContext } from "@/shared/ui/overlay/modal-context";
 
 export const ModalProvider: React.FunctionComponent<{
   children: ReactNode;

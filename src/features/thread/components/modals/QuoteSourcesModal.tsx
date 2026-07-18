@@ -1,17 +1,18 @@
 import type { Post } from "@/entities/post";
+import { PostListDisplay } from "@/features/thread/ui";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
 import { Modal } from "@/shared/ui/overlay";
-import { PostListDisplay } from "../../ui";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
 
 interface QuoteSourcesModalProps {
   isOpen: boolean;
   onClose: () => void;
   sourceIndexes: number[];
   posts: Post[];
-  threadId: number;
+  threadId: string;
   quoteReferencesMap?: QuoteReferencesMap;
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -28,6 +29,7 @@ export const QuoteSourcesModal: React.FunctionComponent<
   quoteReferencesMap,
   onQuoteClick,
   onJumpToPost,
+  isArchived = false,
 }: QuoteSourcesModalProps) => {
   // 引用元レスのリストを作成
   const sourcePosts = sourceIndexes
@@ -70,6 +72,7 @@ export const QuoteSourcesModal: React.FunctionComponent<
         allPosts={posts}
         onQuoteClick={onQuoteClick}
         onJumpToPost={onJumpToPost}
+        isArchived={isArchived}
       />
     </Modal>
   );

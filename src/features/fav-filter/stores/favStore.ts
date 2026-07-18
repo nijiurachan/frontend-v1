@@ -22,18 +22,42 @@ interface FavState {
   clearAllFavSettings: () => void;
 }
 
-function matchesAny(text: string, words: string[], regexes: string[]): boolean {
+export function matchesFavoriteText(
+  text: string,
+  words: string[],
+  regexes: string[],
+): boolean {
   for (const word of words) {
     if (text.includes(word)) return true;
   }
   for (const pattern of regexes) {
     try {
-      if (new RegExp(pattern).test(text)) return true;
+      if (new RegExp(pattern, "i").test(text)) return true;
     } catch {
       // Invalid regex, skip
     }
   }
   return false;
+}
+
+export function toHiragana(value: string): string {
+  return value
+    .normalize("NFKC")
+    .replace(/[\u30a1-\u30f6]/g, (character) =>
+      String.fromCharCode(character.charCodeAt(0) - 0x60),
+    );
+}
+
+export function compareFavoriteJapanese(
+  left: string,
+  right: string,
+  leftIndex: number,
+  rightIndex: number,
+): number {
+  return (
+    toHiragana(left).localeCompare(toHiragana(right), "ja") ||
+    leftIndex - rightIndex
+  );
 }
 
 // Fav処理本体 useFavStore（カタログ並び替え専用）
@@ -115,13 +139,19 @@ export const useFavStore: UseBoundStore<StoreApi<FavState>> =
           if (!hasLv1 && !hasLv2) return 0;
 
           const title = getThreadTitle(thread);
-          const body = thread.body.replace(/<[^>]+>/g, "");
+          const body = thread.opPost.body;
           const text = `${title} ${body}`;
 
-          if (hasLv2 && matchesAny(text, state.favWords2, state.favRegexes2)) {
+          if (
+            hasLv2 &&
+            matchesFavoriteText(text, state.favWords2, state.favRegexes2)
+          ) {
             return 2;
           }
-          if (hasLv1 && matchesAny(text, state.favWords, state.favRegexes)) {
+          if (
+            hasLv1 &&
+            matchesFavoriteText(text, state.favWords, state.favRegexes)
+          ) {
             return 1;
           }
           return 0;

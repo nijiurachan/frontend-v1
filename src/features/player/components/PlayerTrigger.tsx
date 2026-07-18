@@ -12,9 +12,12 @@
 
 import { useEffect, useMemo } from "react";
 import { MdFormatListBulleted, MdPictureInPicture } from "react-icons/md";
-import { isPlaylistProvider, usePlayerAPI } from "../hooks/usePlayerAPI";
-import { usePlayerStore } from "../stores/playerStore";
-import { analyzeUrl } from "../utils/providerDetect";
+import {
+  isPlaylistProvider,
+  usePlayerAPI,
+} from "@/features/player/hooks/usePlayerAPI";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
+import { analyzeUrl } from "@/features/player/utils/providerDetect";
 
 // ----------------------------------------------------------
 // Props
@@ -24,7 +27,7 @@ interface PlayerTriggerProps {
   /** 対象URL */
   url: string;
   /** スレッドID（PostDisplay から number で渡される） */
-  threadId: number;
+  threadId: string;
   /** 元投稿のレス番号（プレイリスト並び順に使用） */
   postNo?: number;
   /** モーダル等のサブビュー内表示。プレイリスト登録・チェックボックスを無効化 */
@@ -59,8 +62,7 @@ export const PlayerTrigger: React.FunctionComponent<PlayerTriggerProps> = ({
   // canPlaylist === true のときの provider（型を絞ったまま callsite に渡す）
   const playlistProvider = canPlaylist ? provider : undefined;
 
-  // threadId は number で受け取るが、ストアのキーは string
-  const threadIdStr = String(threadId);
+  const threadIdStr = threadId;
 
   // ---- チェック状態の取得 ----
   // フックは常に呼ぶ（Rules of Hooks）。非対応URLやライブの場合は false になるだけ

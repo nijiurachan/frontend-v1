@@ -3,37 +3,56 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { apiPost } from "@/shared/api";
+import { usePostedHistoryStore } from "@/features/history/stores/postedHistoryStore";
+import { notifySubmitError } from "@/features/post/lib/submitPostErrorNotification";
+import type {
+  AltchaCredentialProvider,
+  SubmitPostFlowDependencies,
+} from "@/features/post/lib/submitPostFlow";
+import {
+  type SubmitPostInput,
+  submitPostFlow,
+} from "@/features/post/lib/submitPostFlow";
+import type { CreatePostResult } from "@/shared/api";
+import { apiPost, refreshAimgToken, uploadAttachment } from "@/shared/api";
+import { toast } from "@/shared/ui/toast";
 
-interface SubmitParams {
-  formData: FormData;
-  mode: "thread" | "reply";
-}
+type SubmitParams = SubmitPostInput & {
+  altcha: AltchaCredentialProvider;
+};
+
+const SUBMIT_DEPENDENCIES: SubmitPostFlowDependencies = {
+  uploadAttachment,
+  post: (
+    path: string,
+    body: object,
+    options: { token: string; signal?: AbortSignal },
+  ): Promise<CreatePostResult> => apiPost(path, body, options),
+  refreshToken: refreshAimgToken,
+};
 
 export function useSubmitPost(): UseMutationResult<
-  unknown,
+  CreatePostResult,
   unknown,
   SubmitParams
 > {
   const queryClient = useQueryClient();
+  const addPosted = usePostedHistoryStore((state) => state.addPosted);
 
   return useMutation({
-    mutationFn: async ({ formData, mode }: SubmitParams): Promise<unknown> => {
-      const endpoint = mode === "thread" ? "/thread" : "/post";
-      return apiPost(endpoint, formData);
+    mutationFn: async ({ altcha, ...input }: SubmitParams) => {
+      return submitPostFlow(input, altcha, SUBMIT_DEPENDENCIES);
     },
-    onSuccess: (_: unknown, { mode }: SubmitParams): void => {
+    onSuccess: (result: CreatePostResult, { mode }: SubmitParams): void => {
+      addPosted(result.threadId);
       if (mode === "thread") {
         queryClient.invalidateQueries({ queryKey: ["threads"] });
-        // active_threads が増えてティア短縮が起きる可能性があるため
-        // スレ立てフォームの duration 上限を再取得させる
-        queryClient.invalidateQueries({ queryKey: ["thread-limits"] });
       } else {
         queryClient.invalidateQueries({ queryKey: ["thread"] });
       }
     },
     onError: (error: unknown): void => {
-      alert(error instanceof Error ? error.message : "投稿に失敗しました");
+      notifySubmitError(error, (message) => toast.error(message));
     },
   });
 }

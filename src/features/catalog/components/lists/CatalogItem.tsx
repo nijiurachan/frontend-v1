@@ -1,19 +1,23 @@
 import { Link } from "@tanstack/react-router";
 import clsx from "clsx";
-import { memo, useMemo, useState } from "react";
+import { memo, type RefObject, useMemo, useState } from "react";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { MdBlock } from "react-icons/md";
-import fireWebp from "@/assets/img/fire.webp";
 import noImage from "@/assets/img/no-image.svg";
 import type { Thread } from "@/entities/thread";
 import { getImageUrl, getThreadTitle } from "@/entities/thread";
+import { ThreadContextMenu } from "@/features/catalog/components/actions/ThreadContextMenu";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
+import { getCatalogThreadClickAction } from "@/features/catalog/utils/catalogReveal";
 import { useHistoryStore } from "@/features/history/stores/historyStore";
 import { useNgStore } from "@/features/ng-filter/stores";
+import { useSettingsStore } from "@/features/settings/hooks";
+import { formatThreadExpiry } from "@/features/thread/utils/threadExpiry";
 import { useLongPress } from "@/shared/hooks";
 import { decorateTitle, isVideoAttachment } from "@/shared/lib";
-import { OekakiBadge, VideoBadge } from "@/shared/ui/media";
-import { useCatalogStore } from "../../stores/catalogStore";
-import { ThreadContextMenu } from "../actions/ThreadContextMenu";
+import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
+import { VideoBadge } from "@/shared/ui/media";
+import { TagBadges } from "@/shared/ui/navigation";
 
 interface CatalogItemProps {
   thread: Thread;
@@ -21,45 +25,80 @@ interface CatalogItemProps {
 }
 
 export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
-  function CatalogItem({ thread, isNew }: CatalogItemProps) {
+  function CatalogItem(props: CatalogItemProps) {
+    const renderedThread = useAimogeBeforeRender(
+      "catalog:beforeRender",
+      props.thread,
+    );
+    const elementRef = useAimogeRendered(
+      "catalog",
+      renderedThread,
+      renderedThread?.id,
+    );
+
+    if (!renderedThread) return null;
+    return (
+      <CatalogItemContent
+        thread={renderedThread}
+        isNew={props.isNew}
+        elementRef={elementRef}
+      />
+    );
+  },
+);
+
+interface CatalogItemContentProps extends CatalogItemProps {
+  elementRef: RefObject<HTMLDivElement | null>;
+}
+
+const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
+  memo(function CatalogItemContent({
+    thread,
+    isNew,
+    elementRef,
+  }: CatalogItemContentProps) {
     const {
+      textLength,
+      textPosition,
+      imageSize,
+      openInNewTab,
       showNew,
       showCount,
       showUnreadCount,
       catalogAnim,
       threadMenuOpenMethod,
     } = useCatalogStore();
+    const showR18 = useSettingsStore((state) => state.showR18);
     const { addViewed, getViewedIds, getUnreadCount } = useHistoryStore();
     const { isThreadHidden, showNgContent } = useNgStore();
     const [menuOpen, setMenuOpen] = useState(false);
     const [ngRevealed, setNgRevealed] = useState(false);
+    const [r18Revealed, setR18Revealed] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
     // カタログでのアニメ画像が許可されている場合のみアニメ画像のみ動かし、それ以外の場合は動かさない
     const imageUrl = getImageUrl(
-      thread.attachment,
-      catalogAnim === "always" && (thread.attachment?.is_animated ?? false),
+      thread.opPost.attachment,
+      (catalogAnim === "always" || (catalogAnim === "hover" && isHovered)) &&
+        thread.opPost.attachment?.kind === "animated",
     );
-    const title = getThreadTitle(thread);
+    const title = getThreadTitle(thread, textLength);
     const displayTitle = decorateTitle(title);
-    const totalCount = thread.replies_count;
-    const isVideo = thread.attachment
-      ? isVideoAttachment(thread.attachment)
+    const totalCount = thread.replyCount;
+    const isVideo = thread.opPost.attachment
+      ? isVideoAttachment(thread.opPost.attachment)
       : false;
     const isNg = showNgContent && isThreadHidden(thread);
+    const isR18 = thread.tags.some((tag) => tag.name === "R18");
+    const isR18Hidden = isR18 && !showR18 && !r18Revealed;
 
     // 既読判定
     const viewedIds = getViewedIds();
     const isViewed = viewedIds.includes(thread.id);
 
-    // お絵描き判定（お絵描きアイコン OekakiBadge 表示用）。全お絵描きに付与し、そうだね数には依存しない。
-    // カタログ順のフロア優遇（useOekakiFloor / floorOekakiThreads）はそうだね閾値でゲートするため
-    // 判定基準が異なるのは意図的（アイコンは付くがフロアされないスレが存在しうる）。
-    const isOekaki = thread.attachment?.is_oekaki ?? false;
-
-    // 枠線スタイル決定（優先順位: 運営 > 既読×お絵描き > 既読 > お絵描き）
+    // 枠線スタイル決定（既読状態を表示）
     // 上から順に最初に一致したものだけを適用する（条件追加は1行で済む）
     const borderClass = ((): string => {
-      if (thread.is_admin) return "border-3 border-accent";
       if (isViewed) return "border-3 border-primary";
       return "";
     })();
@@ -104,11 +143,25 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
       }
     };
 
+    const handleR18Click = (e: React.MouseEvent): void => {
+      if (isR18Hidden) {
+        e.preventDefault();
+        e.stopPropagation();
+        setR18Revealed(true);
+      }
+    };
+
     const handleThreadClick = (e: React.MouseEvent): void => {
-      if (isNg) {
-        handleNgClick(e);
-      } else {
-        addViewed(thread.id);
+      switch (getCatalogThreadClickAction({ isNg, ngRevealed, isR18Hidden })) {
+        case "toggle-ng":
+          handleNgClick(e);
+          break;
+        case "reveal-r18":
+          handleR18Click(e);
+          break;
+        case "view":
+          addViewed(thread.id);
+          break;
       }
     };
 
@@ -121,44 +174,54 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
     return (
       <>
         <div
+          ref={elementRef}
           className={clsx(
             "group relative bg-card/50 rounded-lg overflow-hidden hover:bg-card transition-colors",
+            textPosition === "right" && "catalog-item-text-right",
             borderClass,
           )}
         >
-          {thread.is_admin ? (
-            <img
-              src={fireWebp}
-              alt=""
-              aria-hidden="true"
-              className="admin-flame"
-            />
-          ) : null}
           <Link
             to="/thread/$threadId"
             params={{ threadId: String(thread.id) }}
             className="block"
+            target={openInNewTab ? "_blank" : undefined}
+            rel={openInNewTab ? "noopener noreferrer" : undefined}
+            onMouseEnter={(): void => setIsHovered(true)}
+            onMouseLeave={(): void => setIsHovered(false)}
+            onFocus={(): void => setIsHovered(true)}
+            onBlur={(): void => setIsHovered(false)}
             {...(longPressOpensMenu ? longPressHandlers : {})}
             onClick={handleThreadClick}
           >
-            <div className="relative aspect-square bg-muted flex items-center justify-center">
+            <div
+              className="relative aspect-square bg-muted flex items-center justify-center catalog-configured-thumb"
+              style={{
+                width: `min(100%, ${imageSize}px)`,
+                maxHeight: `${imageSize}px`,
+              }}
+            >
               <img
                 src={imageUrl}
                 alt={displayTitle}
                 loading="lazy"
                 className={clsx(
                   "w-full h-full object-contain",
-                  isNg && !ngRevealed && "blur-xl opacity-20",
+                  (isNg && !ngRevealed) || isR18Hidden
+                    ? "blur-xl opacity-20"
+                    : undefined,
                 )}
                 onError={(e: React.SyntheticEvent<HTMLImageElement>): void => {
                   (e.target as HTMLImageElement).src = noImage;
                 }}
               />
 
-              {isVideo && (!isNg || ngRevealed) && <VideoBadge />}
-              {isOekaki && !isVideo && (!isNg || ngRevealed) && <OekakiBadge />}
+              {isVideo && (!isNg || ngRevealed) && !isR18Hidden && (
+                <VideoBadge />
+              )}
               {(showCount || (showUnreadCount && unreadCount)) &&
-                (!isNg || ngRevealed) && (
+                (!isNg || ngRevealed) &&
+                !isR18Hidden && (
                   <span className="absolute bottom-1 right-1 px-1.5 py-0.5 text-xs font-bold bg-black/70 text-white rounded">
                     {showCount && totalCount}
                     {showUnreadCount && unreadCount && (
@@ -168,25 +231,25 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
                     )}
                   </span>
                 )}
-              {showNew && isNew && (!isNg || ngRevealed) && (
+              {showNew && isNew && (!isNg || ngRevealed) && !isR18Hidden && (
                 <span className="absolute top-1 left-1 px-1.5 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded">
                   NEW
                 </span>
               )}
-              {isNg && !ngRevealed && (
+              {(isNg && !ngRevealed) || isR18Hidden ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-background/95">
                   <div className="flex flex-col items-center gap-2">
                     <div className="flex items-center gap-1 px-3 py-2 bg-destructive/90 text-destructive-foreground rounded text-sm font-bold">
                       <MdBlock size={16} />
-                      <span>NG</span>
+                      <span>{isR18Hidden ? "R18" : "NG"}</span>
                     </div>
                     <span className="text-xs text-muted-foreground">
                       タップで表示
                     </span>
                   </div>
                 </div>
-              )}
-              {isNg && ngRevealed && (
+              ) : null}
+              {isNg && ngRevealed && !isR18Hidden && (
                 <>
                   <div className="absolute inset-0 bg-transparent cursor-pointer" />
                   <div className="absolute top-1 left-1 px-2 py-1 bg-destructive/90 text-destructive-foreground rounded text-xs font-bold flex items-center gap-1 pointer-events-none">
@@ -197,31 +260,48 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
               )}
             </div>
           </Link>
-          <div className="flex items-start pt-2 px-2 mb-2">
-            <Link
-              to="/thread/$threadId"
-              params={{ threadId: String(thread.id) }}
-              className={clsx(
-                "min-w-0 flex-1 text-xs text-muted-foreground line-clamp-2 leading-tight",
-                "group-hover:text-foreground transition-colors",
-                isNg && !ngRevealed && "blur-sm",
-              )}
-              {...(longPressOpensMenu ? longPressHandlers : {})}
-              onClick={handleThreadClick}
-            >
-              {displayTitle}
-            </Link>
-            {isMenuButtonDisplayed && (
-              <button
-                type="button"
-                onClick={handleMenuClick}
-                className="flex-shrink-0 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                aria-label="スレッドメニュー"
+          {textLength > 0 && (
+            <div className="flex items-start pt-2 px-2 mb-2">
+              <Link
+                to="/thread/$threadId"
+                params={{ threadId: String(thread.id) }}
+                target={openInNewTab ? "_blank" : undefined}
+                rel={openInNewTab ? "noopener noreferrer" : undefined}
+                onMouseEnter={(): void => setIsHovered(true)}
+                onMouseLeave={(): void => setIsHovered(false)}
+                onFocus={(): void => setIsHovered(true)}
+                onBlur={(): void => setIsHovered(false)}
+                className={clsx(
+                  "min-w-0 flex-1 text-xs text-muted-foreground line-clamp-2 leading-tight",
+                  "group-hover:text-foreground transition-colors",
+                  ((isNg && !ngRevealed) || isR18Hidden) && "blur-sm",
+                )}
+                {...(longPressOpensMenu ? longPressHandlers : {})}
+                onClick={handleThreadClick}
               >
-                <HiOutlineDotsVertical className="w-5 h-5" />
-              </button>
+                {displayTitle}
+              </Link>
+              {isMenuButtonDisplayed && (
+                <button
+                  type="button"
+                  onClick={handleMenuClick}
+                  className="flex-shrink-0 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  aria-label="スレッドメニュー"
+                >
+                  <HiOutlineDotsVertical className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          )}
+          <p
+            className={clsx(
+              "px-2 pb-2 text-2xs text-muted-foreground",
+              ((isNg && !ngRevealed) || isR18Hidden) && "blur-sm",
             )}
-          </div>
+          >
+            {formatThreadExpiry(thread.expiresAt, thread.isPermanent)}
+          </p>
+          <TagBadges tags={thread.tags} className="px-2 pb-2" />
         </div>
 
         <ThreadContextMenu
@@ -231,5 +311,4 @@ export const CatalogItem: React.FunctionComponent<CatalogItemProps> = memo(
         />
       </>
     );
-  },
-);
+  });

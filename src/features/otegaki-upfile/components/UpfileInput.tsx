@@ -1,7 +1,10 @@
 import { CustomElementRegion } from "@nijiurachan/js/react/PreactWrapperV1";
-import { useUpfileHost, useUpfileUiHint } from "../hooks";
-import { UpfileActions } from "./UpfileActions";
-import { UpfileClearButton } from "./UpfileClearButton";
+import { UpfileActions } from "@/features/otegaki-upfile/components/UpfileActions";
+import { UpfileClearButton } from "@/features/otegaki-upfile/components/UpfileClearButton";
+import {
+  useUpfileHost,
+  useUpfileUiHint,
+} from "@/features/otegaki-upfile/hooks";
 
 export interface UpfileInputProps {
   fullKey: string;

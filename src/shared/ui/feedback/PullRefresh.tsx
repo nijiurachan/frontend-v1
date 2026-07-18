@@ -1,6 +1,6 @@
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { FiArrowDown, FiArrowUp } from "react-icons/fi";
-import { Loading } from "./Loading";
+import { Loading } from "@/shared/ui/feedback/Loading";
 
 // ---------------------------------------------------------------------------
 // Constants

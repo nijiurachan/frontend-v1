@@ -1,6 +1,6 @@
 import { type Context, createContext, useContext } from "react";
 import { type StoreApi, useStore } from "zustand";
-import type { SettingsStore } from "../stores";
+import type { SettingsStore } from "@/features/settings/stores";
 
 /** 表示設定を持つコンテキスト */
 export const SettingsStoreContext: Context<StoreApi<SettingsStore> | null> =

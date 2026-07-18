@@ -17,11 +17,11 @@ export function extractPopularPosts(posts: Post[]): PopularPost[] {
   // レスをフィルタリング（元のインデックスも保持）
   const filteredPosts = posts
     .map((post, index) => ({ post, originalIndex: index }))
-    .filter(({ post }) => 1 <= post.soudane_count);
+    .filter(({ post }) => 1 <= post.sodaneCount);
 
   // そうだね数の多い順にソート
   const sorted = filteredPosts.sort(
-    (a, b) => b.post.soudane_count - a.post.soudane_count,
+    (a, b) => b.post.sodaneCount - a.post.sodaneCount,
   );
 
   // ランキング番号を付与

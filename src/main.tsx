@@ -17,6 +17,7 @@ import { installCanvas98Patch } from "@/features/otegaki-upfile/lib/canvas98Patc
 import { installIosOffsetPatch } from "@/features/otegaki-upfile/lib/iosOffsetPatch";
 import { SettingsStoreContext } from "@/features/settings/hooks";
 import { createSettingsStore } from "@/features/settings/stores";
+import { initializeAimoge } from "@/shared/lib/aimoge";
 
 // これがないとViteでUpfileInputがうまく動かない
 import "preact";
@@ -36,6 +37,7 @@ const settingsStore: ReturnType<typeof createSettingsStore> =
   createSettingsStore();
 
 initUpfileInput(settingsStore);
+initializeAimoge();
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   makeRoot(settingsStore),

@@ -11,9 +11,15 @@ export const MIN_SOUDANE_FOR_FLOOR = 10;
  * soudane_count は型上必須だが、欠損時は 0 とみなして優遇しない(防御)。
  */
 function isFloorTarget(thread: Thread): boolean {
+  // backend-v1 の ThreadSummary には旧 PHP API のお絵描き/そうだね属性がない。
+  // 旧データを受け取るテストや移行中のキャッシュだけは互換扱いにする。
+  const legacy = thread as unknown as {
+    attachment?: { is_oekaki?: boolean };
+    soudane_count?: number;
+  };
   return (
-    (thread.attachment?.is_oekaki ?? false) &&
-    (thread.soudane_count ?? 0) >= MIN_SOUDANE_FOR_FLOOR
+    (legacy.attachment?.is_oekaki ?? false) &&
+    (legacy.soudane_count ?? 0) >= MIN_SOUDANE_FOR_FLOOR
   );
 }
 
@@ -52,7 +58,7 @@ export function floorOekakiThreads(threads: Thread[]): Thread[] {
 
   // 上半分に入れるスレの id 集合。お絵描き(あふれ分を除く)＋枠を埋める先頭の通常スレ。
   // Thread オブジェクトの参照同一性ではなく id(一意)で判定し、上流がスレを複製しても壊れないようにする。
-  const topMemberIds = new Set<number>();
+  const topMemberIds = new Set<Thread["id"]>();
   for (let i = 0; i < topOekakiCount; i++) topMemberIds.add(oekaki[i].id);
   for (let i = 0; i < fillCount; i++) topMemberIds.add(others[i].id);
 

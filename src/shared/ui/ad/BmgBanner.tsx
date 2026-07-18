@@ -1,5 +1,5 @@
 import { type FunctionComponent, useEffect, useState } from "react";
-import { ADS_BASE_URL, safeAdUrl } from "./safeAdUrl";
+import { ADS_BASE_URL, safeAdUrl } from "@/shared/ui/ad/safeAdUrl";
 
 /** /ads/serve が返す広告1件 */
 interface Ad {

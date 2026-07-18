@@ -10,6 +10,7 @@ interface Props {
   initialComment?: string;
   openCount?: number;
   contentKey?: string | number;
+  isArchived?: boolean;
 }
 
 export const ReplyModal: React.FunctionComponent<Props> = ({
@@ -19,7 +20,10 @@ export const ReplyModal: React.FunctionComponent<Props> = ({
   initialComment,
   openCount,
   contentKey,
+  isArchived = false,
 }: Props) => {
+  if (isArchived) return null;
+
   return (
     <PersistentModal
       isOpen={isOpen}
@@ -32,8 +36,10 @@ export const ReplyModal: React.FunctionComponent<Props> = ({
         <div className="p-4">
           <PostForm
             threadId={thread.id}
-            allowImage={thread.allow_image_replies}
-            isArchived={thread.is_archived}
+            active={isOpen}
+            allowImageReplies={thread.allowImageReplies ?? true}
+            closedAt={thread.closedAt}
+            isArchived={isArchived}
             initialComment={initialComment}
             openCount={openCount}
             onSuccess={destroy}

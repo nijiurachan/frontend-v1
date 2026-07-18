@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import type { Post } from "@/entities/post";
+import { PostListDisplay } from "@/features/thread/ui";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
+import { isSearchPending } from "@/features/thread/utils/searchModalState";
+import type { SearchResult } from "@/features/thread/utils/searchPosts";
 import { Modal } from "@/shared/ui/overlay";
-import { PostListDisplay } from "../../ui";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
-import type { SearchResult } from "../../utils/searchPosts";
 
 interface SearchModalProps {
   isOpen: boolean;
@@ -16,6 +17,7 @@ interface SearchModalProps {
   allPosts?: Post[];
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -27,31 +29,30 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
   onClose,
   onSearch,
   results,
+  isSearching,
   quoteReferencesMap,
   allPosts,
   onQuoteClick,
   onJumpToPost,
+  isArchived = false,
 }: SearchModalProps) => {
   const [query, setQuery] = useState("");
-  const [hasSearched, setHasSearched] = useState(false);
+  const [lastSearchedQuery, setLastSearchedQuery] = useState("");
 
   // リアルタイム検索（debounce: 300ms）
   useEffect(() => {
     if (!isOpen) {
-      setQuery("");
-      setHasSearched(false);
       return;
     }
 
     if (!query.trim()) {
-      setHasSearched(false);
       onSearch("");
       return;
     }
 
     const timer = setTimeout(() => {
       onSearch(query);
-      setHasSearched(true);
+      setLastSearchedQuery(query);
     }, 300);
 
     return (): void => clearTimeout(timer);
@@ -59,7 +60,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
 
   const handleClose = (): void => {
     setQuery("");
-    setHasSearched(false);
+    setLastSearchedQuery("");
     onClose();
   };
 
@@ -85,7 +86,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
           <div className="p-8 text-center text-muted-foreground">
             キーワードを入力してください
           </div>
-        ) : !hasSearched ? (
+        ) : isSearchPending(query, lastSearchedQuery, isSearching) ? (
           <div className="p-8 text-center text-muted-foreground">検索中...</div>
         ) : results.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
@@ -103,6 +104,7 @@ export const SearchModal: React.FunctionComponent<SearchModalProps> = ({
             allPosts={allPosts}
             onQuoteClick={onQuoteClick}
             onJumpToPost={onJumpToPost}
+            isArchived={isArchived}
           />
         )}
       </div>

@@ -1,7 +1,7 @@
 import { type ReactNode, useMemo, useState } from "react";
-import { Header } from "./Header";
-import { SideMenu } from "./SideMenu";
-import { SideMenuContext } from "./SideMenuContext";
+import { Header } from "@/app/layouts/Header";
+import { SideMenu } from "@/app/layouts/SideMenu";
+import { SideMenuContext } from "@/app/layouts/SideMenuContext";
 
 interface Props {
   children: ReactNode;
@@ -23,7 +23,11 @@ export const MobileLayout: React.FunctionComponent<Props> = ({
         <Header onMenuClick={(): void => setSideMenuOpen(true)} />
 
         {/* メインコンテンツ */}
-        <main className="flex-1 min-h-0 flex flex-col overflow-hidden pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]">
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className="flex-1 min-h-0 flex flex-col overflow-hidden pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]"
+        >
           {children}
         </main>
 

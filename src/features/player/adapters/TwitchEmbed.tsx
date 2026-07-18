@@ -5,8 +5,8 @@
 // ============================================================
 
 import { useEffect, useRef } from "react";
-import type { SlotId } from "../stores/playerStore";
-import { usePlayerStore } from "../stores/playerStore";
+import type { SlotId } from "@/features/player/stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
 
 // ----------------------------------------------------------
 // Twitch Embed API ローダー（モジュールレベル・シングルトン）
@@ -324,6 +324,7 @@ const TwitchApiPlayer: React.FunctionComponent<TwitchApiPlayerProps> = ({
       },
     );
 
+    const container = containerRef.current;
     return (): void => {
       mountedRef.current = false;
       stopTimeUpdate();
@@ -339,9 +340,7 @@ const TwitchApiPlayer: React.FunctionComponent<TwitchApiPlayerProps> = ({
         }
       }
       playerRef.current = null;
-      if (containerRef.current) {
-        containerRef.current.innerHTML = "";
-      }
+      if (container) container.innerHTML = "";
     };
   }, [subtype, id, slotId]);
 

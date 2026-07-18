@@ -283,7 +283,7 @@ const createInitialPlayerInstance = (slotId: SlotId): PlayerInstance => ({
   status: "idle",
   currentTrack: null,
   currentTime: 0,
-  volume: 0.5, // 既定は真ん中（不意の爆音を避ける）
+  volume: 1.0,
   playbackRate: 1,
   seekTarget: null,
   muted: false,
@@ -797,13 +797,28 @@ export const usePlayerStore = create<PlayerStore>()(
                 secondary?: Partial<PlayerInstance>;
               }
             | undefined;
+          const legacyRaw =
+            typeof localStorage === "undefined"
+              ? null
+              : localStorage.getItem("futaba_video_volume");
+          const legacy =
+            legacyRaw === null ? null : Number.parseFloat(legacyRaw);
+          const legacyVolume =
+            legacy !== null && Number.isFinite(legacy)
+              ? Math.max(0, Math.min(1, legacy))
+              : 1;
           return {
             ...current,
             ...p,
             players: {
-              primary: { ...current.players.primary, ...(pp?.primary ?? {}) },
+              primary: {
+                ...current.players.primary,
+                volume: pp?.primary?.volume ?? legacyVolume,
+                ...(pp?.primary ?? {}),
+              },
               secondary: {
                 ...current.players.secondary,
+                volume: pp?.secondary?.volume ?? legacyVolume,
                 ...(pp?.secondary ?? {}),
               },
             },

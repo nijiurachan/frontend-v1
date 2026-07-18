@@ -3,7 +3,7 @@ import type { Thread } from "@/entities/thread";
 import {
   floorOekakiThreads,
   MIN_SOUDANE_FOR_FLOOR,
-} from "./floorOekakiThreads";
+} from "@/features/catalog/utils/floorOekakiThreads";
 
 /** is_oekaki と OP そうだね数を持つ最小の Thread を生成する(そうだねは既定でフロア対象の下限) */
 function mk(

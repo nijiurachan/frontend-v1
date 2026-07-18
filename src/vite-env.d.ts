@@ -2,7 +2,7 @@
 
 interface ImportMetaEnv {
   readonly VITE_BASE_URL: string;
-  readonly VITE_TURNSTILE_SITE_KEY: string;
+  readonly VITE_MAX_ATTACHMENT_BYTES?: string;
   readonly VITE_KLECKS_EMBED_URL?: string;
   readonly BASE_PATH: string;
   readonly APP_NAME: string;

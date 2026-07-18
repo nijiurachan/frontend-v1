@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { ExternalEmbedCard } from "@/features/thread/components/ExternalEmbedCard";
+import { OgpCard } from "@/features/thread/components/OgpCard";
+import { detectExternalProvider } from "@/features/thread/utils/externalProvider";
 import { useOgpProxy } from "@/shared/hooks/useOgpProxy";
 import { isDlafIdMismatch } from "@/shared/lib";
-import { OgpCard } from "./OgpCard";
 
 interface Props {
   urls: string[];
+  genericOgpEnabled?: boolean;
 }
 
 export const OgpCardList: React.FunctionComponent<Props> = ({
   urls,
+  genericOgpEnabled = true,
 }: Props) => {
   // 重複URLを削除
   const uniqueUrls = useMemo(() => {
@@ -20,10 +24,30 @@ export const OgpCardList: React.FunctionComponent<Props> = ({
   return (
     <div className="space-y-2 mt-3">
       {uniqueUrls.map((url) => (
-        <OgpCardItem key={url} url={url} />
+        <PreviewItem
+          key={url}
+          url={url}
+          genericOgpEnabled={genericOgpEnabled}
+        />
       ))}
     </div>
   );
+};
+
+const PreviewItem: React.FunctionComponent<{
+  url: string;
+  genericOgpEnabled: boolean;
+}> = ({
+  url,
+  genericOgpEnabled,
+}: {
+  url: string;
+  genericOgpEnabled: boolean;
+}) => {
+  const dedicated = detectExternalProvider(url);
+  if (dedicated) return <ExternalEmbedCard match={dedicated} />;
+  if (!genericOgpEnabled) return null;
+  return <OgpCardItem url={url} />;
 };
 
 const OgpCardItem: React.FunctionComponent<{ url: string }> = ({

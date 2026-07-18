@@ -1,29 +1,52 @@
 import type { UpfileStateFlags } from "@nijiurachan/js/pure";
 import { Scope, useEventLatest } from "@nijiurachan/js/react/PreactWrapperV1";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { UpfileInput } from "@/features/otegaki-upfile/components";
-import { attachUpfileImage } from "@/features/otegaki-upfile/lib/attachUpfileImage";
-import { useSettingsStore } from "@/features/settings/hooks";
 import {
-  useResolveTurnstileToken,
-  useTurnstileOnPostSuccess,
-} from "@/features/turnstile/hooks";
-import { getFingerprint } from "@/shared/lib";
-import { Button, Input, Textarea } from "@/shared/ui/form";
+  getAttachedFile,
+  notifyUpfileSubmitted,
+} from "@/features/otegaki-upfile/lib/attachUpfileImage";
+import {
+  AltchaWidget,
+  type AltchaWidgetHandle,
+} from "@/features/post/components/AltchaWidget";
+import {
+  formatPostBodyLength,
+  hasPostContent,
+  POST_BODY_MAX_LENGTH,
+} from "@/features/post/components/forms/postFormConfig";
+import { createSubmissionLock } from "@/features/post/components/forms/submissionLock";
+import { useSubmitPost } from "@/features/post/hooks/useSubmitPost";
+import { createSubmissionLifecycle } from "@/features/post/lib/submissionLifecycle";
+import {
+  createSubmissionUiState,
+  isSubmissionInProgress,
+  submissionUiReducer,
+} from "@/features/post/lib/submissionUiState";
+import {
+  clearReplyDraft,
+  readReplyDraft,
+  saveReplyDraft,
+} from "@/features/post/stores/replyDraftStore";
+import { useSettingsStore } from "@/features/settings/hooks";
+import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
+import { Button, Textarea } from "@/shared/ui/form";
 import { PostNotice } from "@/shared/ui/navigation";
+import { OnlineUsersIndicator } from "@/shared/ui/navigation/OnlineUsersIndicator";
 import { ConfirmDialog } from "@/shared/ui/overlay";
 import type { CloseReason } from "@/shared/ui/overlay/ConfirmDialog";
-import { useSubmitPost } from "../../hooks/useSubmitPost";
+import { toast } from "@/shared/ui/toast";
 
 interface PostFormData {
-  act: string;
   comment: string;
 }
 
 interface Props {
-  threadId: number;
-  allowImage: boolean;
+  threadId: string;
+  active?: boolean;
+  allowImageReplies?: boolean;
+  closedAt?: string | null;
   initialComment?: string;
   openCount?: number;
   isArchived?: boolean;
@@ -31,211 +54,257 @@ interface Props {
 }
 
 const SCOPE_NAME = "post-form";
-const UPFILE_ID = "upfile";
-const UPFILE_FULL_KEY = `${SCOPE_NAME}:${UPFILE_ID}`;
+const UPFILE_FULL_KEY = `${SCOPE_NAME}:upfile`;
 
-const selectIsPaintPopupOpen = (s: UpfileStateFlags): boolean =>
-  s.isAxnosOpen || s.isKlecksOpen;
+const selectIsPaintPopupOpen = (state: UpfileStateFlags): boolean =>
+  state.isAxnosOpen || state.isKlecksOpen;
+const selectHasSelectedFile = (state: UpfileStateFlags): boolean =>
+  state.hasSelectedFile;
 
 export const PostForm: React.FunctionComponent<Props> = ({
   threadId,
-  allowImage,
+  active = true,
+  allowImageReplies = true,
+  closedAt = null,
   initialComment = "",
   openCount,
   isArchived = false,
   onSuccess,
 }: Props) => {
-  const deleteKey = useSettingsStore((s) => s.deleteKey);
-  const [formData, setFormData] = useState<PostFormData>({
-    act: "",
-    comment: initialComment,
-  });
-  const [showSuccess, setShowSuccess] = useState(false);
+  const deleteKey = useSettingsStore((state) => state.deleteKey);
+  const [formData, setFormData] = useState<PostFormData>(() => ({
+    comment: readReplyDraft(threadId),
+  }));
+  const formDataRef = useRef<PostFormData>(formData);
+  const updateFormData = useCallback(
+    (
+      update: PostFormData | ((previous: PostFormData) => PostFormData),
+    ): void => {
+      const next =
+        typeof update === "function" ? update(formDataRef.current) : update;
+      formDataRef.current = next;
+      setFormData(next);
+      saveReplyDraft(threadId, next.comment);
+    },
+    [threadId],
+  );
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [pendingQuote, setPendingQuote] = useState("");
-  const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
-
+  const [submissionUi, dispatchSubmissionUi] = useReducer(
+    submissionUiReducer,
+    undefined,
+    createSubmissionUiState,
+  );
+  const [submissionLock] = useState(createSubmissionLock);
+  const [submissionLifecycle] = useState(createSubmissionLifecycle);
+  const altchaRef = useRef<AltchaWidgetHandle>(null);
+  const successTimerRef = useRef<number | null>(null);
+  const clearSuccessTimer = useCallback((): void => {
+    if (successTimerRef.current === null) return;
+    window.clearTimeout(successTimerRef.current);
+    successTimerRef.current = null;
+  }, []);
   const isPaintPopupOpen =
     useEventLatest(
       UPFILE_FULL_KEY,
       "aimg:upfile-state",
       selectIsPaintPopupOpen,
     ) ?? false;
+  const hasSelectedFile =
+    useEventLatest(
+      UPFILE_FULL_KEY,
+      "aimg:upfile-state",
+      selectHasSelectedFile,
+    ) ?? false;
 
-  // biome-ignore lint: initialComment取り込みはシートが開いたときに行う
+  useEffect(() => {
+    submissionLifecycle.invalidate();
+    submissionLock.release();
+    altchaRef.current?.reset();
+    clearSuccessTimer();
+    dispatchSubmissionUi({ type: "reset" });
+    const nextFormData = { comment: readReplyDraft(threadId) };
+    formDataRef.current = nextFormData;
+    // threadId is an external identity boundary; switch the controlled value
+    // before this form can submit under the new thread.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFormData(nextFormData);
+  }, [clearSuccessTimer, submissionLifecycle, submissionLock, threadId]);
+
+  useEffect(() => {
+    return (): void => {
+      submissionLifecycle.invalidate();
+      clearSuccessTimer();
+    };
+  }, [clearSuccessTimer, submissionLifecycle]);
+
+  useEffect(() => {
+    if (!active) {
+      submissionLifecycle.invalidate();
+      altchaRef.current?.reset();
+      submissionLock.release();
+      clearSuccessTimer();
+      // Closing a persistent form must make the next open immediately usable.
+      dispatchSubmissionUi({ type: "reset" });
+    }
+  }, [active, clearSuccessTimer, submissionLifecycle, submissionLock]);
+
+  // 投稿モーダルの openCount 変化時だけ、引用初期値を適用する。
+  // biome-ignore lint/correctness/useExhaustiveDependencies: openCountはモーダル再表示を表す明示的なトリガー
   useEffect(() => {
     if (!initialComment) return;
-
-    const currentComment = formData.comment;
-    if (!currentComment.trim()) {
-      setFormData((prev) => ({ ...prev, comment: initialComment }));
-      return;
-    }
-
-    setPendingQuote(initialComment);
-    setQuoteDialogOpen(true);
-  }, [openCount]);
-
-  const handleQuotePrepend = (): void => {
-    setFormData((prev) => ({
-      ...prev,
-      comment: `${pendingQuote}\n${prev.comment}`,
-    }));
-  };
-
-  const handleQuoteAppend = (): void => {
-    setFormData((prev) => ({
-      ...prev,
-      comment: `${prev.comment}\n${pendingQuote}`,
-    }));
-  };
-
-  function handleQuoteConfirmDialogClose(reason: CloseReason): void {
-    switch (reason) {
-      case "pressed-cancel":
-        handleQuoteAppend();
-        break;
-      case "pressed-confirm":
-        handleQuotePrepend();
-        break;
-      default:
-        break;
-    }
-    setQuoteDialogOpen(false);
-  }
+    queueMicrotask(() => {
+      if (!formDataRef.current.comment.trim()) {
+        updateFormData((prev) => ({ ...prev, comment: initialComment }));
+        return;
+      }
+      setPendingQuote(initialComment);
+      setQuoteDialogOpen(true);
+    });
+  }, [initialComment, openCount, updateFormData]);
 
   const { mutateAsync: submitPost, isPending } = useSubmitPost();
-  const resolveTurnstileToken = useResolveTurnstileToken("reply");
-  const onTurnstileSuccess = useTurnstileOnPostSuccess();
-
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ): void => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+  const isSubmitting = isSubmissionInProgress(submissionUi, isPending);
+  const { showSuccess, submitError } = submissionUi;
 
   const handleSubmit = async (
-    e: React.SubmitEvent<HTMLFormElement>,
+    event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
-    e.preventDefault();
-    const form = e.currentTarget; // currentTargetはすぐ捕まえないとnullになってしまうので早めに確保。
-
-    if (isArchived) {
-      alert("このスレッドは落ちています。書き込みできません。");
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (
+      !active ||
+      isArchived ||
+      closedAt ||
+      submissionLock.isLocked() ||
+      isPaintPopupOpen ||
+      !hasPostContent(formData.comment, hasSelectedFile) ||
+      formData.comment.length > POST_BODY_MAX_LENGTH
+    ) {
+      if (isArchived) alert("このスレッドは過去ログ化されています。");
       return;
     }
+    if (!submissionLock.acquire()) return;
 
-    // Enter / form.requestSubmit() で disabled を回避されてもガード。
-    // prepare/fingerprint の非同期区間中は isPending がまだ立たないので
-    // ローカルフラグで二重起動を防ぐ。同条件を <Button disabled={...}> にもミラー。
-    if (isPreparingSubmit || isPending || isPaintPopupOpen) {
-      return;
-    }
-    // submit 前に focus を外して IME 入力を確定させる
-    if (document.activeElement instanceof HTMLElement) {
-      document.activeElement.blur();
-    }
-
-    setIsPreparingSubmit(true);
+    const signal = submissionLifecycle.begin();
+    dispatchSubmissionUi({ type: "start" });
+    let mutationStarted = false;
     try {
-      const token = await resolveTurnstileToken();
-      if (token === null) return;
-
       const prepareEvent = new CustomEvent("aimg:prepare-submit", {
         detail: {} as { preparing?: Promise<void> },
       });
       form.dispatchEvent(prepareEvent);
       await prepareEvent.detail.preparing;
-
-      const data = new FormData(form);
-      attachUpfileImage(form, data);
-      data.delete("act");
-      data.set("email", formData.act);
-      data.set("comment", formData.comment);
-      data.set("password", deleteKey);
-      data.set("thread_id", String(threadId));
-
-      const fingerprint = await getFingerprint();
-      data.set("fingerprint", fingerprint);
-
-      data.set("cf-turnstile-response", token);
-
-      await submitPost({ formData: data, mode: "reply" });
-      form.dispatchEvent(new CustomEvent("aimg:submitted"));
-
-      onTurnstileSuccess(token);
-
-      setShowSuccess(true);
-      setTimeout(() => {
-        setShowSuccess(false);
-        setFormData({
-          act: "",
-          comment: "",
-        });
-
-        onSuccess?.();
+      if (!submissionLifecycle.isCurrent(signal)) return;
+      const file = allowImageReplies ? getAttachedFile(form) : null;
+      if (!hasPostContent(formData.comment, file !== null)) return;
+      const altcha = altchaRef.current;
+      if (!altcha) throw new Error("書き込み認証を読み込んでいます");
+      mutationStarted = true;
+      await submitPost({
+        mode: "reply",
+        threadId,
+        body: formData.comment.trim(),
+        deleteKey,
+        file,
+        altcha,
+        signal,
+      });
+      if (!submissionLifecycle.isCurrent(signal)) return;
+      notifyUpfileSubmitted(form);
+      dispatchSubmissionUi({ type: "success" });
+      clearReplyDraft(threadId);
+      updateFormData({ comment: "" });
+      clearSuccessTimer();
+      successTimerRef.current = window.setTimeout(() => {
+        successTimerRef.current = null;
+        if (submissionLifecycle.isCurrent(signal)) {
+          dispatchSubmissionUi({ type: "hide-success" });
+          onSuccess?.();
+        }
       }, 200);
-    } catch (err) {
-      alert(err instanceof Error ? err.message : "投稿失敗");
+    } catch (error) {
+      if (!submissionLifecycle.isCurrent(signal)) return;
+      const message = getApiErrorMessage(error, "投稿に失敗しました");
+      dispatchSubmissionUi({ type: "failure", message });
+      if (!mutationStarted) toast.error(message);
     } finally {
-      setIsPreparingSubmit(false);
+      if (submissionLifecycle.isCurrent(signal)) {
+        submissionLock.release();
+        dispatchSubmissionUi({ type: "finish" });
+      }
     }
   };
 
+  const handleQuoteDialogClose = (reason: CloseReason): void => {
+    updateFormData((prev) => ({
+      comment:
+        reason === "pressed-confirm"
+          ? `${pendingQuote}\n${prev.comment}`
+          : `${prev.comment}\n${pendingQuote}`,
+    }));
+    setQuoteDialogOpen(false);
+  };
+
+  if (closedAt) {
+    return (
+      <output className="rounded-lg border border-border bg-muted px-4 py-5 text-center text-muted-foreground">
+        このスレッドは閉鎖されています。返信できません。
+      </output>
+    );
+  }
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-4"
-      data-turnstile-target-form="reply"
-    >
-      <div>
-        <Input
-          type="text"
-          name="act"
-          className="w-full"
-          value={formData.act}
-          onChange={handleChange}
-          placeholder="例: sage ID表示"
-        />
-      </div>
-
-      <div>
-        <Textarea
-          name="comment"
-          value={formData.comment}
-          onChange={handleChange}
-          placeholder="ｷﾀ━━━━(ﾟ∀ﾟ)━━━━!!"
-          rows={6}
-        />
-      </div>
-
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <Textarea
+        value={formData.comment}
+        onChange={(event: React.ChangeEvent<HTMLTextAreaElement>): void =>
+          updateFormData({ comment: event.target.value })
+        }
+        placeholder="ｷﾀ━━━━(ﾟ∀ﾟ)━━━━!!"
+        rows={6}
+        maxLength={POST_BODY_MAX_LENGTH}
+        aria-describedby="post-comment-counter"
+      />
+      <p
+        id="post-comment-counter"
+        className="text-right text-xs text-muted-foreground"
+      >
+        {formatPostBodyLength(formData.comment.length)}
+      </p>
       <Scope name={SCOPE_NAME}>
-        <UpfileInput fullKey={UPFILE_FULL_KEY} allowImage={allowImage} />
+        <UpfileInput fullKey={UPFILE_FULL_KEY} allowImage={allowImageReplies} />
       </Scope>
-
+      <AltchaWidget operation="reply" key={threadId} ref={altchaRef} />
+      <OnlineUsersIndicator className="block text-center text-xs text-muted-foreground" />
       <Button
         type="submit"
         variant="primary"
-        disabled={isPreparingSubmit || isPending || isPaintPopupOpen}
+        disabled={
+          isSubmitting ||
+          isPaintPopupOpen ||
+          !hasPostContent(formData.comment, hasSelectedFile) ||
+          formData.comment.length > POST_BODY_MAX_LENGTH
+        }
         className="w-full py-4 text-lg font-medium"
       >
-        {isPending ? "書き込み中..." : "返信"}
+        {isSubmitting ? "書き込み中..." : "返信"}
       </Button>
-
+      {submitError && (
+        <p className="text-sm text-destructive" role="alert">
+          {submitError}
+        </p>
+      )}
       <PostNotice />
-
       {showSuccess && (
-        <div className="flex items-center gap-2 px-4 py-3 bg-green-600 text-white rounded-lg">
-          <div className="w-6 h-6 flex items-center justify-center bg-white rounded-full">
-            <FiCheck className="w-4 h-4 text-green-600" />
-          </div>
+        <div className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-white">
+          <FiCheck className="h-4 w-4" />
           <span className="font-medium">成功しました！</span>
         </div>
       )}
       <ConfirmDialog
         isOpen={quoteDialogOpen}
-        onClose={handleQuoteConfirmDialogClose}
+        onClose={handleQuoteDialogClose}
         title="引用文の挿入位置"
         message="引用文をどちらに挿入しますか？"
         confirmText="先頭に追加"

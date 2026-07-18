@@ -2,7 +2,7 @@ import { motion } from "motion/react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FiX } from "react-icons/fi";
 
-import { ZoomableImage } from "./ZoomableImage";
+import { ZoomableImage } from "@/features/thread/ui/ZoomableImage";
 
 export interface ImageViewerContentProps {
   onClose: () => void;

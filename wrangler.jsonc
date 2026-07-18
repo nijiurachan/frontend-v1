@@ -3,6 +3,10 @@
   "name": "frontend-v1",
   "compatibility_date": "2026-04-03",
   "upload_source_maps": true,
+  "main": "src/worker.ts",
+  "vars": {
+    "PUBLIC_SITE_URL": "https://nijiurachan.net"
+  },
   "assets": {
     "directory": "./dist/",
     "not_found_handling": "single-page-application"
@@ -25,21 +29,45 @@
       "zone_name": "nijiurachan.net"
     },
     {
-      "pattern": "test.nijiurachan.net/ts",
+      "pattern": "nijiurachan.net/robots.txt",
       "zone_name": "nijiurachan.net"
     },
     {
-      "pattern": "test.nijiurachan.net/ts/*",
-      "zone_name": "nijiurachan.net"
-    },
-    {
-      "pattern": "test.nijiurachan.net/assets/klecks/*",
+      "pattern": "nijiurachan.net/sitemap.xml",
       "zone_name": "nijiurachan.net"
     }
   ],
   "env": {
     "dev": {},
-    "test": {}
+    // 実験ビルドは別Worker (frontend-v1-test) + /ts-test パスで配信する
+    // (mode=testing ビルド)。本番Worker (frontend-v1) には main ブランチの
+    // build:prod だけを deploy する。
+    "test": {
+      "assets": {
+        "directory": "./dist/",
+        "not_found_handling": "single-page-application"
+      },
+      "routes": [
+        {
+          "pattern": "nijiurachan.net/ts-test",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "nijiurachan.net/ts-test/*",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "dev.nijiurachan.net/ts-test",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "dev.nijiurachan.net/ts-test/*",
+          "zone_name": "nijiurachan.net"
+        }
+        // test.nijiurachan.net は nginx (Origin_Server:3000) がルート直下で
+        // 配信する (VITE_BASE_PATH="" ビルド)。Worker ルートは張らない。
+      ]
+    }
   },
   "dev": {
     "enable_containers": false,

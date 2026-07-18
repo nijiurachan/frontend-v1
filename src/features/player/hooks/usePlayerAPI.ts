@@ -25,13 +25,13 @@ import type {
   Provider,
   SlotId,
   Track,
-} from "../stores/playerStore";
-import { usePlayerStore } from "../stores/playerStore";
+} from "@/features/player/stores/playerStore";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
 import {
   detectProvider,
   extractDoujiTime,
   extractProviderId,
-} from "../utils/providerDetect";
+} from "@/features/player/utils/providerDetect";
 
 // ----------------------------------------------------------
 // 内部ヘルパー（モジュールレベル — レンダーに依存しない）

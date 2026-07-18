@@ -33,6 +33,7 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
     () => new Set<number>(),
   );
   const [showHistory, setShowHistory] = useState(false);
+  const [initialNowMs] = useState(() => Date.now());
   const {
     data: history,
     isLoading: historyLoading,
@@ -113,7 +114,7 @@ export const JukeboxPlayer: React.FunctionComponent = () => {
         <QueueList
           queue={state?.queue ?? []}
           nowPlaying={nowPlaying}
-          serverNowMs={state?.serverNowMs ?? Date.now()}
+          serverNowMs={state?.serverNowMs ?? initialNowMs}
           onCancelMine={(trackId: number): void => {
             setCancellingIds((prev) => new Set(prev).add(trackId));
             cancelMineMutation.mutate(trackId, {

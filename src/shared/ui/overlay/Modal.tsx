@@ -6,26 +6,31 @@ import {
   type PanInfo,
   useDragControls,
 } from "motion/react";
-import { type ReactNode, useContext, useEffect, useState } from "react";
+import { type ReactNode, useContext, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
-import { ModalContext } from "./ModalContext";
+import { useIsDesktop } from "@/shared/hooks";
+import { useDialogFocusTrap } from "@/shared/ui/overlay/dialogFocus";
+import { ModalContext } from "@/shared/ui/overlay/modal-context";
 
-interface ModalProps {
+type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
-  title?: string;
   position?: "center" | "bottom" | "right";
   headerActions?: ReactNode;
   flickToClose?: boolean;
-}
+} & (
+  | { title: string; ariaLabel?: never }
+  | { title?: undefined; ariaLabel: string }
+);
 
 export const Modal: React.FunctionComponent<ModalProps> = ({
   isOpen,
   onClose,
   children,
   title,
+  ariaLabel,
   position = "center",
   headerActions,
   flickToClose = true,
@@ -37,18 +42,28 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
     unregisterCloseHandler,
   } = useContext(ModalContext);
   const [depth, setDepth] = useState<number | null>(null);
+  const titleId = useId();
+  const dialogRef = useDialogFocusTrap<HTMLDivElement>(isOpen);
   const dragControls = useDragControls(); // ドラッグ制御用
+  const isDesktop = useIsDesktop();
+  // PCでは全幅ボトムシートにせず中央ダイアログとして表示する
+  const promotedFromBottom = isDesktop && position === "bottom";
+  const effectivePosition = promotedFromBottom ? "center" : position;
 
   // モーダルが開いたときに深さとcloseハンドラーを登録
   useEffect(() => {
     if (isOpen) {
       const modalDepth = registerModal();
-      setDepth(modalDepth);
+      let disposed = false;
+      queueMicrotask(() => {
+        if (!disposed) setDepth(modalDepth);
+      });
       registerCloseHandler(onClose);
       return (): void => {
+        disposed = true;
         unregisterModal();
         unregisterCloseHandler(onClose);
-        setDepth(null);
+        queueMicrotask(() => setDepth(null));
       };
     }
   }, [
@@ -89,7 +104,7 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
   };
 
   const getMotionProps = (): MotionProps => {
-    switch (position) {
+    switch (effectivePosition) {
       case "bottom":
         return {
           initial: { opacity: 0, y: "100%" },
@@ -114,7 +129,7 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
   // ボトムモーダルでフリック閉じが有効な場合のドラッグ設定
   const getDragProps = (): MotionProps => {
     // position="bottom"かつflickToCloseがtrueのときのみ有効
-    if (position === "bottom" && flickToClose) {
+    if (effectivePosition === "bottom" && flickToClose) {
       return {
         drag: "y" as const, // y方向のみドラッグ可能
         dragConstraints: { top: 0, bottom: 0 }, // ドラッグ範囲を上下に制限
@@ -146,33 +161,45 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
             onClick={onClose}
           />
           <motion.div
+            ref={dialogRef}
+            tabIndex={-1}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            aria-label={title ? undefined : ariaLabel}
             className={clsx(
               "fixed bg-card shadow-2xl",
-              position === "center" &&
-                "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl max-w-lg w-[calc(100%-2rem)] max-h-[85svh] overflow-hidden",
-              position === "bottom" &&
+              effectivePosition === "center" &&
+                "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-xl max-w-lg w-[calc(100%-2rem)] max-h-[85svh] overflow-hidden flex flex-col",
+              promotedFromBottom && "lg:max-w-2xl",
+              effectivePosition === "bottom" &&
                 "bottom-0 left-0 right-0 rounded-t-2xl max-h-[85svh] overflow-hidden grid grid-flow-row grid-rows-[repeat(2,_max-content)_1fr]",
-              position === "right" &&
+              effectivePosition === "right" &&
                 "top-0 right-0 bottom-0 w-80 max-w-full overflow-y-auto",
             )}
             style={{
               zIndex: modalZIndex,
               touchAction:
-                position === "bottom" && flickToClose ? "none" : "auto",
+                effectivePosition === "bottom" && flickToClose
+                  ? "none"
+                  : "auto",
             }}
             {...getMotionProps()}
             {...getDragProps()}
             transition={{ duration: 0.2, ease: "easeOut" }}
           >
             {/* スワイプハンドル（ボトムモーダルでフリック閉じ有効時のみ表示） */}
-            {position === "bottom" && flickToClose && (
+            {effectivePosition === "bottom" && flickToClose && (
               <div className="flex justify-center pt-2 pb-1 cursor-grab active:cursor-grabbing">
                 <div className="w-10 h-1 bg-muted-foreground/30 rounded-full" />
               </div>
             )}
             {title && (
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2
+                  id={titleId}
+                  className="text-lg font-semibold text-foreground"
+                >
                   {title}
                 </h2>
                 <div className="flex items-center gap-1">
@@ -180,14 +207,15 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
+                    aria-label="閉じる"
                     className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    <FiX className="w-5 h-5" />
+                    <FiX className="w-5 h-5" aria-hidden="true" />
                   </button>
                 </div>
               </div>
             )}
-            <div className="overflow-y-auto">{children}</div>
+            <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
           </motion.div>
         </>
       )}

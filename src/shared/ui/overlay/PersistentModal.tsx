@@ -11,11 +11,13 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useState,
 } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
-import { ModalContext } from "./ModalContext";
+import { useDialogFocusTrap } from "@/shared/ui/overlay/dialogFocus";
+import { ModalContext } from "@/shared/ui/overlay/modal-context";
 
 export interface PersistentModalRenderProps {
   destroy: () => void;
@@ -49,6 +51,8 @@ export const PersistentModal: React.FunctionComponent<PersistentModalProps> = ({
     unregisterCloseHandler,
   } = useContext(ModalContext);
   const [depth, setDepth] = useState<number | null>(null);
+  const titleId = useId();
+  const dialogRef = useDialogFocusTrap<HTMLDivElement>(isOpen);
   const dragControls = useDragControls();
 
   // destroy(): childrenを完全にアンマウントしてから閉じる
@@ -88,12 +92,16 @@ export const PersistentModal: React.FunctionComponent<PersistentModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       const modalDepth = registerModal();
-      setDepth(modalDepth);
+      let disposed = false;
+      queueMicrotask(() => {
+        if (!disposed) setDepth(modalDepth);
+      });
       registerCloseHandler(onClose);
       return (): void => {
+        disposed = true;
         unregisterModal();
         unregisterCloseHandler(onClose);
-        setDepth(null);
+        queueMicrotask(() => setDepth(null));
       };
     }
   }, [
@@ -190,6 +198,11 @@ export const PersistentModal: React.FunctionComponent<PersistentModalProps> = ({
       />
       {/* モーダルパネル: 常時レンダリング、childrenの状態を保持 */}
       <motion.div
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={title != null ? titleId : undefined}
         aria-hidden={!isOpen}
         className={clsx(
           "fixed bg-card shadow-2xl",
@@ -222,18 +235,26 @@ export const PersistentModal: React.FunctionComponent<PersistentModalProps> = ({
         {title != null && (
           <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-border min-w-0">
             {typeof title === "string" ? (
-              <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+              <h2
+                id={titleId}
+                className="text-lg font-semibold text-foreground"
+              >
+                {title}
+              </h2>
             ) : (
-              <div className="min-w-0 flex-1">{title}</div>
+              <div id={titleId} className="min-w-0 flex-1">
+                {title}
+              </div>
             )}
             <div className="flex items-center gap-1 shrink-0">
               {headerActions}
               <button
                 type="button"
                 onClick={onClose}
+                aria-label="閉じる"
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               >
-                <FiX className="w-5 h-5" />
+                <FiX className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
           </div>

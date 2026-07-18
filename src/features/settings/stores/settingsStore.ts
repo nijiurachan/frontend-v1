@@ -4,13 +4,15 @@ import {
   settingsStateCreator,
 } from "@nijiurachan/js/io/settings-store";
 import type { StoreApi } from "zustand";
+import {
+  FONT_SIZE_DEFAULT,
+  FONT_SIZE_MAX,
+  FONT_SIZE_MIN,
+  type LegacyDisplaySettings,
+  readLegacyDisplaySettings,
+} from "@/features/settings/stores/legacyDisplaySettings";
 
-/** 最小文字サイズ(px) */
-export const FONT_SIZE_MIN = 8;
-/** 最大文字サイズ(px) */
-export const FONT_SIZE_MAX = 28;
-/** 初期文字サイズ(px) */
-export const FONT_SIZE_DEFAULT = 16;
+export { FONT_SIZE_DEFAULT, FONT_SIZE_MAX, FONT_SIZE_MIN };
 
 /** 最小文字倍率(%) */
 export const FONT_SCALE_MIN = 50;
@@ -60,11 +62,25 @@ export type SettingsStore = SettingsStoreBase & {
   jukeboxEnabled: boolean;
   /** ジュークボックスの有効/無効を設定 */
   setJukeboxEnabled(value: boolean): void;
+  /** R18添付を常時表示する */
+  showR18: boolean;
+  setShowR18(value: boolean): void;
+  ogpPreviewEnabled: boolean;
+  setOgpPreviewEnabled(value: boolean): void;
+  dragQuotePencilSize: "small" | "large";
+  setDragQuotePencilSize(value: "small" | "large"): void;
 };
 
 /** 表示設定のストアを作る */
-export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
-  createSettingsStoreBase(
+export const createSettingsStore: () => StoreApi<SettingsStore> = () => {
+  // persist初期化がaimg-settingsを作る前に、旧設定の移行可否を確定する。
+  // キーが壊れていても「存在する」なら新設定を常に優先する。
+  const legacyDisplaySettings =
+    typeof localStorage === "undefined"
+      ? null
+      : readLegacyDisplaySettings(localStorage);
+
+  return createSettingsStoreBase(
     (...args) => {
       const [set] = args;
       const base = settingsStateCreator(...args);
@@ -79,6 +95,14 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
         setSpaceMode: (spaceMode: boolean) => set({ spaceMode }),
         jukeboxEnabled: true,
         setJukeboxEnabled: (jukeboxEnabled: boolean) => set({ jukeboxEnabled }),
+        showR18: false,
+        setShowR18: (showR18: boolean) => set({ showR18 }),
+        ogpPreviewEnabled: true,
+        setOgpPreviewEnabled: (ogpPreviewEnabled: boolean) =>
+          set({ ogpPreviewEnabled }),
+        dragQuotePencilSize: "small",
+        setDragQuotePencilSize: (dragQuotePencilSize: "small" | "large") =>
+          set({ dragQuotePencilSize }),
         resetSettings(): void {
           base.resetSettings();
           set({
@@ -86,22 +110,58 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
             fontScalePosts: FONT_SCALE_DEFAULT,
             spaceMode: false,
             jukeboxEnabled: true,
+            showR18: false,
+            ogpPreviewEnabled: true,
+            dragQuotePencilSize: "small",
           });
         },
       };
     },
-    () => initSettings,
+    () =>
+      (store: SettingsStore | undefined): void => {
+        void initSettings(store, legacyDisplaySettings);
+      },
   );
+};
 
 /** 表示設定の初期化。ストレージ読込み後呼ばれる */
-async function initSettings(store: SettingsStore | undefined): Promise<void> {
+async function initSettings(
+  store: SettingsStore | undefined,
+  legacyDisplaySettings: LegacyDisplaySettings | null,
+): Promise<void> {
   if (!store) {
     return;
   }
 
-  // 永続化された文字サイズが範囲外/壊れていた場合は補正
-  store.setFontSize(clampFontSize(store.fontSize));
+  if (legacyDisplaySettings) {
+    if (legacyDisplaySettings.darkMode !== undefined) {
+      store.setDarkMode(legacyDisplaySettings.darkMode);
+    }
+    if (legacyDisplaySettings.privacyMode !== undefined) {
+      store.setPrivacyMode(legacyDisplaySettings.privacyMode);
+    }
+  }
+
+  // 永続化・移行された文字サイズが範囲外/壊れていた場合は補正
+  store.setFontSize(
+    clampFontSize(legacyDisplaySettings?.fontSize ?? store.fontSize),
+  );
   store.setFontScalePosts(clampFontScale(store.fontScalePosts));
+
+  if (
+    typeof localStorage !== "undefined" &&
+    localStorage.getItem("aimg_legacy_thread_settings_migrated") !== "1"
+  ) {
+    const legacyOgp = localStorage.getItem("futaba_ogp_preview");
+    const legacyPencil = localStorage.getItem("dragQuotePencilSize");
+    if (legacyOgp !== null) store.setOgpPreviewEnabled(legacyOgp !== "0");
+    if (legacyPencil !== null) {
+      store.setDragQuotePencilSize(
+        legacyPencil === "large" ? "large" : "small",
+      );
+    }
+    localStorage.setItem("aimg_legacy_thread_settings_migrated", "1");
+  }
 
   if (store.deleteKey) {
     return;

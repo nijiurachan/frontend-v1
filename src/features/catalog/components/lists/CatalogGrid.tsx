@@ -1,13 +1,20 @@
 import { useMemo } from "react";
+import { DesktopCatalogGrid } from "@/features/catalog/components/desktop";
+import { CatalogItem } from "@/features/catalog/components/lists/CatalogItem";
+import { useFavoriteThreads } from "@/features/catalog/hooks/useFavoriteThreads";
+import { useFilteredThreads } from "@/features/catalog/hooks/useFilteredThreads";
+import { useOekakiFloor } from "@/features/catalog/hooks/useOekakiFloor";
+import { useThreads } from "@/features/catalog/hooks/useThreads";
+import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
+import { useIsDesktop } from "@/shared/hooks";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
-import { useFavoriteThreads } from "../../hooks/useFavoriteThreads";
-import { useFilteredThreads } from "../../hooks/useFilteredThreads";
-import { useOekakiFloor } from "../../hooks/useOekakiFloor";
-import { useThreads } from "../../hooks/useThreads";
-import { useCatalogStore } from "../../stores/catalogStore";
-import { CatalogItem } from "./CatalogItem";
 
 export const CatalogGrid: React.FunctionComponent = () => {
+  const isDesktop = useIsDesktop();
+  return isDesktop ? <DesktopCatalogGrid /> : <MobileCatalogGrid />;
+};
+
+const MobileCatalogGrid: React.FunctionComponent = () => {
   const { data, isLoading, error } = useThreads();
   const { columns, lastCatalogIds } = useCatalogStore();
 
@@ -17,7 +24,7 @@ export const CatalogGrid: React.FunctionComponent = () => {
   const visibleThreads = useFavoriteThreads(flooredThreads);
 
   const newThreadIds = useMemo(() => {
-    if (lastCatalogIds.length === 0) return new Set<number>();
+    if (lastCatalogIds.length === 0) return new Set<string>();
     const lastSet = new Set(lastCatalogIds);
     return new Set(
       data?.threads.filter((t) => !lastSet.has(t.id)).map((t) => t.id) ?? [],
@@ -34,10 +41,12 @@ export const CatalogGrid: React.FunctionComponent = () => {
     );
   }
 
-  if (visibleThreads.length === 0 && data?.threads && data.threads.length > 0) {
+  if (visibleThreads.length === 0) {
     return (
       <Message variant="info">
-        検索条件に一致するスレッドが見つかりません
+        {(data?.threads.length ?? 0) > 0
+          ? "検索条件に一致するスレッドが見つかりません"
+          : "スレッドが見つかりません"}
       </Message>
     );
   }

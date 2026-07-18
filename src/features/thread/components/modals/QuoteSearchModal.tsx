@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import type { Post } from "@/entities/post";
+import { type Post, postNo } from "@/entities/post";
+import { PostListDisplay } from "@/features/thread/ui";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
+import type { SearchResult } from "@/features/thread/utils/searchPosts";
 import { Modal } from "@/shared/ui/overlay";
-import { PostListDisplay } from "../../ui";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
-import type { SearchResult } from "../../utils/searchPosts";
 
 interface QuoteSearchModalProps {
   isOpen: boolean;
@@ -13,6 +13,7 @@ interface QuoteSearchModalProps {
   quoteReferencesMap?: QuoteReferencesMap;
   onQuoteClick?: (quoteText: string) => void;
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export const QuoteSearchModal: React.FunctionComponent<
   quoteReferencesMap,
   onQuoteClick,
   onJumpToPost,
+  isArchived = false,
 }: QuoteSearchModalProps) => {
   // 引用テキストから検索クエリを抽出（&gt;を除去してデコード）
   const searchQuery = useMemo(() => {
@@ -48,9 +50,9 @@ export const QuoteSearchModal: React.FunctionComponent<
       // 全レス・ファイル名・レスNoから検索
       // TODO QuoteReferenceMapを利用
       const content = [
-        `No.${post.id}`,
-        post.attachment?.path,
-        ...post.body.map((line) => line.text),
+        `No.${postNo(post)}`,
+        post.attachment?.originalUrl,
+        post.body,
       ]
         .join("\n")
         .toLowerCase();
@@ -81,6 +83,7 @@ export const QuoteSearchModal: React.FunctionComponent<
             allPosts={posts}
             onQuoteClick={onQuoteClick}
             onJumpToPost={onJumpToPost}
+            isArchived={isArchived}
           />
         )}
       </div>

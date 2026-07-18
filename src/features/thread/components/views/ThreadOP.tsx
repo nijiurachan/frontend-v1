@@ -3,36 +3,49 @@ import { useState } from "react";
 import { GiSpiralBloom } from "react-icons/gi";
 import { MdBlock, MdExpandMore } from "react-icons/md";
 import type { Post } from "@/entities/post";
+import type { ThreadTag } from "@/entities/thread";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
-import type { QuoteReferencesMap } from "../../utils";
-import { PostDisplay } from "../PostDisplay";
+import { PostDisplay } from "@/features/thread/components/PostDisplay";
+import type { QuoteReferencesMap } from "@/features/thread/utils";
+import { useAimogeBeforeRender, useAimogeRendered } from "@/shared/lib/aimoge";
+import { TagBadges } from "@/shared/ui/navigation";
 
 interface Props {
   post: Post;
+  tags: ThreadTag[];
   onQuoteClick?: (quoteText: string) => void;
   quoteReferencesMap?: QuoteReferencesMap;
   allPosts?: Post[];
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 export const ThreadOP: React.FunctionComponent<Props> = ({
   post,
+  tags,
   onQuoteClick,
   quoteReferencesMap,
   allPosts,
   onJumpToPost,
+  isArchived = false,
 }: Props) => {
+  const renderedPost = useAimogeBeforeRender("post:beforeRender", post);
+  const elementRef = useAimogeRendered("post", renderedPost, post.threadId);
   const { isPostHidden, showNgContent } = useNgStore();
-  const isNg = isPostHidden(post);
+  const isNg = renderedPost ? isPostHidden(renderedPost) : false;
   const spaceMode = useSettingsStore((s) => s.spaceMode);
   const showSpaceButton = spaceMode && !(isNg && !showNgContent);
   const [expanded, setExpanded] = useState(false);
+
+  if (!renderedPost) return null;
+  if (renderedPost.status !== "public") return null;
 
   // NGかつshowNgContentがfalseの場合のみ非表示メッセージを表示
   if (isNg && !showNgContent) {
     return (
       <div
+        ref={elementRef}
         id="post-0"
         className="p-8 text-center text-muted-foreground border-b border-border"
       >
@@ -46,6 +59,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
     return (
       // biome-ignore lint: <label>＆非表示<button>に乗り換え予定
       <div
+        ref={elementRef}
         id="post-0"
         className="p-4 border-b border-border bg-card/50 cursor-pointer hover:bg-card/80 transition-colors"
         onClick={(): void => setExpanded(true)}
@@ -73,7 +87,7 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
 
   const handleOpenSpaceMode = (e: React.MouseEvent): void => {
     e.stopPropagation();
-    const url = `${import.meta.env.BASE_PATH}/space/${post.thread_id}`;
+    const url = `${import.meta.env.BASE_PATH}/space/${renderedPost.threadId}`;
     const win = window.open(url, "_blank");
     if (!win || win.closed) {
       window.location.href = url;
@@ -81,7 +95,10 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
   };
 
   return (
-    <div id="post-0" className="relative">
+    <div ref={elementRef} id="post-0" className="relative">
+      <div className="px-4 pt-4">
+        <TagBadges tags={tags} />
+      </div>
       {isNg && showNgContent && (
         // biome-ignore lint: <label>＆非表示<button>に乗り換え予定
         <div
@@ -107,15 +124,14 @@ export const ThreadOP: React.FunctionComponent<Props> = ({
         </button>
       )}
       <PostDisplay
-        post={post}
+        post={renderedPost}
         className={clsx("p-4", isNg && showNgContent && "opacity-70")}
         onQuoteClick={onQuoteClick}
         quoteReferencesMap={quoteReferencesMap}
         allPosts={allPosts}
-        onJumpToPost={
-          onJumpToPost ? (): void => onJumpToPost(post.id) : undefined
-        }
+        onJumpToPost={onJumpToPost}
         isSubView={false}
+        isArchived={isArchived}
       />
     </div>
   );

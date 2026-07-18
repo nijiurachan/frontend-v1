@@ -1,20 +1,27 @@
 // biome-ignore-all lint/suspicious/noArrayIndexKey: ここで扱うセグメント配列は変化しない
 
 import { Fragment, useMemo } from "react";
-import type { PostBodyLine } from "@/entities/post";
+import type { Post, PostBodyLine } from "@/entities/post";
 import { PlayerTrigger } from "@/features/player/components";
+import { QuoteHoverPreview } from "@/features/thread/components/QuoteHoverPreview";
+import {
+  getQuotePostIndex,
+  resolveQuotedPostFromIndex,
+} from "@/features/thread/utils/quotePreview";
 import { type Segment, segmentize } from "@/shared/lib";
 import { TextDiced, TextLink } from "@/shared/ui/navigation";
 
 interface Props {
   line: PostBodyLine;
   onQuoteClick?: (quoteText: string) => void;
-  threadId: number;
+  threadId: string;
   postNumber: number;
   /** モーダル等のサブビュー内表示。プレイリスト登録・チェックボックスを無効化 */
   isSubView?: boolean;
   /** 虹色モード。スレ1レス目に「レインボー」を含む場合に true */
   isRainbow?: boolean;
+  allPosts?: Post[];
+  onJumpToPost?: (postSeq: number) => void;
 }
 
 // 「おぺにす」/「open is」(大小無視・空白任意) + 省略記号(...) のバリアント全部にマッチ
@@ -82,8 +89,14 @@ export const LineDisplay: React.FunctionComponent<Props> = ({
   postNumber,
   isSubView,
   isRainbow,
+  allPosts,
+  onJumpToPost,
 }: Props) => {
   const segments = useMemo(() => segmentize(line.text), [line.text]); //１行を解釈してquoteかどうか判別し、link属性とdice属性が見つかればセグメントに分ける。
+  const quotePostIndex = useMemo(
+    () => (allPosts ? getQuotePostIndex(allPosts) : null),
+    [allPosts],
+  );
 
   // 各セグメントの開始文字オフセット（連続した虹色サイクル用）
   const segmentOffsets = useMemo<number[]>(() => {
@@ -97,40 +110,48 @@ export const LineDisplay: React.FunctionComponent<Props> = ({
   }, [segments]);
 
   if (line.type === "quote") {
+    const quoteTarget = quotePostIndex
+      ? resolveQuotedPostFromIndex(line.text, postNumber, quotePostIndex)
+      : null;
     return (
-      <span>
-        {segments.map((seg: Segment, i: number) => {
-          if (seg.type === "link") {
-            return (
-              <TextLink key={i} href={seg.href} variant="primary">
-                {seg.content}
-              </TextLink>
-            );
-          }
-          if (seg.type === "dice") {
-            return (
-              <TextDiced
+      <QuoteHoverPreview target={quoteTarget} onJumpToPost={onJumpToPost}>
+        <span>
+          {segments.map((seg: Segment, i: number) => {
+            if (seg.type === "link") {
+              return (
+                <TextLink key={i} href={seg.href} variant="primary">
+                  {seg.content}
+                </TextLink>
+              );
+            }
+            if (seg.type === "dice") {
+              return (
+                <TextDiced
+                  key={i}
+                  prefix={seg.prefix}
+                  resultValue={seg.resultValue}
+                  suffix={seg.suffix}
+                />
+              );
+            }
+            // 虹色モードでも引用行は従来の quote 色 (緑) を維持
+            return onQuoteClick ? (
+              <button
                 key={i}
-                prefix={seg.prefix}
-                resultValue={seg.resultValue}
-                suffix={seg.suffix}
-              />
+                type="button"
+                className="inline cursor-pointer border-0 bg-transparent p-0 text-left text-quote hover:underline"
+                onClick={(): void => onQuoteClick(line.text)}
+              >
+                {seg.content}
+              </button>
+            ) : (
+              <span key={i} className="text-quote">
+                {seg.content}
+              </span>
             );
-          }
-          // 虹色モードでも引用行は従来の quote 色 (緑) を維持
-          return (
-            // biome-ignore lint/a11y/noStaticElementInteractions: TODO label＆buttonで置き換え予定
-            // biome-ignore lint/a11y/useKeyWithClickEvents: TODO label＆buttonで置き換え予定
-            <span
-              key={i}
-              className="text-quote cursor-pointer hover:underline"
-              onClick={(): void => onQuoteClick?.(line.text)}
-            >
-              {seg.content}
-            </span>
-          );
-        })}
-      </span>
+          })}
+        </span>
+      </QuoteHoverPreview>
     );
   }
 

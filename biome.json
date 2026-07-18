@@ -39,6 +39,20 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": [
+        "src/features/thread/components/desktop/DesktopThreadView.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "a11y": {
+            "noNoninteractiveTabindex": "off"
+          }
+        }
+      }
+    }
+  ],
   "assist": {
     "enabled": true,
     "actions": {

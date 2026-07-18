@@ -1,4 +1,4 @@
-import type { Post } from "@/entities/post";
+import { type Post, postNo } from "@/entities/post";
 import { extractQuoteTexts, stripQuoteLines } from "@/shared/lib";
 
 /**
@@ -6,7 +6,7 @@ import { extractQuoteTexts, stripQuoteLines } from "@/shared/lib";
  * key: 被引用レスのID
  * value: そのレスを引用している元レスのインデックス配列
  */
-export type QuoteReferencesMap = Map<number, number[]>;
+export type QuoteReferencesMap = Map<string, number[]>;
 
 /**
  * スレッド内の引用関係を解析（最適化版）
@@ -14,7 +14,7 @@ export type QuoteReferencesMap = Map<number, number[]>;
  * @returns 被引用レスIDと引用元レスインデックスのマップ
  */
 export function extractQuoteReferences(posts: Post[]): QuoteReferencesMap {
-  const referencesMap = new Map<number, number[]>();
+  const referencesMap = new Map<string, number[]>();
   // 各レスの引用を解析
 
   // TODO QuoteSearchModalで再利用できるようQuoteReferencesMapをクラスにして機能を足す
@@ -23,9 +23,9 @@ export function extractQuoteReferences(posts: Post[]): QuoteReferencesMap {
   const processedPosts = posts.map((post) => {
     // 全レス・ファイル名・レスNoから検索
     const plainText = [
-      `No.${post.id}`,
-      post.attachment?.path,
-      ...post.body.map((line) => line.text),
+      `No.${postNo(post)}`,
+      post.attachment?.originalUrl,
+      post.body,
     ].join("\n");
     const textWithoutQuotes = stripQuoteLines(plainText);
     return {
@@ -36,13 +36,13 @@ export function extractQuoteReferences(posts: Post[]): QuoteReferencesMap {
   });
 
   posts.forEach((post, sourceIndex) => {
-    const plainText = post.plainBody;
+    const plainText = post.body;
     const quoteTexts = extractQuoteTexts(plainText);
 
     if (quoteTexts.length === 0) return;
 
     // このレスがどのレスを引用しているかを追跡（重複を防ぐ）
-    const referencedInThisPost = new Set<number>();
+    const referencedInThisPost = new Set<string>();
 
     // 引用テキストごとに検索
     for (const quoteText of quoteTexts) {

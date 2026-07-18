@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { safeAdUrl } from "./safeAdUrl";
+import { safeAdUrl } from "@/shared/ui/ad/safeAdUrl";
 
 describe("safeAdUrl", () => {
   test("returns null for null (リンク無し広告) without throwing", () => {

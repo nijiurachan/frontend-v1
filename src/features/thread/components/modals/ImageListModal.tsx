@@ -1,11 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { HiDotsVertical } from "react-icons/hi";
 import type { Post } from "@/entities/post";
+import { PostActionMenu } from "@/features/thread/ui";
+import type { ImageItem } from "@/features/thread/utils/extractImages";
 import { VideoPlayOverlay } from "@/shared/ui/media";
 import { Modal } from "@/shared/ui/overlay";
-import { PostActionMenu } from "../../ui";
-import type { ImageItem } from "../../utils/extractImages";
 
 interface ImageListModalProps {
   isOpen: boolean;
@@ -14,6 +14,7 @@ interface ImageListModalProps {
   onImageClick?: (image: ImageItem) => void;
   allPosts?: Post[];
   onJumpToPost?: (postIndex: number) => void;
+  isArchived?: boolean;
 }
 
 /**
@@ -27,21 +28,16 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
   onImageClick,
   allPosts = [],
   onJumpToPost,
+  isArchived = false,
 }: ImageListModalProps) => {
   const [menuPost, setMenuPost] = useState<Post | null>(null);
   const [lastValidMenuPost, setLastValidMenuPost] = useState<Post | null>(null);
 
-  // menuPostが有効な値のとき、それを保持する（アニメーション用）
-  useEffect(() => {
-    if (menuPost) {
-      setLastValidMenuPost(menuPost);
-    }
-  }, [menuPost]);
-
-  const handleMenuClick = (e: React.MouseEvent, postId: number): void => {
+  const handleMenuClick = (e: React.MouseEvent, postId: string): void => {
     e.stopPropagation();
     const post = allPosts.find((p) => p.id === postId);
     if (post) {
+      setLastValidMenuPost(post);
       setMenuPost(post);
     }
   };
@@ -54,7 +50,7 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
     if (!lastValidMenuPost || !onJumpToPost) return;
     const post = allPosts.find((p) => p.id === lastValidMenuPost.id);
     if (post) {
-      onJumpToPost(post.id);
+      onJumpToPost(post.seq);
     }
   };
 
@@ -73,7 +69,7 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
     );
   }
 
-  const [{ thread_id: threadId }] = allPosts;
+  const [{ threadId }] = allPosts;
 
   return (
     <>
@@ -84,7 +80,7 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
         position="bottom"
       >
         <div className="p-4">
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             {images.map((image, index) => (
               <div key={image.id} className="relative">
                 <Link
@@ -133,6 +129,8 @@ export const ImageListModal: React.FunctionComponent<ImageListModalProps> = ({
           onClose={handleCloseMenu}
           post={lastValidMenuPost}
           onJumpToPost={onJumpToPost ? handleJumpToPost : undefined}
+          isArchived={isArchived}
+          maxSeq={allPosts.at(-1)?.seq ?? lastValidMenuPost.seq}
         />
       )}
     </>

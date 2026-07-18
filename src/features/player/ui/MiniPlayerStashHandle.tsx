@@ -6,7 +6,7 @@
 import { motion } from "motion/react";
 import { BsChevronCompactLeft, BsChevronCompactRight } from "react-icons/bs";
 import { FiVideo } from "react-icons/fi";
-import type { MiniPlayerPosition } from "../stores/playerStore";
+import type { MiniPlayerPosition } from "@/features/player/stores/playerStore";
 
 // 隅 → 画面端へ密着させる配置（縦位置はプレイヤ本体のアンカーと揃える）
 const HANDLE_POSITION_CLASSES: Record<MiniPlayerPosition, string> = {

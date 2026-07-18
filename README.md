@@ -95,6 +95,10 @@ bun preview
 cross-env VITE_BASE_URL=https://example.com bun dev
 ```
 
+添付ファイルのクライアント側サイズ上限は、ビルド時環境変数
+`VITE_MAX_ATTACHMENT_BYTES`（未指定または不正な値の場合は `20971520`）で設定できます。
+presign API 側でもサーバー設定による上限検査を行います。
+
 ## 主な機能
 
 - 📱 **カタログ表示** - スレッド一覧のグリッド表示

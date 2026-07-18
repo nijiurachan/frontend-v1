@@ -2,18 +2,19 @@ import { useMemo, useState } from "react";
 import { FiHash, FiSearch, FiSlash } from "react-icons/fi";
 import type { Post } from "@/entities/post";
 import { useNgStore } from "@/features/ng-filter/stores";
+import { DisplayIdSearchModal } from "@/features/thread/components/modals/DisplayIdSearchModal";
+import { useReplyModalStore } from "@/features/thread/stores/replyModalStore";
 import { Modal } from "@/shared/ui/overlay";
-import { DisplayIdSearchModal } from "../components/modals/DisplayIdSearchModal";
-import { useReplyModalStore } from "../stores/replyModalStore";
 
 interface DisplayIdMenuProps {
   isOpen: boolean;
   onClose: () => void;
   displayId: string;
-  threadId: number;
+  threadId: string;
   allPosts?: Post[];
-  quoteReferencesMap?: Map<number, number[]>;
+  quoteReferencesMap?: Map<string, number[]>;
   onQuoteClick?: (quoteText: string) => void;
+  isArchived?: boolean;
 }
 
 interface ActionItem {
@@ -31,15 +32,16 @@ export const DisplayIdMenu: React.FunctionComponent<DisplayIdMenuProps> = ({
   allPosts,
   quoteReferencesMap,
   onQuoteClick,
+  isArchived = false,
 }: DisplayIdMenuProps) => {
   const { addNgDisplayId } = useNgStore();
   const openReplyModal = useReplyModalStore((s) => s.open);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
 
-  // このdisplay_idを持つレスの数を計算
+  // このdisplayIdを持つレスの数を計算
   const postCount = useMemo(() => {
     if (!allPosts) return 0;
-    return allPosts.filter((p) => p.display_id === displayId).length;
+    return allPosts.filter((p) => p.displayId === displayId).length;
   }, [allPosts, displayId]);
 
   const handleSearch = (): void => {
@@ -70,12 +72,14 @@ export const DisplayIdMenu: React.FunctionComponent<DisplayIdMenuProps> = ({
       variant: "destructive",
       onClick: handleNg,
     },
-    {
+  ];
+  if (!isArchived) {
+    actions.push({
       icon: FiHash,
       label: "ID引用",
       onClick: handleQuote,
-    },
-  ];
+    });
+  }
 
   return (
     <>
@@ -118,6 +122,7 @@ export const DisplayIdMenu: React.FunctionComponent<DisplayIdMenuProps> = ({
           threadId={threadId}
           quoteReferencesMap={quoteReferencesMap}
           onQuoteClick={onQuoteClick}
+          isArchived={isArchived}
         />
       )}
     </>

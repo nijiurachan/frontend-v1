@@ -1,41 +1,40 @@
 import type { UseMutationResult } from "@tanstack/react-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiPost } from "@/shared/api";
-import { getFingerprint } from "@/shared/lib/fingerprint";
+import { isDuplicateSoudaneError } from "@/features/thread/hooks/soudaneError";
+import { apiPut } from "@/shared/api";
+import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
 import { toast } from "@/shared/ui/toast";
 
-interface SoudaneResponse {
-  soudane_count: number;
+interface ReactionResponse {
+  postId: string;
+  type: "up";
 }
 
 export function useSoudaneMutation(): UseMutationResult<
-  SoudaneResponse,
+  ReactionResponse,
   unknown,
-  number
+  string
 > {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (postId: number) => {
-      const fingerprint = await getFingerprint();
-      return apiPost<SoudaneResponse>(`/post/${postId}/soudane`, {
-        fingerprint,
-      });
+    mutationFn: async (postId: string) => {
+      try {
+        return await apiPut<ReactionResponse>(`/posts/${postId}/reactions/up`, {
+          requiresToken: true,
+        });
+      } catch (error) {
+        if (isDuplicateSoudaneError(error)) return { postId, type: "up" };
+        throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["thread"] });
       console.info("そうだねしました");
     },
-    onError: (error: unknown, postId: number) => {
+    onError: (error: unknown, postId: string) => {
       console.warn("そうだねに失敗しました", { error, postId });
-      const message = error instanceof Error ? error.message : undefined;
-      if (message === "そうだね済みです") {
-        toast.success(`そうだね済みです`);
-      } else if (message) {
-        toast.error(`エラー: ${message}`);
-      } else {
-        toast.error("そうだねの送信に失敗しました");
-      }
+      toast.error(getApiErrorMessage(error, "そうだねの送信に失敗しました"));
     },
   });
 }

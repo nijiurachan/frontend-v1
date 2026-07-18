@@ -33,8 +33,11 @@
 // ============================================================
 
 import { useEffect } from "react";
-import { usePlayerStore } from "../stores/playerStore";
-import { getSyncedNow, primeServerTimeOffset } from "../utils/serverTime";
+import { usePlayerStore } from "@/features/player/stores/playerStore";
+import {
+  getSyncedNow,
+  primeServerTimeOffset,
+} from "@/features/player/utils/serverTime";
 
 /** 同期チェック間隔（ms）。初回シークは最大このディレイで実行される */
 const CHECK_INTERVAL = 1000;

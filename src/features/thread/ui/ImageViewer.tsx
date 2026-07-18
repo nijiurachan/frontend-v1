@@ -1,6 +1,6 @@
 import { AnimatePresence } from "motion/react";
 
-import { ImageViewerContent } from "./ImageViewerContent";
+import { ImageViewerContent } from "@/features/thread/ui/ImageViewerContent";
 
 interface ImageViewerProps {
   isOpen: boolean;

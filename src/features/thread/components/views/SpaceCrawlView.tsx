@@ -1,13 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { Post } from "@/entities/post";
-import type { Thread } from "@/entities/thread";
 import { resolveUploadPath } from "@/entities/thread";
+import { PostBlock } from "@/features/thread/components/views/space/PostBlock";
+import { useCrawlProgress } from "@/features/thread/components/views/space/useCrawlProgress";
 import { decorateTitle, isVideoAttachment } from "@/shared/lib";
-import { PostBlock } from "./space/PostBlock";
-import { useCrawlProgress } from "./space/useCrawlProgress";
 
 interface Props {
-  thread: Thread;
   posts: Post[];
 }
 
@@ -67,11 +65,11 @@ export const SpaceCrawlView: React.FunctionComponent<Props> = ({
   const imageSrc = attachment
     ? resolveUploadPath(
         isVideoAttachment(attachment)
-          ? attachment.thumbnail || attachment.path
-          : attachment.path,
+          ? attachment.thumbnailUrl
+          : attachment.originalUrl,
       )
     : null;
-  const hasBody = firstPost ? firstPost.plainBody.trim().length > 0 : false;
+  const hasBody = firstPost ? firstPost.body.trim().length > 0 : false;
 
   if (!firstPost) return null;
 
@@ -79,9 +77,7 @@ export const SpaceCrawlView: React.FunctionComponent<Props> = ({
     <>
       {prologueVisible && hasBody && (
         <div className="sw-prologue-overlay" aria-hidden>
-          <p className="sw-prologue-text">
-            {decorateTitle(firstPost.plainBody)}
-          </p>
+          <p className="sw-prologue-text">{decorateTitle(firstPost.body)}</p>
         </div>
       )}
       {crawlMounted && <CrawlRunner rest={rest} />}

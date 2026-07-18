@@ -1,21 +1,22 @@
 import { useMemo } from "react";
 import type { Post } from "@/entities/post";
+import { PostListDisplay } from "@/features/thread/ui";
+import type { QuoteReferencesMap } from "@/features/thread/utils/extractQuoteReferences";
 import { Modal } from "@/shared/ui/overlay";
-import { PostListDisplay } from "../../ui";
-import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
 
 interface DisplayIdSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
   displayId: string;
   posts: Post[];
-  threadId: number;
+  threadId: string;
   quoteReferencesMap?: QuoteReferencesMap;
   onQuoteClick?: (quoteText: string) => void;
+  isArchived?: boolean;
 }
 
 /**
- * 特定のdisplay_idを持つレスを一覧表示するモーダル
+ * 特定のdisplayIdを持つレスを一覧表示するモーダル
  */
 export const DisplayIdSearchModal: React.FunctionComponent<
   DisplayIdSearchModalProps
@@ -26,12 +27,13 @@ export const DisplayIdSearchModal: React.FunctionComponent<
   posts,
   quoteReferencesMap,
   onQuoteClick,
+  isArchived = false,
 }: DisplayIdSearchModalProps) => {
-  // display_idでフィルタリング
+  // displayIdでフィルタリング
   const filteredPosts = useMemo(() => {
     return posts
-      .map((post, index) => ({ post, index: index + 1 }))
-      .filter(({ post }) => post.display_id === displayId);
+      .map((post) => ({ post, index: post.seq }))
+      .filter(({ post }) => post.displayId === displayId);
   }, [posts, displayId]);
 
   return (
@@ -57,6 +59,7 @@ export const DisplayIdSearchModal: React.FunctionComponent<
             quoteReferencesMap={quoteReferencesMap}
             allPosts={posts}
             onQuoteClick={onQuoteClick}
+            isArchived={isArchived}
           />
         )}
       </div>

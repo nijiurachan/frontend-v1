@@ -7,6 +7,7 @@ interface WorkerRoute {
 
 interface WranglerConfig {
   routes?: WorkerRoute[];
+  env?: Record<string, { routes?: WorkerRoute[] }>;
 }
 
 const configPath: URL = new URL("../../wrangler.jsonc", import.meta.url);
@@ -23,17 +24,30 @@ describe("production Worker routes", () => {
     const routes = new Map(
       (config.routes ?? []).map((route) => [route.pattern, route.zone_name]),
     );
+    // 本番Worker (frontend-v1) は本番ドメインのルートだけを持つ。
+    // test.nijiurachan.net は nginx がルート直下で配信するため含めない。
     const expectedRoutes = new Map([
       ["nijiurachan.net/ts", "nijiurachan.net"],
       ["nijiurachan.net/ts/*", "nijiurachan.net"],
       ["nijiurachan.net/manifest.json", "nijiurachan.net"],
-      ["test.nijiurachan.net/ts", "nijiurachan.net"],
-      ["test.nijiurachan.net/ts/*", "nijiurachan.net"],
       ["nijiurachan.net/assets/klecks/*", "nijiurachan.net"],
-      ["test.nijiurachan.net/assets/klecks/*", "nijiurachan.net"],
+      ["nijiurachan.net/robots.txt", "nijiurachan.net"],
+      ["nijiurachan.net/sitemap.xml", "nijiurachan.net"],
     ]);
 
     expect(config.routes).toHaveLength(expectedRoutes.size);
     expect(sortRoutes(routes)).toEqual(sortRoutes(expectedRoutes));
+  });
+
+  test("keeps the experimental worker on /ts-test paths only", async () => {
+    const config = Bun.JSONC.parse(
+      await Bun.file(configPath).text(),
+    ) as WranglerConfig;
+    const testRoutes = config.env?.test?.routes ?? [];
+
+    expect(testRoutes.length).toBeGreaterThan(0);
+    for (const route of testRoutes) {
+      expect(route.pattern).toContain("/ts-test");
+    }
   });
 });

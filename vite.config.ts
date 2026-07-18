@@ -20,10 +20,22 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
   const isBuild = command === "build";
   const isProd = mode === "production";
   const isDev = !isProd;
-  const basePath = isProd ? "/ts" : mode === "testing" ? "/ts-test" : "/ts-dev";
   const env = loadEnv(mode, import.meta.dirname, "");
+  // VITE_BASE_PATH で配信ベースパスを上書きできる (空文字 "" = ルート直下配信)。
+  // 未指定時は従来どおり production=/ts, testing=/ts-test, それ以外=/ts-dev。
+  const basePath =
+    env.VITE_BASE_PATH !== undefined
+      ? env.VITE_BASE_PATH
+      : isProd
+        ? "/ts"
+        : mode === "testing"
+          ? "/ts-test"
+          : "/ts-dev";
   const klecksEmbedUrl =
     env.VITE_KLECKS_EMBED_URL?.trim() || "/assets/klecks/embed.js";
+  // ローカルAPI (AI_BBS) の起動アドレスが 8080 以外の場合に上書きできるようにする
+  // (例: VS Code の auto port-forward が 8080 を占有している環境)
+  const proxyTarget = env.VITE_PROXY_TARGET?.trim() || "http://localhost:8080";
 
   return {
     build: {
@@ -60,6 +72,48 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
     ],
     resolve: {
       alias: [
+        {
+          find: "react-dom/client",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/client.mjs",
+          ),
+        },
+        {
+          find: "react-dom",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/dist/compat.module.js",
+          ),
+        },
+        {
+          find: "react/jsx-dev-runtime",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/jsx-dev-runtime.mjs",
+          ),
+        },
+        {
+          find: "react/jsx-runtime",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/jsx-runtime.mjs",
+          ),
+        },
+        {
+          find: "react",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/dist/compat.module.js",
+          ),
+        },
+        {
+          find: "preact/compat",
+          replacement: resolve(
+            import.meta.dirname,
+            "./node_modules/preact/compat/dist/compat.module.js",
+          ),
+        },
         {
           find: "preact/hooks",
           replacement: resolve(
@@ -98,17 +152,18 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
       ],
     },
     define: {
-      "import.meta.env.BASE_PATH": JSON.stringify(basePath),
+      // ルート直下配信 (basePath="") のときは Router へ "/" を渡す
+      "import.meta.env.BASE_PATH": JSON.stringify(basePath || "/"),
       "import.meta.env.APP_NAME": JSON.stringify(manifest.name),
     },
     server: {
       proxy: {
         "/api": {
-          target: "http://localhost:8080",
+          target: proxyTarget,
           changeOrigin: true,
         },
         "/uploads": {
-          target: "http://localhost:8080",
+          target: proxyTarget,
           changeOrigin: true,
         },
       },

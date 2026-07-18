@@ -9,8 +9,6 @@ import { LoadingScreen, Message } from "@/shared/ui/feedback";
 export const SpacePage: React.FunctionComponent = () => {
   const { threadId } = useParams({ from: "/space/$threadId" });
   const navigate = useNavigate();
-  const id = Number(threadId);
-  const idIsValid = Number.isInteger(id) && id > 0;
 
   // body スクロールを完全ロック（GalleryPage と同じ方式）
   useEffect(() => {
@@ -47,14 +45,15 @@ export const SpacePage: React.FunctionComponent = () => {
     };
   }, []);
 
-  const { data, isLoading, error } = useThread(id);
-  const { isPostHidden } = useNgStore();
+  const { data, isLoading, error } = useThread(threadId);
+  const { isPostHidden, ngImages } = useNgStore();
 
   // 宇宙モードは没入体験のため `showNgContent` を無視し常に NG を除外する（spec §10）
   const visiblePosts = useMemo(() => {
+    void ngImages;
     if (!data) return [];
     return data.posts.filter((post) => !isPostHidden(post));
-  }, [data, isPostHidden]);
+  }, [data, isPostHidden, ngImages]);
 
   const handleClose = (): void => {
     window.close();
@@ -64,14 +63,6 @@ export const SpacePage: React.FunctionComponent = () => {
     }).catch(console.warn);
   };
 
-  if (!idIsValid) {
-    return (
-      <div className="sw-scene">
-        <div className="sw-starfield" aria-hidden />
-        <Message variant="error">無効なスレッドIDです</Message>
-      </div>
-    );
-  }
   if (isLoading) {
     return (
       <div className="sw-scene">
@@ -119,7 +110,7 @@ export const SpacePage: React.FunctionComponent = () => {
       >
         <FiX size={20} />
       </button>
-      <SpaceCrawlView thread={data.thread} posts={visiblePosts} />
+      <SpaceCrawlView posts={visiblePosts} />
     </div>
   );
 };

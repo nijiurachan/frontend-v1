@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-import type { ImageItem } from "../utils/extractImages";
+import type { ImageItem } from "@/features/thread/utils/extractImages";
 
 interface Props {
   images: ImageItem[];

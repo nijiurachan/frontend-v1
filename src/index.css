@@ -90,6 +90,26 @@ body {
   overscroll-behavior-y: none;
 }
 
+.altcha-widget-shell {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.altcha-widget-element {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  --altcha-max-width: 100%;
+  --altcha-color-base: var(--color-card);
+  --altcha-color-base-content: var(--color-card-foreground);
+  --altcha-color-neutral: var(--color-border);
+  --altcha-color-neutral-content: var(--color-foreground);
+  --altcha-color-primary: var(--color-primary);
+  --altcha-color-primary-content: var(--color-primary-foreground);
+  --altcha-color-error: var(--color-destructive);
+  --altcha-color-error-content: var(--color-destructive-foreground);
+}
+
 /* 行制限 */
 .line-clamp-2 {
   display: -webkit-box;
@@ -144,6 +164,894 @@ select option {
 .text-glow {
   font-weight: bold;
   animation: text-glow-pulse 1.4s ease-in-out infinite;
+}
+
+/* ========================================
+   旧AI_BBS PC版デスクトップレイアウト
+   ======================================== */
+
+.desktop-app {
+  --desktop-paper: #ffffee;
+  --desktop-ink: #800000;
+  --desktop-link: #0000ee;
+  --desktop-card: #f0e0d6;
+  background: var(--desktop-paper);
+  color: var(--desktop-ink);
+  font-family: Arial, "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+  font-size: 14px;
+}
+
+/* PC版も共通darkModeを尊重する。旧ライト配色の変数名は維持し、
+   dark時だけセマンティックカラーへ差し替える。 */
+:root:not(.light-mode) .desktop-app {
+  --desktop-paper: var(--color-background);
+  --desktop-ink: var(--color-foreground);
+  --desktop-link: var(--color-primary);
+  --desktop-card: var(--color-card);
+}
+
+:root:not(.light-mode)
+  .desktop-app
+  :is(
+    .desktop-header-utilities input,
+    .desktop-header-utilities button,
+    .desktop-tag-filter button,
+    .desktop-floating-field > input,
+    .desktop-floating-form form > textarea,
+    .desktop-floating-form form > button
+  ) {
+  border-color: var(--color-border);
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+
+:root:not(.light-mode)
+  .desktop-app
+  :is(
+    .desktop-floating-heading,
+    .desktop-floating-grip,
+    .desktop-floating-field > label,
+    .desktop-floating-field > .desktop-floating-label
+  ) {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+
+:root:not(.light-mode)
+  .desktop-app
+  :is(
+    .desktop-catalog-thumb,
+    .desktop-catalog-item,
+    .desktop-thread-op article,
+    .desktop-thread-post-row article
+  ) {
+  border-color: var(--color-border);
+}
+
+.desktop-app a {
+  color: var(--desktop-link);
+}
+
+.desktop-app a:hover {
+  color: #d00;
+}
+
+.desktop-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: grid;
+  grid-template-columns: minmax(300px, 1fr) auto minmax(420px, 1fr);
+  align-items: center;
+  min-height: 44px;
+  padding: 3px 10px 4px;
+  border-bottom: 1px solid #999;
+  background: var(--desktop-paper);
+  white-space: nowrap;
+}
+
+.desktop-header-links,
+.desktop-header-utilities {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+
+.desktop-header-utilities {
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.desktop-header-title {
+  color: var(--desktop-ink);
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.desktop-header-mascot {
+  display: inline-block;
+  width: 34px;
+  height: 34px;
+  margin-right: 3px;
+  object-fit: contain;
+  vertical-align: middle;
+}
+
+.desktop-header-current {
+  color: #c40;
+  font-size: 12px;
+}
+
+.desktop-header-utilities input {
+  flex: 0 1 110px;
+  width: 110px;
+  min-width: 50px;
+  height: 22px;
+  padding: 1px 4px;
+  border: 1px solid #888;
+  border-radius: 0;
+  background: #fff;
+  color: #333;
+}
+
+.desktop-header-utilities button {
+  height: 22px;
+  padding: 0 8px;
+  border: 1px solid #888;
+  background: #eee;
+  color: #333;
+}
+
+.desktop-jukebox-notice {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  border: 1px solid #800;
+  background: var(--desktop-paper);
+  box-shadow: 2px 2px 4px #777;
+  font-size: 12px;
+}
+
+.desktop-jukebox-notice button {
+  margin-left: 8px;
+}
+
+.desktop-main {
+  min-height: calc(100vh - 44px);
+  overflow: visible;
+}
+
+.desktop-catalog-page {
+  position: relative;
+  min-height: calc(100vh - 44px);
+  padding: 4px 10px 40px;
+}
+
+.desktop-catalog-nav,
+.desktop-thread-nav {
+  margin: 0 0 5px;
+  padding: 1px 0;
+  font-size: 16px;
+}
+
+.desktop-catalog-nav a,
+.desktop-thread-nav a,
+.desktop-nav-link,
+.desktop-thread-nav button {
+  margin-right: 7px;
+}
+
+.desktop-nav-link,
+.desktop-thread-nav button,
+.desktop-catalog-nav > button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--desktop-link);
+  font: inherit;
+  cursor: pointer;
+}
+
+.desktop-nav-link:hover,
+.desktop-thread-nav button:hover,
+.desktop-catalog-nav > button:hover {
+  color: #d00;
+  text-decoration: underline;
+}
+
+.desktop-mode-title {
+  margin: 0 0 4px;
+  padding: 4px;
+  background: #0040e0;
+  color: #fff;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.desktop-catalog-tools {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.desktop-tag-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+  justify-content: center;
+}
+
+.desktop-catalog-tools .desktop-tag-filter {
+  max-width: 720px;
+}
+
+.desktop-tag-filter button {
+  padding: 1px 5px;
+  border: 1px solid #aaa;
+  background: #f8f8e8;
+  color: var(--desktop-ink);
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.desktop-tag-filter button[data-selected="true"] {
+  border-color: #0040e0;
+  background: #0040e0;
+  color: #fff;
+}
+
+.desktop-catalog-grid-wrap {
+  /* スレ立てパネル(325px)ぶん右へ寄り過ぎない範囲で広く使う */
+  width: min(100%, 1240px);
+  margin: 0 auto;
+}
+
+.desktop-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(
+      var(--catalog-columns, 7),
+      minmax(0, calc(var(--catalog-image-size, 100px) + 24px))
+    );
+  justify-content: center;
+  gap: 3px;
+}
+
+.desktop-catalog-item {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #bbb;
+  background: var(--desktop-paper);
+}
+
+.desktop-catalog-item > a {
+  display: block;
+  padding: 2px;
+  text-decoration: none;
+}
+
+.desktop-catalog-item-right {
+  grid-column: span 2;
+}
+
+.desktop-catalog-item-right > a {
+  display: grid;
+  grid-template-columns: var(--catalog-image-size, 100px) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 5px;
+}
+
+.desktop-catalog-thumb {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--catalog-image-size, 100px);
+  height: var(--catalog-image-size, 100px);
+  max-width: 100%;
+  overflow: hidden;
+  background: #f5f5f5;
+}
+
+.desktop-catalog-item-right .desktop-catalog-thumb {
+  grid-row: 1 / span 2;
+}
+
+.catalog-item-text-right {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+}
+
+.catalog-item-text-right > a:first-child {
+  grid-row: 1 / span 2;
+}
+
+.catalog-configured-thumb {
+  margin-inline: auto;
+}
+
+.catalog-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem 5rem;
+}
+
+.catalog-pagination button,
+.history-nav a,
+.board-page-nav a,
+.public-search-page nav a {
+  color: var(--color-primary);
+  text-decoration: underline;
+}
+
+.catalog-pagination button:disabled {
+  opacity: 0.5;
+}
+
+.desktop-auto-reload {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-right: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.history-page,
+.board-page,
+.public-search-page {
+  width: min(100%, 70rem);
+  margin-inline: auto;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.history-nav,
+.board-page-nav,
+.public-search-page nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.history-mobile-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding-block: 0.75rem 5rem;
+}
+
+.board-page > h1,
+.public-search-page > h1 {
+  margin-block: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.board-thread {
+  margin-block: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.board-thread-link {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.board-post {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+  margin-block: 0.25rem;
+  padding: 0.5rem;
+  background: var(--color-card);
+}
+
+.board-post-op {
+  border-left: 0.25rem solid var(--color-primary);
+}
+
+.board-post img {
+  width: 6.25rem;
+  height: 6.25rem;
+  flex: none;
+  object-fit: contain;
+}
+
+.board-post p,
+.public-search-results p {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.board-post-meta {
+  color: var(--color-muted-foreground);
+  font-size: 0.75rem;
+}
+
+.public-search-form {
+  display: flex;
+  gap: 0.5rem;
+  margin-block: 1rem;
+}
+
+.public-search-results {
+  display: grid;
+  gap: 0.5rem;
+  margin-block: 1rem;
+  padding: 0;
+  list-style: none;
+}
+
+.public-search-results li {
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  background: var(--color-card);
+}
+
+.public-search-results a {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .board-post img {
+    width: 4.6875rem;
+    height: 4.6875rem;
+  }
+
+  .history-mobile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.desktop-catalog-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.desktop-catalog-text {
+  min-height: 43px;
+  padding: 2px 3px 0;
+  overflow-wrap: anywhere;
+  color: var(--desktop-ink);
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.desktop-catalog-count {
+  padding: 0 3px 2px;
+  color: var(--desktop-ink);
+  font-size: 13px;
+}
+
+.desktop-catalog-menu {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #9ab3e9;
+  border-radius: 3px;
+  background: #87a9ed;
+  color: #fff;
+  cursor: pointer;
+}
+
+.desktop-catalog-item .desktop-r18-mask {
+  position: absolute;
+  inset: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 238, 0.88);
+  color: #c00;
+  font-weight: 700;
+}
+
+.desktop-catalog-item .desktop-r18-mask ~ .desktop-catalog-text,
+.desktop-catalog-item .desktop-r18-mask ~ .desktop-catalog-count {
+  filter: blur(3px);
+}
+
+.desktop-thread-page {
+  position: relative;
+  min-height: calc(100vh - 44px);
+  padding: 3px 16px 80px 8px;
+}
+
+.desktop-thread-scroll {
+  height: calc(100vh - 112px);
+  min-height: 420px;
+  overflow-y: auto;
+  padding-right: 325px;
+  scrollbar-color: #777 transparent;
+}
+
+.desktop-thread-scroll:focus {
+  outline: none;
+}
+
+.desktop-thread-scroll:focus-visible {
+  outline: 2px solid var(--desktop-link);
+  outline-offset: -2px;
+}
+
+.desktop-thread-intro {
+  width: min(100%, 760px);
+  margin: 0 auto 5px;
+}
+
+.desktop-thread-notice {
+  margin: 2px auto 5px;
+  width: min(100%, 520px);
+  color: #c00;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.desktop-thread-op {
+  width: min(100%, 920px);
+  margin: 0 0 8px;
+  padding: 2px 8px 7px;
+  border-top: 1px solid #aaa;
+  border-bottom: 1px solid #aaa;
+}
+
+.desktop-thread-op article,
+.desktop-thread-post-row article {
+  /* 旧PC版のレス配置: 一番左に画像、その右に本文を並べる */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  width: fit-content;
+  min-width: 320px;
+  max-width: 100%;
+  min-height: 55px;
+  padding: 5px 10px;
+  border: 1px solid #e3d0c5;
+  border-radius: 2px;
+  background: var(--desktop-card);
+  box-shadow: 1px 1px 0 rgba(128, 0, 0, 0.08);
+  color: var(--desktop-ink);
+}
+
+.desktop-thread-op article {
+  padding: 4px 8px;
+  background: transparent;
+}
+
+.desktop-thread-op blockquote,
+.desktop-thread-post-row blockquote {
+  margin-left: 20px;
+  max-width: 800px;
+  overflow-wrap: anywhere;
+}
+
+/* 記事直下は既定で全幅に置き、画像 (figure) と直後の本文だけ横並びにする */
+.desktop-thread-op article > *,
+.desktop-thread-post-row article > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.desktop-thread-op figure,
+.desktop-thread-post-row figure {
+  margin-left: 20px;
+}
+
+.desktop-thread-op article > figure,
+.desktop-thread-post-row article > figure {
+  grid-column: 1;
+}
+
+.desktop-thread-op article > figure + blockquote,
+.desktop-thread-post-row article > figure + blockquote {
+  grid-column: 2;
+  margin-left: 0;
+}
+
+.desktop-thread-op .text-foreground,
+.desktop-thread-post-row .text-foreground {
+  color: var(--desktop-ink);
+}
+
+.desktop-thread-post-list {
+  position: relative;
+  width: min(100%, 920px);
+  /* 旧PC版と同じくレスは左詰めで並べる */
+  margin: 0;
+}
+
+.desktop-thread-post-list-inner {
+  position: relative;
+  width: 100%;
+}
+
+.desktop-thread-post-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 2px 0;
+  contain: layout style paint;
+}
+
+.desktop-thread-post-row .text-muted-foreground {
+  color: #a40000;
+}
+
+.desktop-thread-post-row .text-primary,
+.desktop-thread-post-row .text-quote {
+  color: #078307;
+}
+
+.desktop-thread-post-row .text-soudane {
+  color: #800000;
+}
+
+.desktop-thread-post-row .desktop-indent-1 {
+  margin-left: 18px;
+}
+
+.desktop-thread-post-row .desktop-indent-2 {
+  margin-left: 36px;
+}
+
+.desktop-thread-post-row .desktop-indent-3 {
+  margin-left: 54px;
+}
+
+.desktop-floating-panel {
+  position: fixed;
+  top: 60px;
+  right: 16px;
+  z-index: 25;
+  display: flex;
+  width: 325px;
+  max-height: calc(100vh - 78px);
+  transform: translateX(0);
+  transition: transform 0.2s ease;
+  font-size: 12px;
+}
+
+.desktop-floating-panel[data-collapsed="true"] {
+  transform: translateX(calc(100% - 24px));
+}
+
+.desktop-floating-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  min-height: 120px;
+  border: 0;
+  border-radius: 5px 0 0 5px;
+  background: #e04000;
+  color: #fff;
+  cursor: pointer;
+  writing-mode: vertical-rl;
+  font-weight: 700;
+}
+
+.desktop-floating-panel[data-kind="thread"] .desktop-floating-tab {
+  background: #0040e0;
+}
+
+.desktop-floating-content {
+  width: 301px;
+  max-height: calc(100vh - 78px);
+  overflow-y: auto;
+  border: 2px solid #e04000;
+  border-right: 0;
+  border-radius: 5px 0 0 5px;
+  background: var(--desktop-card);
+  box-shadow: -2px 2px 10px rgba(0, 0, 0, 0.3);
+  visibility: visible;
+  transition: visibility 0s 0s;
+}
+
+/* 折りたたみ中は画面右端にスクロールバー等がはみ出て見えないよう隠す */
+.desktop-floating-panel[data-collapsed="true"] .desktop-floating-content {
+  visibility: hidden;
+  transition: visibility 0s 0.2s;
+}
+
+.desktop-floating-panel[data-kind="thread"] .desktop-floating-content {
+  border-color: #0040e0;
+}
+
+.desktop-floating-heading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 4px;
+  background: #d0d0d0;
+  color: #666;
+  /* タイトルバーを掴んでパネルを移動できる */
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+
+/* フォーム下端の「三」型ドラッグハンドル */
+.desktop-floating-grip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  background: #d0d0d0;
+  color: #666;
+  cursor: move;
+  user-select: none;
+  touch-action: none;
+}
+
+.desktop-floating-form {
+  padding: 8px;
+}
+
+.desktop-floating-field {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.desktop-floating-field > label,
+.desktop-floating-field > .desktop-floating-label {
+  align-self: stretch;
+  display: flex;
+  align-items: center;
+  padding: 3px;
+  background: #ea8;
+  color: #800000;
+  font-weight: 700;
+}
+
+.desktop-floating-field > input {
+  min-width: 0;
+  height: 24px;
+  border: 1px solid #999;
+  border-radius: 0;
+  background: #fff;
+  color: #333;
+}
+
+.desktop-floating-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.desktop-floating-form form > textarea {
+  order: 1;
+  min-height: 68px;
+  padding: 4px;
+  border: 1px solid #999;
+  border-radius: 0;
+  background: #fff;
+  color: #333;
+  resize: vertical;
+}
+
+.desktop-floating-form form > div,
+.desktop-floating-form form > button {
+  order: 2;
+}
+
+.desktop-floating-form form > .altcha-widget-shell {
+  min-width: 0;
+  order: 2;
+}
+
+.desktop-floating-form form > button {
+  border-radius: 2px;
+  background: #eee;
+  color: #333;
+}
+
+.desktop-floating-form .desktop-form-notice {
+  display: block;
+  margin: 4px 0;
+  color: #666;
+  text-align: center;
+}
+
+.desktop-thread-bottom-nav {
+  display: flex;
+  gap: 10px;
+  width: min(100%, 920px);
+  margin: 6px 0 0;
+  padding: 4px 8px;
+  border-top: 1px solid #aaa;
+  font-size: 13px;
+}
+
+.new-replies-banner {
+  position: fixed;
+  right: 1rem;
+  bottom: calc(4rem + env(safe-area-inset-bottom));
+  left: 1rem;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.5rem;
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.quote-preview-anchor {
+  position: relative;
+  display: inline;
+}
+
+.quote-preview-popup {
+  position: fixed;
+  z-index: 60;
+  display: flex;
+  width: min(24rem, calc(100vw - 2rem));
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--color-primary);
+  border-radius: 0.375rem;
+  background: var(--color-card);
+  color: var(--color-foreground);
+  text-align: left;
+  box-shadow: 0 0.25rem 1rem var(--color-badge);
+}
+
+.quote-preview-popup:hover {
+  background: var(--color-muted);
+}
+
+.quote-preview-number,
+.quote-preview-hint {
+  color: var(--color-primary);
+  font-size: 0.75rem;
+}
+
+.quote-preview-body {
+  max-height: 6rem;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+@media (min-width: 1024px) {
+  .new-replies-banner {
+    right: 22rem;
+    bottom: 1rem;
+    left: auto;
+    width: 18rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .desktop-app:not([data-force-pc="true"]) {
+    display: none;
+  }
 }
 
 /* プライバシーモード */

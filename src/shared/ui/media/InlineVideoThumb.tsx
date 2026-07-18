@@ -106,6 +106,8 @@ export const InlineVideoThumb: React.FunctionComponent<
         className="max-w-full rounded-lg"
         width={width}
         height={height}
+        loading="lazy"
+        decoding="async"
       />
       <VideoPlayOverlay />
     </button>
@@ -138,6 +140,7 @@ const Player: React.FunctionComponent<PlayerProps> = ({
       height={height}
       controls={showControls}
       autoPlay
+      preload="none"
       playsInline
       onClick={(): void => setShowControls(true)}
     >

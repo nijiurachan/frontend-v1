@@ -18,7 +18,7 @@ export const ReplyTargetTitle: React.FunctionComponent<Props> = ({
   // カタログと同じヘルパーでタイトル（無ければ本文先頭）を解決。
   // CSS truncate で幅に応じて省略するため、文字数は多めに確保しておく。
   const title = decorateTitle(getThreadTitle(thread, 120));
-  const imageUrl = getImageUrl(thread.attachment, false);
+  const imageUrl = getImageUrl(thread.opPost.attachment, false);
 
   return (
     <div className="flex items-center gap-2 min-w-0">
