@@ -26,7 +26,7 @@ describe("ThreadCreateForm draft persistence", () => {
       new URL("./ThreadCreateForm.tsx", import.meta.url),
     ).text();
     const submitSource = await Bun.file(
-      new URL("../../../post/hooks/useSubmitPost.ts", import.meta.url),
+      new URL("../../../post/lib/submitPostFlow.ts", import.meta.url),
     ).text();
 
     expect(formSource).toContain('name="duration"');

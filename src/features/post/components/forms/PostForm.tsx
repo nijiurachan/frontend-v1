@@ -1,6 +1,6 @@
 import type { UpfileStateFlags } from "@nijiurachan/js/pure";
 import { Scope, useEventLatest } from "@nijiurachan/js/react/PreactWrapperV1";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { UpfileInput } from "@/features/otegaki-upfile/components";
 import {
@@ -8,12 +8,22 @@ import {
   notifyUpfileSubmitted,
 } from "@/features/otegaki-upfile/lib/attachUpfileImage";
 import {
+  AltchaWidget,
+  type AltchaWidgetHandle,
+} from "@/features/post/components/AltchaWidget";
+import {
   formatPostBodyLength,
   hasPostContent,
   POST_BODY_MAX_LENGTH,
 } from "@/features/post/components/forms/postFormConfig";
 import { createSubmissionLock } from "@/features/post/components/forms/submissionLock";
 import { useSubmitPost } from "@/features/post/hooks/useSubmitPost";
+import { createSubmissionLifecycle } from "@/features/post/lib/submissionLifecycle";
+import {
+  createSubmissionUiState,
+  isSubmissionInProgress,
+  submissionUiReducer,
+} from "@/features/post/lib/submissionUiState";
 import {
   clearReplyDraft,
   readReplyDraft,
@@ -34,6 +44,7 @@ interface PostFormData {
 
 interface Props {
   threadId: string;
+  active?: boolean;
   allowImageReplies?: boolean;
   closedAt?: string | null;
   initialComment?: string;
@@ -52,6 +63,7 @@ const selectHasSelectedFile = (state: UpfileStateFlags): boolean =>
 
 export const PostForm: React.FunctionComponent<Props> = ({
   threadId,
+  active = true,
   allowImageReplies = true,
   closedAt = null,
   initialComment = "",
@@ -76,12 +88,22 @@ export const PostForm: React.FunctionComponent<Props> = ({
     },
     [threadId],
   );
-  const [showSuccess, setShowSuccess] = useState(false);
   const [quoteDialogOpen, setQuoteDialogOpen] = useState(false);
   const [pendingQuote, setPendingQuote] = useState("");
-  const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const submissionLock = useRef(createSubmissionLock()).current;
+  const [submissionUi, dispatchSubmissionUi] = useReducer(
+    submissionUiReducer,
+    undefined,
+    createSubmissionUiState,
+  );
+  const [submissionLock] = useState(createSubmissionLock);
+  const [submissionLifecycle] = useState(createSubmissionLifecycle);
+  const altchaRef = useRef<AltchaWidgetHandle>(null);
+  const successTimerRef = useRef<number | null>(null);
+  const clearSuccessTimer = useCallback((): void => {
+    if (successTimerRef.current === null) return;
+    window.clearTimeout(successTimerRef.current);
+    successTimerRef.current = null;
+  }, []);
   const isPaintPopupOpen =
     useEventLatest(
       UPFILE_FULL_KEY,
@@ -96,13 +118,36 @@ export const PostForm: React.FunctionComponent<Props> = ({
     ) ?? false;
 
   useEffect(() => {
+    submissionLifecycle.invalidate();
+    submissionLock.release();
+    altchaRef.current?.reset();
+    clearSuccessTimer();
+    dispatchSubmissionUi({ type: "reset" });
     const nextFormData = { comment: readReplyDraft(threadId) };
     formDataRef.current = nextFormData;
     // threadId is an external identity boundary; switch the controlled value
     // before this form can submit under the new thread.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setFormData(nextFormData);
-  }, [threadId]);
+  }, [clearSuccessTimer, submissionLifecycle, submissionLock, threadId]);
+
+  useEffect(() => {
+    return (): void => {
+      submissionLifecycle.invalidate();
+      clearSuccessTimer();
+    };
+  }, [clearSuccessTimer, submissionLifecycle]);
+
+  useEffect(() => {
+    if (!active) {
+      submissionLifecycle.invalidate();
+      altchaRef.current?.reset();
+      submissionLock.release();
+      clearSuccessTimer();
+      // Closing a persistent form must make the next open immediately usable.
+      dispatchSubmissionUi({ type: "reset" });
+    }
+  }, [active, clearSuccessTimer, submissionLifecycle, submissionLock]);
 
   // 投稿モーダルの openCount 変化時だけ、引用初期値を適用する。
   // biome-ignore lint/correctness/useExhaustiveDependencies: openCountはモーダル再表示を表す明示的なトリガー
@@ -119,7 +164,8 @@ export const PostForm: React.FunctionComponent<Props> = ({
   }, [initialComment, openCount, updateFormData]);
 
   const { mutateAsync: submitPost, isPending } = useSubmitPost();
-  const isSubmitting = isPreparingSubmit || isPending;
+  const isSubmitting = isSubmissionInProgress(submissionUi, isPending);
+  const { showSuccess, submitError } = submissionUi;
 
   const handleSubmit = async (
     event: React.SubmitEvent<HTMLFormElement>,
@@ -127,6 +173,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
     event.preventDefault();
     const form = event.currentTarget;
     if (
+      !active ||
       isArchived ||
       closedAt ||
       submissionLock.isLocked() ||
@@ -139,8 +186,8 @@ export const PostForm: React.FunctionComponent<Props> = ({
     }
     if (!submissionLock.acquire()) return;
 
-    setSubmitError(null);
-    setIsPreparingSubmit(true);
+    const signal = submissionLifecycle.begin();
+    dispatchSubmissionUi({ type: "start" });
     let mutationStarted = false;
     try {
       const prepareEvent = new CustomEvent("aimg:prepare-submit", {
@@ -148,8 +195,11 @@ export const PostForm: React.FunctionComponent<Props> = ({
       });
       form.dispatchEvent(prepareEvent);
       await prepareEvent.detail.preparing;
+      if (!submissionLifecycle.isCurrent(signal)) return;
       const file = allowImageReplies ? getAttachedFile(form) : null;
       if (!hasPostContent(formData.comment, file !== null)) return;
+      const altcha = altchaRef.current;
+      if (!altcha) throw new Error("書き込み認証を読み込んでいます");
       mutationStarted = true;
       await submitPost({
         mode: "reply",
@@ -157,22 +207,32 @@ export const PostForm: React.FunctionComponent<Props> = ({
         body: formData.comment.trim(),
         deleteKey,
         file,
+        altcha,
+        signal,
       });
+      if (!submissionLifecycle.isCurrent(signal)) return;
       notifyUpfileSubmitted(form);
-      setShowSuccess(true);
+      dispatchSubmissionUi({ type: "success" });
       clearReplyDraft(threadId);
       updateFormData({ comment: "" });
-      window.setTimeout(() => {
-        setShowSuccess(false);
-        onSuccess?.();
+      clearSuccessTimer();
+      successTimerRef.current = window.setTimeout(() => {
+        successTimerRef.current = null;
+        if (submissionLifecycle.isCurrent(signal)) {
+          dispatchSubmissionUi({ type: "hide-success" });
+          onSuccess?.();
+        }
       }, 200);
     } catch (error) {
+      if (!submissionLifecycle.isCurrent(signal)) return;
       const message = getApiErrorMessage(error, "投稿に失敗しました");
-      setSubmitError(message);
+      dispatchSubmissionUi({ type: "failure", message });
       if (!mutationStarted) toast.error(message);
     } finally {
-      submissionLock.release();
-      setIsPreparingSubmit(false);
+      if (submissionLifecycle.isCurrent(signal)) {
+        submissionLock.release();
+        dispatchSubmissionUi({ type: "finish" });
+      }
     }
   };
 
@@ -215,6 +275,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
       <Scope name={SCOPE_NAME}>
         <UpfileInput fullKey={UPFILE_FULL_KEY} allowImage={allowImageReplies} />
       </Scope>
+      <AltchaWidget operation="reply" key={threadId} ref={altchaRef} />
       <OnlineUsersIndicator className="block text-center text-xs text-muted-foreground" />
       <Button
         type="submit"

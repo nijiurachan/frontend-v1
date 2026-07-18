@@ -49,6 +49,7 @@ export const DesktopThreadCreatePanel: React.FunctionComponent<Props> = ({
         </div>
         <div className="desktop-floating-form">
           <ThreadCreateForm
+            active={!collapsed}
             onSuccess={(): void => {
               onClose();
               setManuallyCollapsed(true);

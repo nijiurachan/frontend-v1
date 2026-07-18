@@ -90,6 +90,26 @@ body {
   overscroll-behavior-y: none;
 }
 
+.altcha-widget-shell {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.altcha-widget-element {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  --altcha-max-width: 100%;
+  --altcha-color-base: var(--color-card);
+  --altcha-color-base-content: var(--color-card-foreground);
+  --altcha-color-neutral: var(--color-border);
+  --altcha-color-neutral-content: var(--color-foreground);
+  --altcha-color-primary: var(--color-primary);
+  --altcha-color-primary-content: var(--color-primary-foreground);
+  --altcha-color-error: var(--color-destructive);
+  --altcha-color-error-content: var(--color-destructive-foreground);
+}
+
 /* 行制限 */
 .line-clamp-2 {
   display: -webkit-box;
@@ -931,6 +951,11 @@ select option {
 
 .desktop-floating-form form > div,
 .desktop-floating-form form > button {
+  order: 2;
+}
+
+.desktop-floating-form form > .altcha-widget-shell {
+  min-width: 0;
   order: 2;
 }
 

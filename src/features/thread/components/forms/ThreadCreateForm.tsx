@@ -1,13 +1,17 @@
 import type { UpfileStateFlags } from "@nijiurachan/js/pure";
 import { Scope, useEventLatest } from "@nijiurachan/js/react/PreactWrapperV1";
 import { useRouter } from "@tanstack/react-router";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { UpfileInput } from "@/features/otegaki-upfile/components";
 import {
   getAttachedFile,
   notifyUpfileSubmitted,
 } from "@/features/otegaki-upfile/lib/attachUpfileImage";
+import {
+  AltchaWidget,
+  type AltchaWidgetHandle,
+} from "@/features/post/components/AltchaWidget";
 import { getCreatedThreadRoute } from "@/features/post/components/forms/createdThreadRoute";
 import {
   formatPostBodyLength,
@@ -16,6 +20,12 @@ import {
 } from "@/features/post/components/forms/postFormConfig";
 import { createSubmissionLock } from "@/features/post/components/forms/submissionLock";
 import { useSubmitPost } from "@/features/post/hooks/useSubmitPost";
+import { createSubmissionLifecycle } from "@/features/post/lib/submissionLifecycle";
+import {
+  createSubmissionUiState,
+  isSubmissionInProgress,
+  submissionUiReducer,
+} from "@/features/post/lib/submissionUiState";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { useThreadLimits } from "@/features/thread/hooks/useThreadLimits";
 import {
@@ -35,6 +45,7 @@ import { toast } from "@/shared/ui/toast";
 
 interface Props {
   onSuccess?: () => void;
+  active?: boolean;
 }
 
 const SCOPE_NAME = "thread-create-form";
@@ -47,6 +58,7 @@ const selectHasSelectedFile = (state: UpfileStateFlags): boolean =>
 
 export const ThreadCreateForm: React.FunctionComponent<Props> = ({
   onSuccess,
+  active = true,
 }: Props) => {
   const router = useRouter();
   const deleteKey = useSettingsStore((state) => state.deleteKey);
@@ -58,10 +70,14 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
   const [r18, setR18] = useState(false);
   const [allowImageReplies, setAllowImageReplies] = useState(true);
   const [duration, setDuration] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
-  const [isPreparingSubmit, setIsPreparingSubmit] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
-  const submissionLock = useRef(createSubmissionLock()).current;
+  const [submissionUi, dispatchSubmissionUi] = useReducer(
+    submissionUiReducer,
+    undefined,
+    createSubmissionUiState,
+  );
+  const [submissionLock] = useState(createSubmissionLock);
+  const [submissionLifecycle] = useState(createSubmissionLifecycle);
+  const altchaRef = useRef<AltchaWidgetHandle>(null);
   const isPaintPopupOpen =
     useEventLatest(
       UPFILE_FULL_KEY,
@@ -84,13 +100,29 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
         threadLimits.minimumMinutes,
       )
     : null;
-  const isSubmitting = isPreparingSubmit || isPending;
+  const isSubmitting = isSubmissionInProgress(submissionUi, isPending);
+  const { showSuccess, submitError } = submissionUi;
+
+  useEffect(() => {
+    return (): void => submissionLifecycle.invalidate();
+  }, [submissionLifecycle]);
+
+  useEffect(() => {
+    if (!active) {
+      submissionLifecycle.invalidate();
+      altchaRef.current?.reset();
+      submissionLock.release();
+      // Closing a persistent form must make the next open immediately usable.
+      dispatchSubmissionUi({ type: "reset" });
+    }
+  }, [active, submissionLifecycle, submissionLock]);
 
   const handleSubmit = async (
     event: React.SubmitEvent<HTMLFormElement>,
   ): Promise<void> => {
     event.preventDefault();
     if (
+      !active ||
       submissionLock.isLocked() ||
       isPaintPopupOpen ||
       !hasPostContent(body, hasSelectedFile) ||
@@ -100,24 +132,31 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
       return;
     }
     if (!submissionLock.acquire()) return;
-    setSubmitError(null);
-    setIsPreparingSubmit(true);
+    const signal = submissionLifecycle.begin();
+    dispatchSubmissionUi({ type: "start" });
 
     const form = event.currentTarget;
     let file: File;
     try {
       file = await prepareThreadCreateAttachment(form, getAttachedFile);
+      if (!submissionLifecycle.isCurrent(signal)) return;
     } catch (error) {
+      if (!submissionLifecycle.isCurrent(signal)) return;
       toast.error(
         error instanceof Error ? error.message : "画像の準備に失敗しました",
       );
-      setSubmitError(getApiErrorMessage(error, "画像の準備に失敗しました"));
+      dispatchSubmissionUi({
+        type: "failure",
+        message: getApiErrorMessage(error, "画像の準備に失敗しました"),
+      });
       submissionLock.release();
-      setIsPreparingSubmit(false);
+      dispatchSubmissionUi({ type: "finish" });
       return;
     }
 
     try {
+      const altcha = altchaRef.current;
+      if (!altcha) throw new Error("書き込み認証を読み込んでいます");
       const result = await submitPost({
         mode: "thread",
         body: body.trim(),
@@ -126,9 +165,12 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
         r18,
         allowImageReplies,
         duration,
+        altcha,
+        signal,
       });
+      if (!submissionLifecycle.isCurrent(signal)) return;
       notifyUpfileSubmitted(form);
-      setShowSuccess(true);
+      dispatchSubmissionUi({ type: "success" });
       clearThreadCreateDraft();
       setBody("");
       setR18(false);
@@ -137,11 +179,17 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
       onSuccess?.();
       void router.navigate(getCreatedThreadRoute(result.threadId));
     } catch (error) {
+      if (!submissionLifecycle.isCurrent(signal)) return;
       // useSubmitPost displays the native API error.
-      setSubmitError(getApiErrorMessage(error, "スレッド作成に失敗しました"));
+      dispatchSubmissionUi({
+        type: "failure",
+        message: getApiErrorMessage(error, "スレッド作成に失敗しました"),
+      });
     } finally {
-      submissionLock.release();
-      setIsPreparingSubmit(false);
+      if (submissionLifecycle.isCurrent(signal)) {
+        submissionLock.release();
+        dispatchSubmissionUi({ type: "finish" });
+      }
     }
   };
 
@@ -172,6 +220,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
       <Scope name={SCOPE_NAME}>
         <UpfileInput fullKey={UPFILE_FULL_KEY} allowImage />
       </Scope>
+      <AltchaWidget operation="thread" ref={altchaRef} />
       <Checkbox checked={r18} onChange={setR18} label="R18スレッド" />
       <p className="text-xs text-muted-foreground">
         R18を指定したスレッドにはR18タグが付き、画像は初期状態でぼかして表示されます。

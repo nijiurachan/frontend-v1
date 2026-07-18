@@ -76,10 +76,11 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
           </div>
           <div className="desktop-floating-field">
             <span className="desktop-floating-label">認証</span>
-            <span>自動</span>
+            <span>下のALTCHAで確認</span>
           </div>
           <PostForm
             threadId={thread.id}
+            active={!collapsed}
             allowImageReplies={thread.allowImageReplies ?? true}
             closedAt={thread.closedAt}
             isArchived={isArchived}

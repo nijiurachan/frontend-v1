@@ -4,20 +4,32 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { usePostedHistoryStore } from "@/features/history/stores/postedHistoryStore";
+import { notifySubmitError } from "@/features/post/lib/submitPostErrorNotification";
+import type {
+  AltchaCredentialProvider,
+  SubmitPostFlowDependencies,
+} from "@/features/post/lib/submitPostFlow";
+import {
+  type SubmitPostInput,
+  submitPostFlow,
+} from "@/features/post/lib/submitPostFlow";
 import type { CreatePostResult } from "@/shared/api";
-import { apiPost, getAltchaSolution, uploadAttachment } from "@/shared/api";
+import { apiPost, refreshAimgToken, uploadAttachment } from "@/shared/api";
 import { toast } from "@/shared/ui/toast";
 
-interface SubmitParams {
-  mode: "thread" | "reply";
-  threadId?: string;
-  body: string;
-  deleteKey: string;
-  file: File | null;
-  r18?: boolean;
-  allowImageReplies?: boolean;
-  duration?: string;
-}
+type SubmitParams = SubmitPostInput & {
+  altcha: AltchaCredentialProvider;
+};
+
+const SUBMIT_DEPENDENCIES: SubmitPostFlowDependencies = {
+  uploadAttachment,
+  post: (
+    path: string,
+    body: object,
+    options: { token: string; signal?: AbortSignal },
+  ): Promise<CreatePostResult> => apiPost(path, body, options),
+  refreshToken: refreshAimgToken,
+};
 
 export function useSubmitPost(): UseMutationResult<
   CreatePostResult,
@@ -28,31 +40,8 @@ export function useSubmitPost(): UseMutationResult<
   const addPosted = usePostedHistoryStore((state) => state.addPosted);
 
   return useMutation({
-    mutationFn: async ({
-      mode,
-      threadId,
-      body,
-      deleteKey,
-      file,
-      r18 = false,
-      allowImageReplies = true,
-      duration = "",
-    }: SubmitParams): Promise<CreatePostResult> => {
-      if (mode === "reply" && !threadId) {
-        throw new Error("スレッドIDがありません");
-      }
-      const attachmentId = file ? await uploadAttachment(file) : undefined;
-      const altcha = await getAltchaSolution();
-      const payload = {
-        body,
-        altcha,
-        deleteKey,
-        ...(attachmentId ? { attachmentId } : {}),
-        ...(mode === "thread" ? { r18, allowImageReplies, duration } : {}),
-      };
-      const path =
-        mode === "thread" ? "/threads" : `/threads/${threadId}/posts`;
-      return apiPost<CreatePostResult>(path, payload, { requiresToken: true });
+    mutationFn: async ({ altcha, ...input }: SubmitParams) => {
+      return submitPostFlow(input, altcha, SUBMIT_DEPENDENCIES);
     },
     onSuccess: (result: CreatePostResult, { mode }: SubmitParams): void => {
       addPosted(result.threadId);
@@ -63,9 +52,7 @@ export function useSubmitPost(): UseMutationResult<
       }
     },
     onError: (error: unknown): void => {
-      toast.error(
-        error instanceof Error ? error.message : "投稿に失敗しました",
-      );
+      notifySubmitError(error, (message) => toast.error(message));
     },
   });
 }

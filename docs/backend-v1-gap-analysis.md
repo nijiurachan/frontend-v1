@@ -1,11 +1,11 @@
 # backend-v1 接続切替・機能ギャップ分析
 
-確認日: 2026-07-17
+確認日: 2026-07-18
 
 対象ブランチ: `feat/backend-v1-native`
 基準コミット: `8ea41d8`
 
-backend-v1 の `schemas.ts`、`routes-read.ts`、`routes-write.ts`、Altcha、添付 presign 実装を読み取り、frontend-v1 の旧 API 呼び出しと突き合わせた結果を記録する。backend-v1 側の並行実装に依存するタグ/R18 は、仕様書の公開形状を正として型定義した。
+backend-v1 の `schemas.ts`、`routes-read.ts`、`routes-write.ts`、ALTCHA、添付 presign 実装を読み取り、frontend-v1 の API 呼び出しと突き合わせた結果を記録する。backend-v1 側の並行実装に依存するタグ/R18 は、仕様書の公開形状を正として型定義した。
 
 ## エンドポイント対応
 
@@ -18,7 +18,7 @@ backend-v1 の `schemas.ts`、`routes-read.ts`、`routes-write.ts`、Altcha、�
 | `GET /api/archive/storage` | `useArchiveStorage` | camelCase 容量形状を使用 |
 | `GET /api/threads/{threadId}` | `useThread` | UUID の `threadId` と `posts[].seq` を分離 |
 | `POST /api/tokens` | `client.ts` のトークン取得 | `x-aimg-token` をキャッシュして送信 |
-| `GET /api/altcha` | `getAltchaSolution` | PoW 解決後に投稿 payload の `altcha` へ設定 |
+| `GET /api/altcha?op=thread\|reply` | 公式 `AltchaWidget` の custom fetch | managed token を先に取得し、公式 widget が V1 challenge を解決。現 backend では `op` は advisory |
 | `POST /api/attachments/presign` | `uploadAttachment` | MD5 申告後に presigned URL へ PUT |
 | `POST /api/threads` | `useSubmitPost` | JSON body、`r18` 対応 |
 | `POST /api/threads/{id}/posts` | `useSubmitPost` | JSON body、`attachmentId` 対応 |
@@ -38,6 +38,22 @@ backend-v1 の `schemas.ts`、`routes-read.ts`、`routes-write.ts`、Altcha、�
 - スレ立て/レス投稿の添付を `attachment_uploads` 申告 → RustFS 等への presigned PUT → `attachmentId` 参照の順に変更。
 - Turnstile を投稿経路から除去し、Altcha PoW を使用。
 - 削除キーによる投稿削除、そうだね、del reaction を native API へ変更。
+
+## 公式 ALTCHA widget の現行フロー
+
+frontend-v1 は `altcha@3.2.1` の公式 `<altcha-widget>` をスレ立て・返信フォームへ常設し、旧 custom solver の `getAltchaSolution` は使用しない。投稿時の順序と payload は次のとおり。
+
+1. managed token を取得する。未発行時は `POST /api/tokens` を行う。
+2. token 取得後、同 token を `x-aimg-token` に付けて `GET /api/altcha?op=thread|reply` から V1 challenge を取得する。
+3. 公式 widget がブラウザ内で PoW を解き、`algorithm`、`challenge`、`number`、`salt`、`signature`、`took` を含む V1 payload の base64 文字列を生成する。
+4. challenge 取得時の token と V1 payload を credential として束ねる。`POST /api/threads` または `POST /api/threads/{id}/posts` の JSON body の `altcha` に payload を入れ、同 token を明示的に送る。
+
+`TOKEN_EXPIRED` の場合だけ、token・challenge・payload を fresh にして最大1回再送する。添付 upload は再実行しない。network error、429、`ALTCHA_FAILED`、一般業務エラー、2回目の `TOKEN_EXPIRED` は自動再送しない。
+
+### backend 後続ゲート
+
+- **operation binding:** frontend は challenge URL に `op=thread|reply` を付けるが、現 backend-v1 はこの値を challenge の署名対象へ含めず、write endpoint でも期待 operation と照合しない。この query は現時点では advisory であり、security boundary ではない。backend 側で operation を signed parameters に含め、thread/reply ごとに検証する必要がある。
+- **idempotency:** frontend/backend の現契約には client-generated idempotency key と同一 operation の結果再利用がない。自動再送を限定しても、保存後に response だけ失われた場合の手動再送による重複は防止できない。backend と frontend の operation ID / idempotency 契約が別途必要である。
 
 ## 未対応・暫定処置
 

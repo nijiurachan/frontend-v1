@@ -11,6 +11,11 @@ describe("PostForm thread draft switching", () => {
     );
     expect(source).toContain("formDataRef.current = nextFormData;");
     expect(source).toContain("setFormData(nextFormData);");
-    expect(source).toContain("}, [threadId]);");
+    expect(source).toContain("submissionLifecycle.invalidate();");
+    expect(source).toContain('dispatchSubmissionUi({ type: "reset" });');
+    expect(source).toContain("clearSuccessTimer();");
+    expect(source).toContain(
+      "}, [clearSuccessTimer, submissionLifecycle, submissionLock, threadId]);",
+    );
   });
 });

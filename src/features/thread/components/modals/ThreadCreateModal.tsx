@@ -18,7 +18,7 @@ export const ThreadCreateModal: React.FunctionComponent<Props> = ({
       position="bottom"
     >
       <div className="p-4">
-        <ThreadCreateForm onSuccess={onClose} />
+        <ThreadCreateForm active={isOpen} onSuccess={onClose} />
       </div>
     </PersistentModal>
   );

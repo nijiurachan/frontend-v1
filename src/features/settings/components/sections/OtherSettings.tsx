@@ -93,7 +93,7 @@ export const OtherSettings: React.FunctionComponent = () => {
       </SettingRow>
       <SettingRow label="書き込み認証">
         <span className="text-sm text-muted-foreground">
-          backend-v1のAltcha認証を使用します
+          投稿フォームに表示される公式ALTCHAウィジェットで確認します
         </span>
       </SettingRow>
     </SettingSection>

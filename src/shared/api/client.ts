@@ -1,4 +1,3 @@
-import { type AltchaChallenge, solveAltcha } from "@/shared/api/altcha";
 import { readAttachmentForUpload } from "@/shared/api/attachmentUpload";
 import { ApiError } from "@/shared/api/errors";
 import { md5 } from "@/shared/api/md5";
@@ -71,12 +70,14 @@ export function clearAimgToken(): void {
   tokenManager.clear();
 }
 
-export async function getAltchaSolution(): Promise<string> {
-  const challenge = await apiGet<AltchaChallenge>("/altcha");
-  return solveAltcha(challenge);
+export async function refreshAimgToken(expiredToken: string): Promise<string> {
+  return tokenManager.refresh(expiredToken);
 }
 
-export async function uploadAttachment(file: File): Promise<string> {
+export async function uploadAttachment(
+  file: File,
+  signal?: AbortSignal,
+): Promise<string> {
   const digest = await md5(await readAttachmentForUpload(file));
   const result = await apiPost<PresignResult>(
     "/attachments/presign",
@@ -85,7 +86,7 @@ export async function uploadAttachment(file: File): Promise<string> {
       mime: file.type,
       sizeBytes: file.size,
     },
-    { requiresToken: true },
+    { requiresToken: true, signal },
   );
 
   if (result.uploadUrl) {
@@ -93,6 +94,7 @@ export async function uploadAttachment(file: File): Promise<string> {
       method: "PUT",
       headers: { "Content-Type": file.type },
       body: file,
+      signal,
     });
     if (!uploadResponse.ok) {
       throw new ApiError(
