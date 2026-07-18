@@ -45,7 +45,40 @@ export const DesktopHeader: React.FunctionComponent = () => {
 
   return (
     <header className="desktop-header">
-      <nav className="desktop-header-links" aria-label="外部サービス">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+      >
+        本文へスキップ
+      </a>
+
+      <nav
+        className="desktop-header-utilities col-start-3 row-start-1"
+        aria-label="サイトメニュー"
+      >
+        {isThreadView && (
+          <span className="desktop-header-current">スレッド</span>
+        )}
+        {UTILITY_LINKS.map((link) => (
+          <HeaderLinkItem key={link.label} link={link} />
+        ))}
+        <SearchBar />
+      </nav>
+
+      <div className="desktop-header-title col-start-2 row-start-1">
+        <img
+          className="desktop-header-mascot"
+          src={mascot}
+          alt=""
+          aria-hidden="true"
+        />
+        二次元裏@αimg(あいもげ)
+      </div>
+
+      <nav
+        className="desktop-header-links col-start-1 row-start-1"
+        aria-label="外部サービス"
+      >
         {NAV_LINKS.map((link) => (
           <HeaderLinkItem
             key={link.label}
@@ -60,26 +93,6 @@ export const DesktopHeader: React.FunctionComponent = () => {
             }
           />
         ))}
-      </nav>
-
-      <div className="desktop-header-title">
-        <img
-          className="desktop-header-mascot"
-          src={mascot}
-          alt=""
-          aria-hidden="true"
-        />
-        二次元裏@αimg(あいもげ)
-      </div>
-
-      <nav className="desktop-header-utilities" aria-label="サイトメニュー">
-        {isThreadView && (
-          <span className="desktop-header-current">スレッド</span>
-        )}
-        {UTILITY_LINKS.map((link) => (
-          <HeaderLinkItem key={link.label} link={link} />
-        ))}
-        <SearchBar />
       </nav>
 
       {isJukeboxOpen && (
@@ -106,7 +119,11 @@ const HeaderLinkItem: React.FunctionComponent<HeaderLinkItemProps> = ({
 }: HeaderLinkItemProps) => {
   if (link.to) {
     return (
-      <Link to={link.to} onClick={onClick}>
+      <Link
+        to={link.to}
+        onClick={onClick}
+        className="inline-flex min-h-11 items-center"
+      >
         [{link.label}]
       </Link>
     );
@@ -118,6 +135,7 @@ const HeaderLinkItem: React.FunctionComponent<HeaderLinkItemProps> = ({
       target={link.external ? "_blank" : undefined}
       rel={link.external ? "noopener noreferrer" : undefined}
       onClick={onClick}
+      className="inline-flex min-h-11 items-center"
     >
       [{link.label}]
     </a>

@@ -24,7 +24,7 @@ export const TagFilter: React.FunctionComponent<TagFilterProps> = ({
       <button
         type="button"
         className={clsx(
-          "shrink-0 rounded-full border px-3 py-1 text-xs",
+          "shrink-0 min-h-11 rounded-full border px-3 py-1 text-xs",
           selectedTag === null
             ? "border-primary bg-primary text-primary-foreground"
             : "border-border text-muted-foreground",
@@ -38,7 +38,7 @@ export const TagFilter: React.FunctionComponent<TagFilterProps> = ({
           type="button"
           key={tag}
           className={clsx(
-            "shrink-0 rounded-full border px-3 py-1 text-xs",
+            "shrink-0 min-h-11 rounded-full border px-3 py-1 text-xs",
             selectedTag === tag
               ? "border-primary bg-primary text-primary-foreground"
               : "border-border text-muted-foreground",

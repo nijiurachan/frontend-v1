@@ -6,7 +6,7 @@ import {
   type PanInfo,
   useDragControls,
 } from "motion/react";
-import { type ReactNode, useContext, useEffect, useState } from "react";
+import { type ReactNode, useContext, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
 import { ModalContext } from "./modal-context";
@@ -37,6 +37,7 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
     unregisterCloseHandler,
   } = useContext(ModalContext);
   const [depth, setDepth] = useState<number | null>(null);
+  const titleId = useId();
   const dragControls = useDragControls(); // ドラッグ制御用
 
   // モーダルが開いたときに深さとcloseハンドラーを登録
@@ -150,6 +151,10 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
             onClick={onClose}
           />
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={title ? titleId : undefined}
+            aria-label={title ? undefined : "ダイアログ"}
             className={clsx(
               "fixed bg-card shadow-2xl",
               position === "center" &&
@@ -176,7 +181,10 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
             )}
             {title && (
               <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2
+                  id={titleId}
+                  className="text-lg font-semibold text-foreground"
+                >
                   {title}
                 </h2>
                 <div className="flex items-center gap-1">
@@ -184,9 +192,10 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
                   <button
                     type="button"
                     onClick={onClose}
+                    aria-label="閉じる"
                     className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    <FiX className="w-5 h-5" />
+                    <FiX className="w-5 h-5" aria-hidden="true" />
                   </button>
                 </div>
               </div>

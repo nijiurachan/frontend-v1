@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
 import { AnimatePresence, motion, type PanInfo } from "motion/react";
-import type { SyntheticEvent } from "react";
+import { type SyntheticEvent, useEffect } from "react";
 import {
   FiGrid,
   FiMonitor,
@@ -33,6 +33,17 @@ export const SideMenu: React.FunctionComponent<Props> = ({
   const viewedIds = getViewedIds().slice(0, 20);
   const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
   const params = useParams({ strict: false });
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key === "Escape") onClose();
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return (): void => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   const {
     data: historyThreads = [],
@@ -68,6 +79,9 @@ export const SideMenu: React.FunctionComponent<Props> = ({
             onClick={onClose}
           />
           <motion.aside
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="side-menu-title"
             className="fixed top-0 left-0 bottom-0 w-72 pl-[env(safe-area-inset-left)] bg-card z-50 flex flex-col overflow-y-auto overscroll-contain"
             initial={{ x: "-100%" }}
             animate={{ x: 0 }}
@@ -84,13 +98,19 @@ export const SideMenu: React.FunctionComponent<Props> = ({
           >
             {/* ヘッダー */}
             <header className="flex items-center justify-between px-4 pt-[env(safe-area-inset-top)] border-b border-border bg-card sticky top-0 w-full flex-none basis-14">
-              <h1 className="text-lg font-bold text-foreground">メニュー</h1>
+              <h1
+                id="side-menu-title"
+                className="text-lg font-bold text-foreground"
+              >
+                メニュー
+              </h1>
               <button
                 type="button"
                 onClick={onClose}
+                aria-label="閉じる"
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted"
               >
-                <FiX className="w-5 h-5" />
+                <FiX className="w-5 h-5" aria-hidden="true" />
               </button>
             </header>
 

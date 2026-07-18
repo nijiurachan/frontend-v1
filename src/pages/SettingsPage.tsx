@@ -29,12 +29,13 @@ export const SettingsPage: React.FunctionComponent = () => {
         <div className="flex items-center justify-between px-4 py-3">
           <Link
             to="/"
-            className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+            aria-label="カタログに戻る"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-muted transition-colors"
           >
-            <FiChevronLeft className="w-6 h-6" />
+            <FiChevronLeft className="w-6 h-6" aria-hidden="true" />
           </Link>
           <h1 className="text-lg font-bold text-foreground">設定</h1>
-          <div className="w-10" />
+          <div className="w-11" />
         </div>
 
         {/* タブ */}
