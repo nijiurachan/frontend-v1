@@ -1,7 +1,9 @@
 import { useLocation, useRouter } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { FiImage } from "react-icons/fi";
 import type { ThreadSummary } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
+import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { NewRepliesBanner } from "@/features/thread/ui";
 import { BmgBanner } from "@/shared/ui/ad";
@@ -13,8 +15,10 @@ import {
   selectReplyOpenCount,
   useReplyModalStore,
 } from "../../stores/replyModalStore";
+import { extractImages } from "../../utils/extractImages";
 import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
 import { resolvePostSeqFromHash } from "../../utils/threadHash";
+import { ImageListModal } from "../modals/ImageListModal";
 import { ThreadOP } from "../views/ThreadOP";
 import { DesktopReplyPanel } from "./DesktopReplyPanel";
 import { VirtualizedDesktopPostList } from "./VirtualizedDesktopPostList";
@@ -44,6 +48,9 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const { hash } = useLocation();
   const addViewed = useHistoryStore((state) => state.addViewed);
   const fontSize = useSettingsStore((state) => `${state.fontScalePosts}%`);
+  const isPostHidden = useNgStore((state) => state.isPostHidden);
+  const showNgContent = useNgStore((state) => state.showNgContent);
+  const [isImageListOpen, setIsImageListOpen] = useState(false);
   const replyComment = useReplyModalStore(selectReplyInitialComment);
   const replyOpenCount = useReplyModalStore(selectReplyOpenCount);
   const openReplyPanel = useReplyModalStore((state) => state.open);
@@ -59,6 +66,13 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const quoteReferencesMap = useMemo(() => {
     return data ? extractQuoteReferences(data.posts) : new Map();
   }, [data]);
+  const images = useMemo(() => {
+    if (!data) return [];
+    const posts = showNgContent
+      ? data.posts
+      : data.posts.filter((post) => !isPostHidden(post));
+    return extractImages(posts);
+  }, [data, isPostHidden, showNgContent]);
 
   useEffect(() => {
     addViewed(threadId);
@@ -167,6 +181,14 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
         <button type="button" onClick={scrollToBottom}>
           ▼最下部へ
         </button>
+        <button
+          type="button"
+          onClick={(): void => setIsImageListOpen(true)}
+          aria-label={`画像一覧を開く（${images.length}件）`}
+        >
+          <FiImage aria-hidden="true" />
+          画像一覧
+        </button>
         <button type="button" onClick={(): void => void handleRefresh()}>
           {isFetching ? "更新中..." : "リロード"}
         </button>
@@ -229,6 +251,14 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
         initialComment={replyComment}
         openCount={replyOpenCount}
         onCloseComment={resetReplyPanel}
+        isArchived={isArchived}
+      />
+      <ImageListModal
+        isOpen={isImageListOpen}
+        onClose={(): void => setIsImageListOpen(false)}
+        images={images}
+        allPosts={data.posts}
+        onJumpToPost={handleJumpToPost}
         isArchived={isArchived}
       />
     </div>
