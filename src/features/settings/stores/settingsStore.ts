@@ -4,13 +4,15 @@ import {
   settingsStateCreator,
 } from "@nijiurachan/js/io/settings-store";
 import type { StoreApi } from "zustand";
+import {
+  FONT_SIZE_DEFAULT,
+  FONT_SIZE_MAX,
+  FONT_SIZE_MIN,
+  type LegacyDisplaySettings,
+  readLegacyDisplaySettings,
+} from "@/features/settings/stores/legacyDisplaySettings";
 
-/** 最小文字サイズ(px) */
-export const FONT_SIZE_MIN = 8;
-/** 最大文字サイズ(px) */
-export const FONT_SIZE_MAX = 28;
-/** 初期文字サイズ(px) */
-export const FONT_SIZE_DEFAULT = 16;
+export { FONT_SIZE_DEFAULT, FONT_SIZE_MAX, FONT_SIZE_MIN };
 
 /** 最小文字倍率(%) */
 export const FONT_SCALE_MIN = 50;
@@ -70,8 +72,15 @@ export type SettingsStore = SettingsStoreBase & {
 };
 
 /** 表示設定のストアを作る */
-export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
-  createSettingsStoreBase(
+export const createSettingsStore: () => StoreApi<SettingsStore> = () => {
+  // persist初期化がaimg-settingsを作る前に、旧設定の移行可否を確定する。
+  // キーが壊れていても「存在する」なら新設定を常に優先する。
+  const legacyDisplaySettings =
+    typeof localStorage === "undefined"
+      ? null
+      : readLegacyDisplaySettings(localStorage);
+
+  return createSettingsStoreBase(
     (...args) => {
       const [set] = args;
       const base = settingsStateCreator(...args);
@@ -108,17 +117,35 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
         },
       };
     },
-    () => initSettings,
+    () =>
+      (store: SettingsStore | undefined): void => {
+        void initSettings(store, legacyDisplaySettings);
+      },
   );
+};
 
 /** 表示設定の初期化。ストレージ読込み後呼ばれる */
-async function initSettings(store: SettingsStore | undefined): Promise<void> {
+async function initSettings(
+  store: SettingsStore | undefined,
+  legacyDisplaySettings: LegacyDisplaySettings | null,
+): Promise<void> {
   if (!store) {
     return;
   }
 
-  // 永続化された文字サイズが範囲外/壊れていた場合は補正
-  store.setFontSize(clampFontSize(store.fontSize));
+  if (legacyDisplaySettings) {
+    if (legacyDisplaySettings.darkMode !== undefined) {
+      store.setDarkMode(legacyDisplaySettings.darkMode);
+    }
+    if (legacyDisplaySettings.privacyMode !== undefined) {
+      store.setPrivacyMode(legacyDisplaySettings.privacyMode);
+    }
+  }
+
+  // 永続化・移行された文字サイズが範囲外/壊れていた場合は補正
+  store.setFontSize(
+    clampFontSize(legacyDisplaySettings?.fontSize ?? store.fontSize),
+  );
   store.setFontScalePosts(clampFontScale(store.fontScalePosts));
 
   if (

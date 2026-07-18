@@ -5,6 +5,7 @@ import { DesktopLayout } from "@/app/layouts/DesktopLayout";
 import { MobileLayout } from "@/app/layouts/MobileLayout";
 import { usePlayerStore } from "@/features/player/stores/playerStore";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { resolveLightMode } from "@/features/settings/stores/legacyDisplaySettings";
 import { FONT_SIZE_DEFAULT } from "@/features/settings/stores/settingsStore";
 import { useIsDesktop } from "@/shared/hooks";
 import { cn } from "@/shared/lib/cn";
@@ -81,16 +82,13 @@ export const Route = createRootRoute({
 function useRenderSettings(): void {
   const darkMode = useSettingsStore((s) => s.darkMode);
   const fontSize = useSettingsStore((s) => s.fontSize);
-  const isDesktop = useIsDesktop();
 
   useLayoutEffect(() => {
-    // PC版は旧AI_BBS再現のライト配色で固定する。共通コンポーネント
-    // (モーダル・フォーム等) もライト変数で描画しないと文字が溶ける。
     document.documentElement.classList.toggle(
       "light-mode",
-      isDesktop || darkMode === false,
+      resolveLightMode(darkMode),
     );
-  }, [darkMode, isDesktop]);
+  }, [darkMode]);
 
   useLayoutEffect(() => {
     document.documentElement.style.setProperty(

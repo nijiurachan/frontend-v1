@@ -273,8 +273,10 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
           ))}
         </blockquote>
 
-        {/* OGPカード表示 */}
-        {ogpPreviewEnabled && links.length > 0 && <OgpCardList urls={links} />}
+        {/* 専用providerは常時、汎用OGPだけを設定で切り替える */}
+        {links.length > 0 && (
+          <OgpCardList urls={links} genericOgpEnabled={ogpPreviewEnabled} />
+        )}
 
         <PostActionMenu
           isOpen={menuOpen}

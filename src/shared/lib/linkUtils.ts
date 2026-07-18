@@ -28,7 +28,8 @@ export function extractYouTubeId(url: string): string | null {
 
     // youtu.be形式
     if (urlObj.hostname === "youtu.be") {
-      return urlObj.pathname.slice(1);
+      const match = urlObj.pathname.match(/^\/([A-Za-z0-9_-]{11})\/?$/);
+      return match?.[1] ?? null;
     }
 
     // youtube.com形式
@@ -39,10 +40,12 @@ export function extractYouTubeId(url: string): string | null {
     ) {
       // /watch?v=VIDEO_ID
       const vParam = urlObj.searchParams.get("v");
-      if (vParam) return vParam;
+      if (vParam && /^[A-Za-z0-9_-]{11}$/.test(vParam)) return vParam;
 
       // /embed/VIDEO_ID
-      const embedMatch = urlObj.pathname.match(/^\/embed\/([^/?]+)/);
+      const embedMatch = urlObj.pathname.match(
+        /^\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})\/?$/,
+      );
       if (embedMatch) return embedMatch[1];
     }
 
@@ -82,7 +85,7 @@ export function extractXTweetId(url: string): string | null {
   try {
     const urlObj = new URL(url);
     // /username/status/TWEET_ID 形式
-    const match = urlObj.pathname.match(/\/status\/(\d+)/);
+    const match = urlObj.pathname.match(/^\/[A-Za-z0-9_]+\/status\/(\d+)\/?$/);
     return match ? match[1] : null;
   } catch {
     return null;

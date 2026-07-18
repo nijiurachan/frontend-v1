@@ -161,6 +161,53 @@ select option {
   font-size: 14px;
 }
 
+/* PC版も共通darkModeを尊重する。旧ライト配色の変数名は維持し、
+   dark時だけセマンティックカラーへ差し替える。 */
+:root:not(.light-mode) .desktop-app {
+  --desktop-paper: var(--color-background);
+  --desktop-ink: var(--color-foreground);
+  --desktop-link: var(--color-primary);
+  --desktop-card: var(--color-card);
+}
+
+:root:not(.light-mode)
+  .desktop-app
+  :is(
+    .desktop-header-utilities input,
+    .desktop-header-utilities button,
+    .desktop-tag-filter button,
+    .desktop-floating-field > input,
+    .desktop-floating-form form > textarea,
+    .desktop-floating-form form > button
+  ) {
+  border-color: var(--color-border);
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+
+:root:not(.light-mode)
+  .desktop-app
+  :is(
+    .desktop-floating-heading,
+    .desktop-floating-grip,
+    .desktop-floating-field > label,
+    .desktop-floating-field > .desktop-floating-label
+  ) {
+  background: var(--color-muted);
+  color: var(--color-foreground);
+}
+
+:root:not(.light-mode)
+  .desktop-app
+  :is(
+    .desktop-catalog-thumb,
+    .desktop-catalog-item,
+    .desktop-thread-op article,
+    .desktop-thread-post-row article
+  ) {
+  border-color: var(--color-border);
+}
+
 .desktop-app a {
   color: var(--desktop-link);
 }
