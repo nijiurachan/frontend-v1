@@ -130,28 +130,27 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
               {formatDate(post.createdAt)}
             </span>
             {post.displayId && (
-              <label
+              <button
+                type="button"
+                onClick={(): void => setDisplayIdMenuOpen(true)}
                 className={clsx(
                   "display-id hover:underline cursor-pointer",
                   isOpId ? "text-accent" : "text-destructive",
                 )}
               >
-                <button
-                  type="button"
-                  onClick={(): void => setDisplayIdMenuOpen(true)}
-                />
                 ID:{post.displayId}
-              </label>
+              </button>
             )}
-            <label
+            <button
+              type="button"
+              onClick={(): void => setMenuOpen(true)}
               className={clsx(
                 "post-no underline hover:text-foreground cursor-pointer",
                 post.attachment?.kind === "animated" && "text-otegaki",
               )}
             >
-              <button type="button" onClick={(): void => setMenuOpen(true)} />
               No.{post.seq}
-            </label>
+            </button>
             {!isArchived && (
               <SoudaneButton
                 count={post.sodaneCount}

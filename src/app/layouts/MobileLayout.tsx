@@ -23,7 +23,10 @@ export const MobileLayout: React.FunctionComponent<Props> = ({
         <Header onMenuClick={(): void => setSideMenuOpen(true)} />
 
         {/* メインコンテンツ */}
-        <main className="flex-1 min-h-0 flex flex-col overflow-hidden pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]">
+        <main
+          id="main-content"
+          className="flex-1 min-h-0 flex flex-col overflow-hidden pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]"
+        >
           {children}
         </main>
 

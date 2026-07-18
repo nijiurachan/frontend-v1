@@ -235,6 +235,7 @@ export const DisplaySettings: React.FunctionComponent = () => {
           <Select
             value={columns}
             onChange={(value: string): void => setColumns(Number(value))}
+            aria-label="カタログ列数"
           >
             {[3, 4, 5, 6, 7, 8].map((n) => (
               <option key={n} value={n}>
@@ -270,6 +271,7 @@ export const DisplaySettings: React.FunctionComponent = () => {
             onChange={(value: string): void =>
               setThreadMenuOpenMethod(value as ThreadMenuOpenMethod)
             }
+            aria-label="メニューの開き方"
           >
             <option value="auto">自動</option>
             <option value="long-press">長押し</option>
