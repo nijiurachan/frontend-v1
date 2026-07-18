@@ -14,3 +14,12 @@ export function attachUpfileImage(form: HTMLFormElement): File | null {
 }
 
 export const getAttachedFile: typeof attachUpfileImage = attachUpfileImage;
+
+/** Clear the embedded upfile value and notify it after a successful submit. */
+export function notifyUpfileSubmitted(form: HTMLFormElement): void {
+  const host = form.querySelector?.("upfile-input-v2") as
+    | (HTMLElement & { clickClear?: () => void })
+    | null;
+  host?.clickClear?.();
+  form.dispatchEvent(new CustomEvent("aimg:submitted"));
+}

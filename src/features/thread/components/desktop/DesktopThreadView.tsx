@@ -8,6 +8,8 @@ import { useSettingsStore } from "@/features/settings/hooks";
 import { DesktopReplyPanel } from "@/features/thread/components/desktop/DesktopReplyPanel";
 import { VirtualizedDesktopPostList } from "@/features/thread/components/desktop/VirtualizedDesktopPostList";
 import { ImageListModal } from "@/features/thread/components/modals/ImageListModal";
+import { PopularPostsModal } from "@/features/thread/components/modals/PopularPostsModal";
+import { SearchModal } from "@/features/thread/components/modals/SearchModal";
 import { ThreadOP } from "@/features/thread/components/views/ThreadOP";
 import { useReadReplyNumber } from "@/features/thread/hooks/useReadReplyNumber";
 import type { UseThreadResult } from "@/features/thread/hooks/useThread";
@@ -18,7 +20,10 @@ import {
 } from "@/features/thread/stores/replyModalStore";
 import { NewRepliesBanner } from "@/features/thread/ui";
 import { extractImages } from "@/features/thread/utils/extractImages";
+import { extractPopularPosts } from "@/features/thread/utils/extractPopularPosts";
 import { extractQuoteReferences } from "@/features/thread/utils/extractQuoteReferences";
+import type { SearchResult } from "@/features/thread/utils/searchPosts";
+import { searchPosts } from "@/features/thread/utils/searchPosts";
 import { BmgBanner } from "@/shared/ui/ad";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
 
@@ -49,6 +54,9 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const isPostHidden = useNgStore((state) => state.isPostHidden);
   const showNgContent = useNgStore((state) => state.showNgContent);
   const [isImageListOpen, setIsImageListOpen] = useState(false);
+  const [isPopularPostsOpen, setIsPopularPostsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const replyComment = useReplyModalStore(selectReplyInitialComment);
   const replyOpenCount = useReplyModalStore(selectReplyOpenCount);
   const openReplyPanel = useReplyModalStore((state) => state.open);
@@ -73,6 +81,10 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
       : data.posts.filter((post) => !isPostHidden(post));
     return extractImages(posts);
   }, [data, isPostHidden, showNgContent]);
+  const popularPosts = useMemo(
+    () => (data ? extractPopularPosts(data.posts) : []),
+    [data],
+  );
 
   useEffect(() => {
     addViewed(threadId);
@@ -113,8 +125,26 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     }
   }, []);
 
+  const handleModalJumpToPost = useCallback(
+    (postIndex: number): void => {
+      const post = data?.posts[postIndex];
+      if (post) handleJumpToPost(post.seq);
+      setIsPopularPostsOpen(false);
+      setIsSearchOpen(false);
+    },
+    [data, handleJumpToPost],
+  );
+
+  const handleSearch = useCallback(
+    (query: string): void => {
+      setSearchResults(data ? searchPosts(data.posts, query) : []);
+    },
+    [data],
+  );
+
   const scrollToTop = useCallback((): void => {
-    scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    // Dynamic row measurements make smooth scrolling drift away from zero.
+    scrollRef.current?.scrollTo({ top: 0, behavior: "auto" });
   }, []);
 
   const scrollToBottom = useCallback((): void => {
@@ -205,6 +235,12 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
           <FiImage aria-hidden="true" />
           画像一覧
         </button>
+        <button type="button" onClick={(): void => setIsPopularPostsOpen(true)}>
+          人気レス
+        </button>
+        <button type="button" onClick={(): void => setIsSearchOpen(true)}>
+          検索
+        </button>
         <button type="button" onClick={(): void => void handleRefresh()}>
           {isFetching ? "更新中..." : "リロード"}
         </button>
@@ -283,6 +319,28 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
         images={images}
         allPosts={data.posts}
         onJumpToPost={handleJumpToPost}
+        isArchived={isArchived}
+      />
+      <PopularPostsModal
+        isOpen={isPopularPostsOpen}
+        onClose={(): void => setIsPopularPostsOpen(false)}
+        posts={popularPosts}
+        quoteReferencesMap={quoteReferencesMap}
+        allPosts={data.posts}
+        onQuoteClick={isArchived ? undefined : handleQuoteClick}
+        onJumpToPost={handleModalJumpToPost}
+        isArchived={isArchived}
+      />
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={(): void => setIsSearchOpen(false)}
+        onSearch={handleSearch}
+        results={searchResults}
+        isSearching={false}
+        quoteReferencesMap={quoteReferencesMap}
+        allPosts={data.posts}
+        onQuoteClick={isArchived ? undefined : handleQuoteClick}
+        onJumpToPost={handleModalJumpToPost}
         isArchived={isArchived}
       />
     </div>

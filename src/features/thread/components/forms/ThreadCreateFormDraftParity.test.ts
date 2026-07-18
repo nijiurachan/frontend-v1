@@ -10,4 +10,14 @@ describe("ThreadCreateForm draft persistence", () => {
     expect(source).toContain("saveThreadCreateDraft(nextBody)");
     expect(source).toContain("clearThreadCreateDraft()");
   });
+
+  test("本文または選択済み添付がある場合だけ送信可能にする", async () => {
+    const source = await Bun.file(
+      new URL("./ThreadCreateForm.tsx", import.meta.url),
+    ).text();
+
+    expect(source).toContain("selectHasSelectedFile");
+    expect(source).toContain("state.hasSelectedFile");
+    expect(source).toContain("hasPostContent(body, hasSelectedFile)");
+  });
 });

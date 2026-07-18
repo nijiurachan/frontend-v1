@@ -3,9 +3,13 @@ import { Scope, useEventLatest } from "@nijiurachan/js/react/PreactWrapperV1";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { UpfileInput } from "@/features/otegaki-upfile/components";
-import { getAttachedFile } from "@/features/otegaki-upfile/lib/attachUpfileImage";
+import {
+  getAttachedFile,
+  notifyUpfileSubmitted,
+} from "@/features/otegaki-upfile/lib/attachUpfileImage";
 import {
   formatPostBodyLength,
+  hasPostContent,
   POST_BODY_MAX_LENGTH,
 } from "@/features/post/components/forms/postFormConfig";
 import { createSubmissionLock } from "@/features/post/components/forms/submissionLock";
@@ -43,6 +47,8 @@ const UPFILE_FULL_KEY = `${SCOPE_NAME}:upfile`;
 
 const selectIsPaintPopupOpen = (state: UpfileStateFlags): boolean =>
   state.isAxnosOpen || state.isKlecksOpen;
+const selectHasSelectedFile = (state: UpfileStateFlags): boolean =>
+  state.hasSelectedFile;
 
 export const PostForm: React.FunctionComponent<Props> = ({
   threadId,
@@ -82,6 +88,12 @@ export const PostForm: React.FunctionComponent<Props> = ({
       "aimg:upfile-state",
       selectIsPaintPopupOpen,
     ) ?? false;
+  const hasSelectedFile =
+    useEventLatest(
+      UPFILE_FULL_KEY,
+      "aimg:upfile-state",
+      selectHasSelectedFile,
+    ) ?? false;
 
   useEffect(() => {
     const nextFormData = { comment: readReplyDraft(threadId) };
@@ -119,7 +131,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
       closedAt ||
       submissionLock.isLocked() ||
       isPaintPopupOpen ||
-      !formData.comment.trim() ||
+      !hasPostContent(formData.comment, hasSelectedFile) ||
       formData.comment.length > POST_BODY_MAX_LENGTH
     ) {
       if (isArchived) alert("このスレッドは過去ログ化されています。");
@@ -137,6 +149,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
       form.dispatchEvent(prepareEvent);
       await prepareEvent.detail.preparing;
       const file = allowImageReplies ? getAttachedFile(form) : null;
+      if (!hasPostContent(formData.comment, file !== null)) return;
       mutationStarted = true;
       await submitPost({
         mode: "reply",
@@ -145,6 +158,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
         deleteKey,
         file,
       });
+      notifyUpfileSubmitted(form);
       setShowSuccess(true);
       clearReplyDraft(threadId);
       updateFormData({ comment: "" });
@@ -191,7 +205,6 @@ export const PostForm: React.FunctionComponent<Props> = ({
         rows={6}
         maxLength={POST_BODY_MAX_LENGTH}
         aria-describedby="post-comment-counter"
-        required
       />
       <p
         id="post-comment-counter"
@@ -209,7 +222,7 @@ export const PostForm: React.FunctionComponent<Props> = ({
         disabled={
           isSubmitting ||
           isPaintPopupOpen ||
-          !formData.comment.trim() ||
+          !hasPostContent(formData.comment, hasSelectedFile) ||
           formData.comment.length > POST_BODY_MAX_LENGTH
         }
         className="w-full py-4 text-lg font-medium"

@@ -21,4 +21,13 @@ describe("desktop image list parity", () => {
     );
     expect(source).toContain("return extractImages(posts)");
   });
+
+  test("PCナビゲーションから人気レスとスレ内検索を開ける", async () => {
+    const source = await Bun.file(sourceUrl).text();
+
+    expect(source).toContain("setIsPopularPostsOpen(true)");
+    expect(source).toContain("setIsSearchOpen(true)");
+    expect(source).toContain("<PopularPostsModal");
+    expect(source).toContain("<SearchModal");
+  });
 });
