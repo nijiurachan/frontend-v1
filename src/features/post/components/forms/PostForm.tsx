@@ -80,6 +80,15 @@ export const PostForm: React.FunctionComponent<Props> = ({
       selectIsPaintPopupOpen,
     ) ?? false;
 
+  useEffect(() => {
+    const nextFormData = { comment: readReplyDraft(threadId) };
+    formDataRef.current = nextFormData;
+    // threadId is an external identity boundary; switch the controlled value
+    // before this form can submit under the new thread.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setFormData(nextFormData);
+  }, [threadId]);
+
   // 投稿モーダルの openCount 変化時だけ、引用初期値を適用する。
   // biome-ignore lint/correctness/useExhaustiveDependencies: openCountはモーダル再表示を表す明示的なトリガー
   useEffect(() => {

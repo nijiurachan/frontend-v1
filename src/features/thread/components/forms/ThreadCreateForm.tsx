@@ -1,7 +1,7 @@
 import type { UpfileStateFlags } from "@nijiurachan/js/pure";
 import { Scope, useEventLatest } from "@nijiurachan/js/react/PreactWrapperV1";
 import { useRouter } from "@tanstack/react-router";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { FiCheck } from "react-icons/fi";
 import { UpfileInput } from "@/features/otegaki-upfile/components";
 import { getAttachedFile } from "@/features/otegaki-upfile/lib/attachUpfileImage";
@@ -13,6 +13,11 @@ import {
 import { createSubmissionLock } from "@/features/post/components/forms/submissionLock";
 import { useSubmitPost } from "@/features/post/hooks/useSubmitPost";
 import { useSettingsStore } from "@/features/settings/hooks";
+import {
+  clearThreadCreateDraft,
+  readThreadCreateDraft,
+  saveThreadCreateDraft,
+} from "@/features/thread/stores/threadCreateDraftStore";
 import { getApiErrorMessage } from "@/shared/ui/feedback/apiErrorMessage";
 import { Button, Checkbox, Textarea } from "@/shared/ui/form";
 import { OnlineUsersIndicator, PostNotice } from "@/shared/ui/navigation";
@@ -34,7 +39,11 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
 }: Props) => {
   const router = useRouter();
   const deleteKey = useSettingsStore((state) => state.deleteKey);
-  const [body, setBody] = useState("");
+  const [body, setBody] = useState(readThreadCreateDraft);
+  const updateBody = useCallback((nextBody: string): void => {
+    setBody(nextBody);
+    saveThreadCreateDraft(nextBody);
+  }, []);
   const [r18, setR18] = useState(false);
   const [allowImageReplies, setAllowImageReplies] = useState(true);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -90,6 +99,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
         allowImageReplies,
       });
       setShowSuccess(true);
+      clearThreadCreateDraft();
       setBody("");
       setR18(false);
       setAllowImageReplies(true);
@@ -115,7 +125,7 @@ export const ThreadCreateForm: React.FunctionComponent<Props> = ({
       <Textarea
         value={body}
         onChange={(event: React.ChangeEvent<HTMLTextAreaElement>): void =>
-          setBody(event.target.value)
+          updateBody(event.target.value)
         }
         placeholder="ｷﾀ━━━━(ﾟ∀ﾟ)━━━━!!"
         rows={6}
