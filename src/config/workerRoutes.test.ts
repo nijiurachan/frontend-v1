@@ -31,6 +31,8 @@ describe("production Worker routes", () => {
       ["nijiurachan.net/ts/*", "nijiurachan.net"],
       ["nijiurachan.net/manifest.json", "nijiurachan.net"],
       ["nijiurachan.net/assets/klecks/*", "nijiurachan.net"],
+      ["nijiurachan.net/robots.txt", "nijiurachan.net"],
+      ["nijiurachan.net/sitemap.xml", "nijiurachan.net"],
     ]);
 
     expect(config.routes).toHaveLength(expectedRoutes.size);

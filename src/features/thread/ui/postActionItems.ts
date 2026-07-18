@@ -20,11 +20,11 @@ export interface PostActionItem {
 export interface PostActionPost {
   seq: number;
   delCount?: number | null;
-  attachment?: { ngHash: string | null } | null;
+  attachment?: { ngHash: string | null; originalUrl?: string } | null;
 }
 
 export interface PostActionHandlers {
-  onReply: (type: "body" | "no") => void;
+  onReply: (type: "body" | "no" | "filename") => void;
   onSoudane: () => void;
   onDelete: () => void;
   onDel: () => void;
@@ -71,6 +71,15 @@ export function createPostActionItems(
           label: "No返信",
           onClick: (): void => handlers.onReply("no"),
         },
+        ...(post.attachment
+          ? [
+              {
+                icon: FiImage,
+                label: "画像ファイル名を引用",
+                onClick: (): void => handlers.onReply("filename"),
+              },
+            ]
+          : []),
         {
           icon: FiThumbsUp,
           label: "そうだね",

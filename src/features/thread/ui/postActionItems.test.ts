@@ -28,6 +28,7 @@ describe("createPostActionItems", () => {
     expect(labels(false)).toEqual([
       "本文返信",
       "No返信",
+      "画像ファイル名を引用",
       "そうだね",
       "削除",
       "本文NG",

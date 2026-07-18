@@ -10,19 +10,36 @@ export interface ReplyModalState {
   reset: () => void;
 }
 
-export type ReplyQuoteType = "body" | "no";
+export type ReplyQuoteType = "body" | "no" | "filename";
+
+function attachmentFilename(url: string | undefined): string {
+  if (!url) return "";
+  const encoded = url.split("/").pop()?.split("?")[0] ?? "";
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return encoded;
+  }
+}
 
 export function createReplyInitialComment(
-  post: { body: string; seq: number; boardNo: number | null },
+  post: {
+    body: string;
+    seq: number;
+    boardNo: number | null;
+    attachment?: { originalUrl: string } | null;
+  },
   type: ReplyQuoteType,
 ): string {
   const quote =
-    type === "no"
-      ? `>No.${postNo(post)}`
-      : post.body
-          .split(/\r?\n/)
-          .map((line) => `>${line}`)
-          .join("\n");
+    type === "filename"
+      ? `>${attachmentFilename(post.attachment?.originalUrl)}`
+      : type === "no"
+        ? `>No.${postNo(post)}`
+        : post.body
+            .split(/\r?\n/)
+            .map((line) => `>${line}`)
+            .join("\n");
   return `${quote}\n`;
 }
 

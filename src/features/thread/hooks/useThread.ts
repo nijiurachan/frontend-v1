@@ -210,6 +210,7 @@ export function useThread(
 
     return runAimogeDataHook("data:thread", {
       id: threadId,
+      legacyThreadId: stateData.legacyThreadId,
       replyCount: stateData.replyCount,
       createdAt: firstPost?.createdAt ?? stateData.bumpedAt,
       bumpedAt: stateData.bumpedAt,

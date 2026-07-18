@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { DesktopHeader } from "@/app/layouts/DesktopHeader";
+import { DesktopHistorySidebar } from "@/features/history/components/DesktopHistorySidebar";
 import { useIsPcForced } from "@/shared/hooks/useMediaQuery";
 
 interface Props {
@@ -18,6 +19,7 @@ export const DesktopLayout: React.FunctionComponent<Props> = ({
       data-force-pc={isPcForced || undefined}
     >
       <DesktopHeader />
+      <DesktopHistorySidebar />
       <main id="main-content" tabIndex={-1} className="desktop-main">
         {children}
       </main>

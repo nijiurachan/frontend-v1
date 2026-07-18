@@ -16,12 +16,18 @@ import { migrateThreadIdArray } from "@/shared/lib/threadIdMigration";
 
 export const IMAGE_NG_SIMILARITY_THRESHOLD = 0.95;
 const LEGACY_IMAGE_NG_STORAGE_KEY = "futaba_image_ng";
-const NG_STORE_VERSION = 2;
+const LEGACY_TEXT_NG_STORAGE_KEY = "futaba_ng_settings";
+export const NG_DISPLAY_ID_EXPIRY_MS: number = 3 * 24 * 60 * 60 * 1000;
+const NG_STORE_VERSION = 3;
 
 export interface NgImageEntry {
   hash: string;
   addedAt: number;
   note: string;
+}
+export interface NgDisplayIdEntry {
+  id: string;
+  addedAt: number;
 }
 
 export interface NgImageAddResult {
@@ -33,12 +39,13 @@ export interface NgState {
   enabled: boolean;
   showNgContent: boolean;
   hiddenThreadIds: string[];
-  ngDisplayIds: string[];
+  ngDisplayIds: NgDisplayIdEntry[];
   ngTitles: string[];
   ngWords: string[];
   ngRegexes: string[];
   ngImages: NgImageEntry[];
   legacyImageNgMigrated: boolean;
+  legacyTextNgMigrated: boolean;
 
   setEnabled: (enabled: boolean) => void;
   setShowNgContent: (show: boolean) => void;
@@ -88,6 +95,7 @@ export function createNgStore(storage?: StateStorage): NgStore {
           ngRegexes: [],
           ngImages: [],
           legacyImageNgMigrated: false,
+          legacyTextNgMigrated: false,
 
           setEnabled: (enabled: boolean) => set({ enabled }),
           setShowNgContent: (showNgContent: boolean) => set({ showNgContent }),
@@ -106,14 +114,17 @@ export function createNgStore(storage?: StateStorage): NgStore {
 
           addNgDisplayId: (displayId: string) =>
             set((s: NgState) => ({
-              ngDisplayIds: s.ngDisplayIds.includes(displayId)
-                ? s.ngDisplayIds
-                : [...s.ngDisplayIds, displayId],
+              ngDisplayIds: [
+                ...s.ngDisplayIds.filter((entry) => entry.id !== displayId),
+                { id: displayId, addedAt: Date.now() },
+              ],
             })),
 
           removeNgDisplayId: (displayId: string) =>
             set((s: NgState) => ({
-              ngDisplayIds: s.ngDisplayIds.filter((d) => d !== displayId),
+              ngDisplayIds: s.ngDisplayIds.filter(
+                (entry) => entry.id !== displayId,
+              ),
             })),
 
           addNgTitle: (title: string) =>
@@ -198,18 +209,19 @@ export function createNgStore(storage?: StateStorage): NgStore {
             const title = getThreadTitle(thread);
             const body = thread.opPost.body;
             const text = `${title} ${body}`;
+            const foldedText = text.toLocaleLowerCase();
 
             for (const ng of state.ngTitles) {
               if (title.includes(ng)) return true;
             }
 
             for (const ng of state.ngWords) {
-              if (text.includes(ng)) return true;
+              if (foldedText.includes(ng.toLocaleLowerCase())) return true;
             }
 
             for (const pattern of state.ngRegexes) {
               try {
-                if (new RegExp(pattern).test(text)) return true;
+                if (new RegExp(pattern, "i").test(text)) return true;
               } catch {
                 // Invalid regex, skip
               }
@@ -231,17 +243,28 @@ export function createNgStore(storage?: StateStorage): NgStore {
             const joinedBody = post.body;
 
             // displayIdでチェック
-            if (post.displayId && state.ngDisplayIds.includes(post.displayId)) {
+            const now = Date.now();
+            if (
+              post.displayId &&
+              state.ngDisplayIds.some(
+                (entry) =>
+                  entry.id === post.displayId &&
+                  now - entry.addedAt < NG_DISPLAY_ID_EXPIRY_MS,
+              )
+            ) {
               return true;
             }
 
             for (const ng of state.ngWords) {
-              if (joinedBody.includes(ng)) return true;
+              if (
+                joinedBody.toLocaleLowerCase().includes(ng.toLocaleLowerCase())
+              )
+                return true;
             }
 
             for (const pattern of state.ngRegexes) {
               try {
-                if (new RegExp(pattern).test(joinedBody)) return true;
+                if (new RegExp(pattern, "i").test(joinedBody)) return true;
               } catch {
                 // Invalid regex, skip
               }
@@ -277,7 +300,7 @@ export function createNgStore(storage?: StateStorage): NgStore {
             if (
               error ||
               !state ||
-              state.legacyImageNgMigrated ||
+              (state.legacyImageNgMigrated && state.legacyTextNgMigrated) ||
               legacyMigrationStarted
             ) {
               return;
@@ -291,16 +314,30 @@ export function createNgStore(storage?: StateStorage): NgStore {
               const legacyValue = persistStorage.getItem(
                 LEGACY_IMAGE_NG_STORAGE_KEY,
               );
+              const legacyTextValue = persistStorage.getItem(
+                LEGACY_TEXT_NG_STORAGE_KEY,
+              );
               if (legacyValue instanceof Promise) {
-                void legacyValue.then(
-                  (value) => completeLegacyImageNgMigration(storeApi, value),
-                  () => completeLegacyImageNgMigration(storeApi, undefined),
+                void Promise.all([
+                  legacyValue,
+                  Promise.resolve(legacyTextValue),
+                ]).then(
+                  ([value, textValue]) =>
+                    completeLegacyNgMigration(storeApi, value, textValue),
+                  () =>
+                    completeLegacyNgMigration(storeApi, undefined, undefined),
                 );
                 return;
               }
-              completeLegacyImageNgMigration(storeApi, legacyValue);
+              if (legacyTextValue instanceof Promise) {
+                void legacyTextValue.then((value) =>
+                  completeLegacyNgMigration(storeApi, legacyValue, value),
+                );
+                return;
+              }
+              completeLegacyNgMigration(storeApi, legacyValue, legacyTextValue);
             } catch {
-              completeLegacyImageNgMigration(storeApi, undefined);
+              completeLegacyNgMigration(storeApi, undefined, undefined);
             }
           },
       },
@@ -360,22 +397,84 @@ export function migrateNgState(persisted: unknown, version: number): unknown {
     1,
     "hiddenThreadIds",
   );
-  if (version >= 2 || !isRecord(withThreadIds)) return withThreadIds;
+  if (!isRecord(withThreadIds)) return withThreadIds;
   const ngImages = Array.isArray(withThreadIds.ngImages)
     ? withThreadIds.ngImages.flatMap(normalizePersistedNgImage)
     : [];
-  return { ...withThreadIds, ngImages };
+  const now = Date.now();
+  const ngDisplayIds = Array.isArray(withThreadIds.ngDisplayIds)
+    ? withThreadIds.ngDisplayIds.flatMap((value) =>
+        normalizeDisplayId(value, now),
+      )
+    : [];
+  return { ...withThreadIds, ngImages, ngDisplayIds };
 }
 
-function completeLegacyImageNgMigration(
+function completeLegacyNgMigration(
   storeApi: NgStoreApi | undefined,
   legacyValue: unknown,
+  legacyTextValue: unknown,
 ): void {
   if (!storeApi) return;
   const currentState = storeApi.getState();
   const legacyImages = normalizeLegacyNgImages(legacyValue);
   const ngImages = mergeNgImages(currentState.ngImages, legacyImages);
-  storeApi.setState({ ngImages, legacyImageNgMigrated: true });
+  const legacyText = normalizeLegacyTextNg(legacyTextValue);
+  storeApi.setState({
+    ngImages,
+    ngWords: [...new Set([...currentState.ngWords, ...legacyText.words])],
+    ngRegexes: [...new Set([...currentState.ngRegexes, ...legacyText.regexes])],
+    ngDisplayIds: mergeDisplayIds(currentState.ngDisplayIds, legacyText.ids),
+    legacyImageNgMigrated: true,
+    legacyTextNgMigrated: true,
+  });
+}
+
+function normalizeDisplayId(
+  value: unknown,
+  fallback: number,
+): NgDisplayIdEntry[] {
+  if (typeof value === "string") return [{ id: value, addedAt: fallback }];
+  if (!isRecord(value) || typeof value.id !== "string") return [];
+  return [
+    {
+      id: value.id,
+      addedAt: typeof value.addedAt === "number" ? value.addedAt : fallback,
+    },
+  ];
+}
+
+function normalizeLegacyTextNg(value: unknown): {
+  words: string[];
+  regexes: string[];
+  ids: NgDisplayIdEntry[];
+} {
+  if (!isRecord(value)) return { words: [], regexes: [], ids: [] };
+  const strings = (key: string): string[] =>
+    Array.isArray(value[key])
+      ? value[key].filter((item): item is string => typeof item === "string")
+      : [];
+  const now = Date.now();
+  const rawIds = Array.isArray(value.ids)
+    ? value.ids
+    : Array.isArray(value.ngIds)
+      ? value.ngIds
+      : [];
+  return {
+    words: [...strings("words"), ...strings("ngWords")],
+    regexes: [...strings("regexes"), ...strings("ngRegexes")],
+    ids: rawIds.flatMap((item) => normalizeDisplayId(item, now)),
+  };
+}
+
+function mergeDisplayIds(
+  existing: NgDisplayIdEntry[],
+  legacy: NgDisplayIdEntry[],
+): NgDisplayIdEntry[] {
+  const merged = new Map(existing.map((entry) => [entry.id, entry]));
+  for (const entry of legacy)
+    if (!merged.has(entry.id)) merged.set(entry.id, entry);
+  return [...merged.values()];
 }
 
 function normalizeLegacyNgImages(value: unknown): NgImageEntry[] {

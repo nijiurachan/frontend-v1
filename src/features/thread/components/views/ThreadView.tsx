@@ -28,6 +28,13 @@ import { useSettingsStore } from "@/features/settings/hooks";
 import { DesktopThreadView } from "@/features/thread/components/desktop/DesktopThreadView";
 import { PostList } from "@/features/thread/components/lists/PostList";
 import type * as modals from "@/features/thread/components/modals";
+import {
+  ArchiveSaveActions,
+  MlbTracker,
+  SelectionQuoteButton,
+  SpeechControls,
+  ThreadMetadata,
+} from "@/features/thread/components/ThreadParityTools";
 import { ThreadOP } from "@/features/thread/components/views/ThreadOP";
 import { useReadReplyNumber } from "@/features/thread/hooks/useReadReplyNumber";
 import {
@@ -47,6 +54,10 @@ import {
   isAbortError,
   LatestSearchRequestGuard,
 } from "@/features/thread/utils/latestSearchRequest";
+import {
+  restoreThreadScroll,
+  saveThreadScroll,
+} from "@/features/thread/utils/scrollPosition";
 import type { SearchResult } from "@/features/thread/utils/searchPosts";
 import { searchPosts } from "@/features/thread/utils/searchPosts";
 import { formatThreadExpiry } from "@/features/thread/utils/threadExpiry";
@@ -350,6 +361,32 @@ const MobileThreadView: React.FunctionComponent<MobileThreadViewProps> = ({
   }, [threadId, addViewed]);
 
   useEffect(() => {
+    const position = restoreThreadScroll(
+      localStorage,
+      threadId,
+      data?.legacyThreadId == null ? [] : [data.legacyThreadId],
+    );
+    if (position !== null && !hash)
+      requestAnimationFrame(() => scrollTo({ top: position }));
+    let timer = 0;
+    const save = (): void => {
+      clearTimeout(timer);
+      timer = window.setTimeout(
+        () => saveThreadScroll(localStorage, threadId, scrollY),
+        200,
+      );
+    };
+    addEventListener("scroll", save, { passive: true });
+    addEventListener("beforeunload", save);
+    return (): void => {
+      clearTimeout(timer);
+      saveThreadScroll(localStorage, threadId, scrollY);
+      removeEventListener("scroll", save);
+      removeEventListener("beforeunload", save);
+    };
+  }, [data?.legacyThreadId, hash, threadId]);
+
+  useEffect(() => {
     if (!isLoading && hash && data) {
       const postSeq = resolvePostSeqFromHash(hash, data.posts);
       if (postSeq !== null) scrollToPost(postSeq);
@@ -377,7 +414,7 @@ const MobileThreadView: React.FunctionComponent<MobileThreadViewProps> = ({
   return (
     <>
       <NewRepliesBanner newCount={newPostsCount} onAccept={acceptNewPosts} />
-      <title>{`${firstPost.body.slice(0, 20) || `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
+      <ThreadMetadata body={firstPost.body} threadId={threadId} />
       <div ref={swipeContentRef}>
         <PullRefresh onRefresh={handleRefresh}>
           <div className="pb-14" style={{ fontSize }}>
@@ -404,9 +441,20 @@ const MobileThreadView: React.FunctionComponent<MobileThreadViewProps> = ({
               postContentVersion={postsContentVersion}
             />
             <BmgBanner />
+            <MlbTracker legacyThreadId={data.legacyThreadId} />
+            <div className="px-3 py-2">
+              <SpeechControls
+                key={threadId}
+                threadId={threadId}
+                posts={data.posts}
+                onAutoScroll={scrollToBottom}
+              />
+              {isArchived && <ArchiveSaveActions thread={data} />}
+            </div>
           </div>
         </PullRefresh>
       </div>
+      <SelectionQuoteButton root={swipeContentRef} disabled={isArchived} />
       <Suspense fallback={null}>
         <ReplyModal
           isOpen={isReplyOpen}

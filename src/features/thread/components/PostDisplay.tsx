@@ -5,6 +5,7 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { getPostBodyLines, type Post, postNo } from "@/entities/post";
 import { getImageUrl, resolveUploadPath } from "@/entities/thread";
 import { PlayerTrigger } from "@/features/player/components";
+import { useSettingsStore } from "@/features/settings/hooks";
 import { SoudaneButton } from "@/features/thread/components/actions/SoudaneButton";
 import { LineDisplay } from "@/features/thread/components/LineDisplay";
 import { QuoteSourcesModal } from "@/features/thread/components/modals/QuoteSourcesModal";
@@ -49,6 +50,9 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
     const [quoteSourcesOpen, setQuoteSourcesOpen] = useState(false);
     const [displayIdMenuOpen, setDisplayIdMenuOpen] = useState(false);
     const { mutate: soudane, isPending } = useSoudaneMutation();
+    const ogpPreviewEnabled = useSettingsStore(
+      (state) => state.ogpPreviewEnabled,
+    );
     const bodyLines = useMemo(() => getPostBodyLines(post.body), [post.body]);
 
     // このレスを引用している元レスのインデックス一覧
@@ -270,7 +274,7 @@ export const PostDisplay: React.FunctionComponent<Props> = memo(
         </blockquote>
 
         {/* OGPカード表示 */}
-        {links.length > 0 && <OgpCardList urls={links} />}
+        {ogpPreviewEnabled && links.length > 0 && <OgpCardList urls={links} />}
 
         <PostActionMenu
           isOpen={menuOpen}

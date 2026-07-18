@@ -10,6 +10,13 @@ import { VirtualizedDesktopPostList } from "@/features/thread/components/desktop
 import { ImageListModal } from "@/features/thread/components/modals/ImageListModal";
 import { PopularPostsModal } from "@/features/thread/components/modals/PopularPostsModal";
 import { SearchModal } from "@/features/thread/components/modals/SearchModal";
+import {
+  ArchiveSaveActions,
+  MlbTracker,
+  SelectionQuoteButton,
+  SpeechControls,
+  ThreadMetadata,
+} from "@/features/thread/components/ThreadParityTools";
 import { ThreadOP } from "@/features/thread/components/views/ThreadOP";
 import { useReadReplyNumber } from "@/features/thread/hooks/useReadReplyNumber";
 import type { UseThreadResult } from "@/features/thread/hooks/useThread";
@@ -22,9 +29,17 @@ import { NewRepliesBanner } from "@/features/thread/ui";
 import { extractImages } from "@/features/thread/utils/extractImages";
 import { extractPopularPosts } from "@/features/thread/utils/extractPopularPosts";
 import { extractQuoteReferences } from "@/features/thread/utils/extractQuoteReferences";
+import {
+  restoreThreadScroll,
+  saveThreadScroll,
+} from "@/features/thread/utils/scrollPosition";
 import type { SearchResult } from "@/features/thread/utils/searchPosts";
 import { searchPosts } from "@/features/thread/utils/searchPosts";
 import { formatThreadExpiry } from "@/features/thread/utils/threadExpiry";
+import {
+  initialWheelReloadState,
+  recordEdgeWheel,
+} from "@/features/thread/utils/wheelReload";
 import { BmgBanner } from "@/shared/ui/ad";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
 
@@ -69,6 +84,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     null,
   );
   const pendingPostSeqRef = useRef<number | null>(null);
+  const wheelStateRef = useRef(initialWheelReloadState());
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: スレ切替時にPC返信パネルの共有状態を閉じる
   useEffect(() => (): void => resetReplyPanel(), [resetReplyPanel, threadId]);
@@ -97,6 +113,62 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   useEffect(() => {
     scrollRef.current?.focus({ preventScroll: true });
   }, []);
+
+  useEffect(() => {
+    const element = scrollRef.current;
+    if (!element) return;
+    const saved = restoreThreadScroll(
+      localStorage,
+      threadId,
+      data?.legacyThreadId == null ? [] : [data.legacyThreadId],
+    );
+    if (saved !== null)
+      requestAnimationFrame(() => {
+        element.scrollTop = saved;
+      });
+    let timer = 0;
+    const save = (): void => {
+      window.clearTimeout(timer);
+      timer = window.setTimeout(
+        () => saveThreadScroll(localStorage, threadId, element.scrollTop),
+        200,
+      );
+    };
+    const wheel = (event: WheelEvent): void => {
+      if (
+        event.shiftKey ||
+        event.altKey ||
+        event.ctrlKey ||
+        event.metaKey ||
+        isArchived
+      )
+        return;
+      const atEdge =
+        event.deltaY < 0
+          ? element.scrollTop <= 5
+          : element.scrollTop + element.clientHeight >=
+            element.scrollHeight - 5;
+      const result = recordEdgeWheel(
+        wheelStateRef.current,
+        event.deltaY,
+        atEdge,
+      );
+      wheelStateRef.current = result.state;
+      if (result.reload) void refetch();
+    };
+    element.addEventListener("scroll", save, { passive: true });
+    element.addEventListener("wheel", wheel, { passive: true });
+    const finalSave = (): void =>
+      saveThreadScroll(localStorage, threadId, element.scrollTop);
+    addEventListener("beforeunload", finalSave);
+    return (): void => {
+      clearTimeout(timer);
+      finalSave();
+      element.removeEventListener("scroll", save);
+      element.removeEventListener("wheel", wheel);
+      removeEventListener("beforeunload", finalSave);
+    };
+  }, [data?.legacyThreadId, isArchived, refetch, threadId]);
 
   const handleQuoteClick = useCallback(
     (quoteText: string): void => {
@@ -216,7 +288,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   return (
     <div className="desktop-thread-page">
       <NewRepliesBanner newCount={newPostsCount} onAccept={acceptNewPosts} />
-      <title>{`${firstPost.body.slice(0, 20) || `No.${threadId}`} - ${import.meta.env.APP_NAME}`}</title>
+      <ThreadMetadata body={firstPost.body} threadId={threadId} />
       <nav className="desktop-thread-nav" aria-label="スレッドナビゲーション">
         [
         <button type="button" onClick={goCatalog}>
@@ -249,10 +321,16 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
         <button type="button" onClick={(): void => void handleRefresh()}>
           {isFetching ? "更新中..." : "リロード"}
         </button>
+        <SpeechControls
+          key={threadId}
+          threadId={threadId}
+          posts={data.posts}
+          onAutoScroll={scrollToBottom}
+        />
+        {isArchived && <ArchiveSaveActions thread={data} />}
       </nav>
       {/* スクロール可能領域: tabIndex=0 で PageUp/Down・Space等の
           ネイティブスクロールキーがこのコンテナに効くようにする */}
-      {/* biome-ignore lint/a11y/noNoninteractiveTabindex: スクロール領域をキーボード到達可能にする標準手法 */}
       <section
         ref={scrollRef}
         className="desktop-thread-scroll"
@@ -304,7 +382,9 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
           />
         </div>
         <BmgBanner />
+        <MlbTracker legacyThreadId={data.legacyThreadId} />
       </section>
+      <SelectionQuoteButton root={scrollRef} disabled={isArchived} />
       <div className="desktop-thread-bottom-nav">
         <button type="button" onClick={scrollToTop}>
           ▲ 上へ

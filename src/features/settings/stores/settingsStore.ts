@@ -63,6 +63,10 @@ export type SettingsStore = SettingsStoreBase & {
   /** R18添付を常時表示する */
   showR18: boolean;
   setShowR18(value: boolean): void;
+  ogpPreviewEnabled: boolean;
+  setOgpPreviewEnabled(value: boolean): void;
+  dragQuotePencilSize: "small" | "large";
+  setDragQuotePencilSize(value: "small" | "large"): void;
 };
 
 /** 表示設定のストアを作る */
@@ -84,6 +88,12 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
         setJukeboxEnabled: (jukeboxEnabled: boolean) => set({ jukeboxEnabled }),
         showR18: false,
         setShowR18: (showR18: boolean) => set({ showR18 }),
+        ogpPreviewEnabled: true,
+        setOgpPreviewEnabled: (ogpPreviewEnabled: boolean) =>
+          set({ ogpPreviewEnabled }),
+        dragQuotePencilSize: "small",
+        setDragQuotePencilSize: (dragQuotePencilSize: "small" | "large") =>
+          set({ dragQuotePencilSize }),
         resetSettings(): void {
           base.resetSettings();
           set({
@@ -92,6 +102,8 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
             spaceMode: false,
             jukeboxEnabled: true,
             showR18: false,
+            ogpPreviewEnabled: true,
+            dragQuotePencilSize: "small",
           });
         },
       };
@@ -108,6 +120,21 @@ async function initSettings(store: SettingsStore | undefined): Promise<void> {
   // 永続化された文字サイズが範囲外/壊れていた場合は補正
   store.setFontSize(clampFontSize(store.fontSize));
   store.setFontScalePosts(clampFontScale(store.fontScalePosts));
+
+  if (
+    typeof localStorage !== "undefined" &&
+    localStorage.getItem("aimg_legacy_thread_settings_migrated") !== "1"
+  ) {
+    const legacyOgp = localStorage.getItem("futaba_ogp_preview");
+    const legacyPencil = localStorage.getItem("dragQuotePencilSize");
+    if (legacyOgp !== null) store.setOgpPreviewEnabled(legacyOgp !== "0");
+    if (legacyPencil !== null) {
+      store.setDragQuotePencilSize(
+        legacyPencil === "large" ? "large" : "small",
+      );
+    }
+    localStorage.setItem("aimg_legacy_thread_settings_migrated", "1");
+  }
 
   if (store.deleteKey) {
     return;

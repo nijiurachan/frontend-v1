@@ -60,6 +60,8 @@ export interface ThreadPostState {
 
 /** GET /api/threads/:threadId/state の可変状態。 */
 export interface ThreadState {
+  /** 旧システムの数値ID。移行threadだけが持つ。 */
+  legacyThreadId: number | null;
   replyCount: number;
   bumpedAt: string;
   tags: ThreadTag[];
@@ -75,6 +77,8 @@ export interface ThreadState {
 /** backend-v1 ThreadView */
 export interface ThreadView {
   id: string;
+  /** 旧システムの数値ID。MLB等の一次仕様ゲートにのみ使用する。 */
+  legacyThreadId?: number | null;
   replyCount: number;
   createdAt: string;
   bumpedAt: string;

@@ -63,6 +63,35 @@ function persistedState(storage: StateStorage): Record<string, unknown> {
 }
 
 describe("image NG store", () => {
+  it("matches body words and regular expressions case-insensitively", () => {
+    const store = createNgStore(memoryStorage());
+    const target = post("");
+    target.body = "Hello AiMoGe";
+    store.getState().addNgWord("hello");
+    expect(store.getState().isPostHidden(target)).toBe(true);
+    store.getState().removeNgWord("hello");
+    store.getState().addNgRegex("aimoge$");
+    expect(store.getState().isPostHidden(target)).toBe(true);
+  });
+
+  it("expires persisted display IDs after the legacy three-day window", async () => {
+    const storage = memoryStorage({
+      "aimg-ng-settings": JSON.stringify({
+        state: {
+          ngDisplayIds: [{ id: "ID:OLD", addedAt: 0 }],
+          legacyImageNgMigrated: true,
+          legacyTextNgMigrated: true,
+        },
+        version: 3,
+      }),
+    });
+    const store = createNgStore(storage);
+    await store.persist.rehydrate();
+    const target = post("");
+    target.displayId = "ID:OLD";
+    expect(store.getState().isPostHidden(target)).toBe(false);
+  });
+
   it("uses the legacy 0.95 matching threshold and rejects similar duplicates", () => {
     expect(IMAGE_NG_SIMILARITY_THRESHOLD).toBe(0.95);
     const store = createNgStore(memoryStorage());

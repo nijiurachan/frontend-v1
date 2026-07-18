@@ -45,6 +45,10 @@ export const DisplaySettings: React.FunctionComponent = () => {
     resetSettings,
     fontScalePosts,
     setFontScalePosts,
+    ogpPreviewEnabled,
+    setOgpPreviewEnabled,
+    dragQuotePencilSize,
+    setDragQuotePencilSize,
   } = useSettingsStore();
   const {
     columns,
@@ -233,6 +237,28 @@ export const DisplaySettings: React.FunctionComponent = () => {
             onChange={setSpaceMode}
             aria-label="宇宙モード切替"
           />
+        </SettingRow>
+        <SettingRow
+          label="OGPプレビュー"
+          description="投稿内URLのリンクカードを表示します（既定ON）"
+        >
+          <Toggle
+            checked={ogpPreviewEnabled}
+            onChange={setOgpPreviewEnabled}
+            aria-label="OGPプレビュー切替"
+          />
+        </SettingRow>
+        <SettingRow label="選択引用アイコン">
+          <Select
+            value={dragQuotePencilSize}
+            onChange={(value: string): void =>
+              setDragQuotePencilSize(value === "large" ? "large" : "small")
+            }
+            aria-label="選択引用アイコンサイズ"
+          >
+            <option value="small">小</option>
+            <option value="large">大</option>
+          </Select>
         </SettingRow>
         <SettingRow
           label="ジュークボックス"

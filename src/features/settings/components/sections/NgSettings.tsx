@@ -127,7 +127,7 @@ export const NgSettings: React.FunctionComponent = () => {
         </SettingRow>
         {ngDisplayIds.length > 0 ? (
           <div className="space-y-2">
-            {ngDisplayIds.map((displayId) => (
+            {ngDisplayIds.map(({ id: displayId }) => (
               <SettingRow key={displayId}>
                 <div className="flex items-center justify-between w-full gap-2">
                   <span className="text-foreground text-destructive">
