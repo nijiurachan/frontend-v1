@@ -1,3 +1,4 @@
+import { useLocation } from "@tanstack/react-router";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   memo,
@@ -15,6 +16,7 @@ import {
 } from "@/shared/lib/aimoge";
 import { usePostReadObserver } from "../../hooks/usePostReadObserver";
 import type { QuoteReferencesMap } from "../../utils/extractQuoteReferences";
+import { resolvePostSeqFromHash } from "../../utils/threadHash";
 import { PostItem } from "../lists/PostItem";
 
 interface Props {
@@ -49,6 +51,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
 }: Props) => {
   const { isPostHidden, showNgContent } = useNgStore();
   const aimogeGeneration = useAimogeHookGeneration();
+  const { hash } = useLocation();
   const visiblePosts = useMemo(() => {
     void aimogeGeneration;
     const ngFilteredPosts = showNgContent
@@ -61,6 +64,7 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
   }, [aimogeGeneration, posts, isPostHidden, showNgContent]);
   const observePostRead = usePostReadObserver(onPostFullyVisible, visiblePosts);
   const listRef = useRef<HTMLDivElement>(null);
+  const handledHashRef = useRef<string | null>(null);
   // TanStack Virtual intentionally exposes an imperative virtualizer API.
   // eslint-disable-next-line react-hooks/incompatible-library
   const rowVirtualizer = useVirtualizer({
@@ -96,6 +100,30 @@ export const VirtualizedDesktopPostList: React.FunctionComponent<Props> = ({
       }
     });
   }, [onRegisterScrollToPost, rowVirtualizer, visiblePosts]);
+
+  useEffect(() => {
+    if (!hash) return;
+    const postSeq = resolvePostSeqFromHash(hash, allPosts);
+    if (postSeq === null) return;
+    const hashKey = `${allPosts[0]?.threadId ?? "unknown"}:${hash}:${postSeq}`;
+    if (handledHashRef.current === hashKey) return;
+    if (postSeq === 0) {
+      if (scrollElementRef.current) scrollElementRef.current.scrollTop = 0;
+      handledHashRef.current = hashKey;
+      return;
+    }
+    const index = visiblePosts.findIndex((post) => post.seq === postSeq);
+    if (index < 0) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      rowVirtualizer.scrollToIndex(index, {
+        align: "center",
+        behavior: "auto",
+      });
+      handledHashRef.current = hashKey;
+    });
+    return (): void => window.cancelAnimationFrame(frame);
+  }, [allPosts, hash, rowVirtualizer, scrollElementRef, visiblePosts]);
 
   if (visiblePosts.length === 0) {
     return (

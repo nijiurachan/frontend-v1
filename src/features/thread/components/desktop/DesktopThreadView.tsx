@@ -1,4 +1,4 @@
-import { useLocation, useRouter } from "@tanstack/react-router";
+import { useRouter } from "@tanstack/react-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FiImage } from "react-icons/fi";
 import type { ThreadSummary } from "@/entities/thread";
@@ -17,7 +17,6 @@ import {
 } from "../../stores/replyModalStore";
 import { extractImages } from "../../utils/extractImages";
 import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
-import { resolvePostSeqFromHash } from "../../utils/threadHash";
 import { ImageListModal } from "../modals/ImageListModal";
 import { ThreadOP } from "../views/ThreadOP";
 import { DesktopReplyPanel } from "./DesktopReplyPanel";
@@ -45,7 +44,6 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   } = useThread(threadId, { archivedAt });
   const scrollRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
-  const { hash } = useLocation();
   const addViewed = useHistoryStore((state) => state.addViewed);
   const fontSize = useSettingsStore((state) => `${state.fontScalePosts}%`);
   const isPostHidden = useNgStore((state) => state.isPostHidden);
@@ -61,7 +59,6 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     null,
   );
   const pendingPostSeqRef = useRef<number | null>(null);
-  const handledHashRef = useRef<string | null>(null);
 
   const quoteReferencesMap = useMemo(() => {
     return data ? extractQuoteReferences(data.posts) : new Map();
@@ -107,17 +104,6 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
       pendingPostSeqRef.current = postSeq;
     }
   }, []);
-
-  useEffect(() => {
-    if (isLoading || !hash || !data) return;
-    const hashKey = `${threadId}:${hash}`;
-    if (handledHashRef.current === hashKey) return;
-    const postSeq = resolvePostSeqFromHash(hash, data.posts);
-    if (postSeq !== null) {
-      handledHashRef.current = hashKey;
-      handleJumpToPost(postSeq);
-    }
-  }, [data, handleJumpToPost, hash, isLoading, threadId]);
 
   const scrollToTop = useCallback((): void => {
     scrollRef.current?.scrollTo({ top: 0, behavior: "smooth" });
