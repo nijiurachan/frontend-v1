@@ -8,7 +8,11 @@ import { useDelMutation } from "@/shared/hooks/useDelMutation";
 import { ConfirmDialog, Modal } from "@/shared/ui/overlay";
 import { ReportModal } from "../components/modals/ReportModal";
 import { useSoudaneMutation } from "../hooks/useSoudaneMutation";
-import { useReplyModalStore } from "../stores/replyModalStore";
+import {
+  createReplyInitialComment,
+  type ReplyQuoteType,
+  useReplyModalStore,
+} from "../stores/replyModalStore";
 import { createPostActionItems } from "./postActionItems";
 
 interface PostActionMenuProps {
@@ -19,8 +23,6 @@ interface PostActionMenuProps {
   isArchived?: boolean;
   maxSeq?: number;
 }
-
-type QuoteType = "body" | "no";
 
 export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
   isOpen,
@@ -39,22 +41,9 @@ export const PostActionMenu: React.FunctionComponent<PostActionMenuProps> = ({
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
 
-  // 引用テキストを生成
-  const getQuoteText = (type: QuoteType): string => {
-    if (type === "no") {
-      return `>No.${post.seq}`;
-    } else {
-      // 本文引用の場合
-      return post.body
-        .split(/\r?\n/)
-        .map((line) => `>${line}`)
-        .join("\n");
-    }
-  };
-
   // 返信モーダルを開く共通処理
-  const handleReply = (type: QuoteType): void => {
-    openReplyModal(`${getQuoteText(type)}\n`);
+  const handleReply = (type: ReplyQuoteType): void => {
+    openReplyModal(createReplyInitialComment(post, type));
     onClose();
   };
 

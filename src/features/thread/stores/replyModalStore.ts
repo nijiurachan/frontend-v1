@@ -1,6 +1,6 @@
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 
-interface ReplyModalState {
+export interface ReplyModalState {
   isOpen: boolean;
   initialComment: string;
   openCount: number;
@@ -8,6 +8,28 @@ interface ReplyModalState {
   close: () => void;
   reset: () => void;
 }
+
+export type ReplyQuoteType = "body" | "no";
+
+export function createReplyInitialComment(
+  post: { body: string; seq: number },
+  type: ReplyQuoteType,
+): string {
+  const quote =
+    type === "no"
+      ? `>No.${post.seq}`
+      : post.body
+          .split(/\r?\n/)
+          .map((line) => `>${line}`)
+          .join("\n");
+  return `${quote}\n`;
+}
+
+export const selectReplyInitialComment = (state: ReplyModalState): string =>
+  state.initialComment;
+
+export const selectReplyOpenCount = (state: ReplyModalState): number =>
+  state.openCount;
 
 export const useReplyModalStore: UseBoundStore<StoreApi<ReplyModalState>> =
   create<ReplyModalState>((set) => ({

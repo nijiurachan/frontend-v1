@@ -1,5 +1,5 @@
 import { useLocation, useRouter } from "@tanstack/react-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import type { ThreadSummary } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
@@ -8,6 +8,11 @@ import { BmgBanner } from "@/shared/ui/ad";
 import { LoadingScreen, Message } from "@/shared/ui/feedback";
 import { useReadReplyNumber } from "../../hooks/useReadReplyNumber";
 import { useThread } from "../../hooks/useThread";
+import {
+  selectReplyInitialComment,
+  selectReplyOpenCount,
+  useReplyModalStore,
+} from "../../stores/replyModalStore";
 import { extractQuoteReferences } from "../../utils/extractQuoteReferences";
 import { resolvePostSeqFromHash } from "../../utils/threadHash";
 import { ThreadOP } from "../views/ThreadOP";
@@ -39,8 +44,10 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
   const { hash } = useLocation();
   const addViewed = useHistoryStore((state) => state.addViewed);
   const fontSize = useSettingsStore((state) => `${state.fontScalePosts}%`);
-  const [replyComment, setReplyComment] = useState("");
-  const [replyOpenCount, setReplyOpenCount] = useState(0);
+  const replyComment = useReplyModalStore(selectReplyInitialComment);
+  const replyOpenCount = useReplyModalStore(selectReplyOpenCount);
+  const openReplyPanel = useReplyModalStore((state) => state.open);
+  const resetReplyPanel = useReplyModalStore((state) => state.reset);
   const { handlePostFullyVisible, handleRefresh: recordReadReplyNumber } =
     useReadReplyNumber(threadId);
   const scrollToVirtualPostRef = useRef<((postSeq?: number) => void) | null>(
@@ -57,10 +64,12 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
     addViewed(threadId);
   }, [addViewed, threadId]);
 
-  const handleQuoteClick = useCallback((quoteText: string): void => {
-    setReplyComment(`${quoteText}\n`);
-    setReplyOpenCount((count) => count + 1);
-  }, []);
+  const handleQuoteClick = useCallback(
+    (quoteText: string): void => {
+      openReplyPanel(`${quoteText}\n`);
+    },
+    [openReplyPanel],
+  );
 
   const registerScrollToPost = useCallback(
     (scrollToPost: (postSeq?: number) => void): void => {
@@ -219,7 +228,7 @@ export const DesktopThreadView: React.FunctionComponent<Props> = ({
         thread={threadSummary}
         initialComment={replyComment}
         openCount={replyOpenCount}
-        onCloseComment={(): void => setReplyComment("")}
+        onCloseComment={resetReplyPanel}
         isArchived={isArchived}
       />
     </div>
