@@ -18,6 +18,9 @@ describe("layout accessibility markup", () => {
 
   test("modal_dialog_is_labelled_by_its_title", async () => {
     const source = await readSource("../../shared/ui/overlay/Modal.tsx");
+    const persistentSource = await readSource(
+      "../../shared/ui/overlay/PersistentModal.tsx",
+    );
     const threadContextMenu = await readSource(
       "../../features/catalog/components/actions/ThreadContextMenu.tsx",
     );
@@ -29,6 +32,14 @@ describe("layout accessibility markup", () => {
     expect(source).toContain('aria-label="閉じる"');
     expect(source).toContain("aria-label={title ? undefined : ariaLabel}");
     expect(source).toContain("useDialogFocusTrap");
+    expect(persistentSource).toContain('role="dialog"');
+    expect(persistentSource).toContain('aria-modal="true"');
+    expect(persistentSource).toContain(
+      "aria-labelledby={title != null ? titleId : undefined}",
+    );
+    expect(persistentSource).toContain("id={titleId}");
+    expect(persistentSource).toContain('aria-label="閉じる"');
+    expect(persistentSource).toContain("useDialogFocusTrap");
     expect(threadContextMenu).toContain('ariaLabel="スレッド操作"');
   });
 
