@@ -474,6 +474,13 @@ select option {
 
 .desktop-thread-op article,
 .desktop-thread-post-row article {
+  /* 旧PC版のレス配置: 一番左に画像、その右に本文を並べる */
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 12px;
+  width: fit-content;
+  min-width: 320px;
+  max-width: 100%;
   min-height: 55px;
   padding: 5px 10px;
   border: 1px solid #e3d0c5;
@@ -495,6 +502,24 @@ select option {
   overflow-wrap: anywhere;
 }
 
+/* 記事直下は既定で全幅に置き、画像 (figure) と直後の本文だけ横並びにする */
+.desktop-thread-op article > *,
+.desktop-thread-post-row article > * {
+  grid-column: 1 / -1;
+  min-width: 0;
+}
+
+.desktop-thread-op article > figure,
+.desktop-thread-post-row article > figure {
+  grid-column: 1;
+}
+
+.desktop-thread-op article > figure + blockquote,
+.desktop-thread-post-row article > figure + blockquote {
+  grid-column: 2;
+  margin-left: 0;
+}
+
 .desktop-thread-op figure,
 .desktop-thread-post-row figure {
   margin-left: 20px;
@@ -508,7 +533,8 @@ select option {
 .desktop-thread-post-list {
   position: relative;
   width: min(100%, 920px);
-  margin: 0 auto;
+  /* 旧PC版と同じくレスは左詰めで並べる */
+  margin: 0;
 }
 
 .desktop-thread-post-list-inner {
