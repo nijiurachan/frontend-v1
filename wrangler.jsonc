@@ -23,23 +23,49 @@
     {
       "pattern": "nijiurachan.net/assets/klecks/*",
       "zone_name": "nijiurachan.net"
-    },
-    {
-      "pattern": "test.nijiurachan.net/ts",
-      "zone_name": "nijiurachan.net"
-    },
-    {
-      "pattern": "test.nijiurachan.net/ts/*",
-      "zone_name": "nijiurachan.net"
-    },
-    {
-      "pattern": "test.nijiurachan.net/assets/klecks/*",
-      "zone_name": "nijiurachan.net"
     }
   ],
   "env": {
     "dev": {},
-    "test": {}
+    // 実験ビルドは別Worker (frontend-v1-test) + /ts-test パスで配信する
+    // (mode=testing ビルド)。本番Worker (frontend-v1) には main ブランチの
+    // build:prod だけを deploy する。
+    "test": {
+      "assets": {
+        "directory": "./dist/",
+        "not_found_handling": "single-page-application"
+      },
+      "routes": [
+        {
+          "pattern": "nijiurachan.net/ts-test",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "nijiurachan.net/ts-test/*",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "dev.nijiurachan.net/ts-test",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "dev.nijiurachan.net/ts-test/*",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "test.nijiurachan.net/ts-test",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "test.nijiurachan.net/ts-test/*",
+          "zone_name": "nijiurachan.net"
+        },
+        {
+          "pattern": "test.nijiurachan.net/assets/klecks/*",
+          "zone_name": "nijiurachan.net"
+        }
+      ]
+    }
   },
   "dev": {
     "enable_containers": false,
