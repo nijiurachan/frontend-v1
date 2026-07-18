@@ -25,6 +25,7 @@ export const MobileLayout: React.FunctionComponent<Props> = ({
         {/* メインコンテンツ */}
         <main
           id="main-content"
+          tabIndex={-1}
           className="flex-1 min-h-0 flex flex-col overflow-hidden pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)]"
         >
           {children}

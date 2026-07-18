@@ -11,7 +11,7 @@ export const DesktopLayout: React.FunctionComponent<Props> = ({
 }: Props) => (
   <div className="desktop-app min-h-screen bg-background text-foreground">
     <DesktopHeader />
-    <main id="main-content" className="desktop-main">
+    <main id="main-content" tabIndex={-1} className="desktop-main">
       {children}
     </main>
   </div>

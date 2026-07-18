@@ -9,23 +9,27 @@ import {
 import { type ReactNode, useContext, useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { FiX } from "react-icons/fi";
+import { useDialogFocusTrap } from "./dialogFocus";
 import { ModalContext } from "./modal-context";
 
-interface ModalProps {
+type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
-  title?: string;
   position?: "center" | "bottom" | "right";
   headerActions?: ReactNode;
   flickToClose?: boolean;
-}
+} & (
+  | { title: string; ariaLabel?: never }
+  | { title?: undefined; ariaLabel: string }
+);
 
 export const Modal: React.FunctionComponent<ModalProps> = ({
   isOpen,
   onClose,
   children,
   title,
+  ariaLabel,
   position = "center",
   headerActions,
   flickToClose = true,
@@ -38,6 +42,7 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
   } = useContext(ModalContext);
   const [depth, setDepth] = useState<number | null>(null);
   const titleId = useId();
+  const dialogRef = useDialogFocusTrap<HTMLDivElement>(isOpen);
   const dragControls = useDragControls(); // ドラッグ制御用
 
   // モーダルが開いたときに深さとcloseハンドラーを登録
@@ -151,10 +156,12 @@ export const Modal: React.FunctionComponent<ModalProps> = ({
             onClick={onClose}
           />
           <motion.div
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby={title ? titleId : undefined}
-            aria-label={title ? undefined : "ダイアログ"}
+            aria-label={title ? undefined : ariaLabel}
             className={clsx(
               "fixed bg-card shadow-2xl",
               position === "center" &&

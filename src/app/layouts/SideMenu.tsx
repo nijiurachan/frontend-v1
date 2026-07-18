@@ -18,6 +18,7 @@ import { getImageUrl, getThreadTitle } from "@/entities/thread";
 import { useHistoryStore } from "@/features/history/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import { apiGet } from "@/shared/api";
+import { useDialogFocusTrap } from "@/shared/ui/overlay/dialogFocus";
 import { MenuItem } from "./MenuItem";
 
 interface Props {
@@ -33,6 +34,7 @@ export const SideMenu: React.FunctionComponent<Props> = ({
   const viewedIds = getViewedIds().slice(0, 20);
   const jukeboxEnabled = useSettingsStore((s) => s.jukeboxEnabled);
   const params = useParams({ strict: false });
+  const dialogRef = useDialogFocusTrap<HTMLElement>(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -79,6 +81,8 @@ export const SideMenu: React.FunctionComponent<Props> = ({
             onClick={onClose}
           />
           <motion.aside
+            ref={dialogRef}
+            tabIndex={-1}
             role="dialog"
             aria-modal="true"
             aria-labelledby="side-menu-title"

@@ -64,7 +64,12 @@ export const ThreadContextMenu: React.FunctionComponent<Props> = ({
   const title = getThreadTitle(thread);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} position="bottom">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      ariaLabel="スレッド操作"
+      position="bottom"
+    >
       {/* プレビュー */}
       <div className="flex items-center gap-3 p-4 border-b border-border">
         <img

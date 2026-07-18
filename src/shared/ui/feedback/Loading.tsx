@@ -31,12 +31,15 @@ export const LoadingScreen: React.FunctionComponent<LoadingScreenProps> = ({
   message = "読み込み中...",
 }: LoadingScreenProps) => {
   return (
-    <output
+    // biome-ignore lint/a11y/useSemanticElements: CodeRabbit要求によりstatus roleを明示する
+    <div
+      role="status"
       className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-muted-foreground"
       aria-live="polite"
+      aria-atomic="true"
     >
       <Loading size="lg" />
       <span className="text-sm">{message}</span>
-    </output>
+    </div>
   );
 };

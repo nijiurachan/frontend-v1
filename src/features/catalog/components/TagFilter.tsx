@@ -23,6 +23,7 @@ export const TagFilter: React.FunctionComponent<TagFilterProps> = ({
     >
       <button
         type="button"
+        aria-pressed={selectedTag === null}
         className={clsx(
           "shrink-0 min-h-11 rounded-full border px-3 py-1 text-xs",
           selectedTag === null
@@ -37,6 +38,7 @@ export const TagFilter: React.FunctionComponent<TagFilterProps> = ({
         <button
           type="button"
           key={tag}
+          aria-pressed={selectedTag === tag}
           className={clsx(
             "shrink-0 min-h-11 rounded-full border px-3 py-1 text-xs",
             selectedTag === tag

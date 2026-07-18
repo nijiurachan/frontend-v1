@@ -13,16 +13,23 @@ describe("layout accessibility markup", () => {
     expect(source).toContain('aria-modal="true"');
     expect(source).toContain('aria-labelledby="side-menu-title"');
     expect(source).toContain('aria-label="閉じる"');
+    expect(source).toContain("useDialogFocusTrap");
   });
 
   test("modal_dialog_is_labelled_by_its_title", async () => {
     const source = await readSource("../../shared/ui/overlay/Modal.tsx");
+    const threadContextMenu = await readSource(
+      "../../features/catalog/components/actions/ThreadContextMenu.tsx",
+    );
 
     expect(source).toContain('role="dialog"');
     expect(source).toContain('aria-modal="true"');
     expect(source).toContain("aria-labelledby={title ? titleId : undefined}");
     expect(source).toContain("id={titleId}");
     expect(source).toContain('aria-label="閉じる"');
+    expect(source).toContain("aria-label={title ? undefined : ariaLabel}");
+    expect(source).toContain("useDialogFocusTrap");
+    expect(threadContextMenu).toContain('ariaLabel="スレッド操作"');
   });
 
   test("skip_link_precedes_external_desktop_navigation", async () => {
@@ -39,6 +46,9 @@ describe("layout accessibility markup", () => {
     expect(source).toContain('href="#main-content"');
     expect(mobileSource).toContain('href="#main-content"');
     expect(mobileLayoutSource).toContain('id="main-content"');
+    expect(mobileLayoutSource).toContain("tabIndex={-1}");
+    const desktopLayoutSource = await readSource("./DesktopLayout.tsx");
+    expect(desktopLayoutSource).toContain("tabIndex={-1}");
     expect(utilityNavigation).toBeGreaterThanOrEqual(0);
     expect(externalNavigation).toBeGreaterThan(utilityNavigation);
   });
@@ -57,5 +67,14 @@ describe("layout accessibility markup", () => {
       "../../features/catalog/components/TagFilter.tsx",
     );
     expect(tagFilter).toContain("min-h-11");
+    expect(tagFilter).toContain("aria-pressed={selectedTag === null}");
+    expect(tagFilter).toContain("aria-pressed={selectedTag === tag}");
+  });
+
+  test("loading_screen_announces_status_updates", async () => {
+    const source = await readSource("../../shared/ui/feedback/Loading.tsx");
+
+    expect(source).toContain('role="status"');
+    expect(source).toContain('aria-live="polite"');
   });
 });
