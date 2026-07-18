@@ -8,3 +8,10 @@ export function isThreadInitialLoading(
     isActiveQueryLoading || (!isArchiveView && hasStateData && isChunkLoading)
   );
 }
+
+export function shouldShowThreadLoadError(
+  error: unknown,
+  hasData: boolean,
+): boolean {
+  return Boolean(error) && !hasData;
+}

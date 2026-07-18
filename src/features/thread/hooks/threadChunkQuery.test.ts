@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   createFailedThreadChunkRefetchFilters,
   getThreadChunkStaleTime,
+  hasCompleteThreadChunkSnapshot,
   resolveThreadQueryError,
   THREAD_CHUNK_QUERY_BEHAVIOR,
 } from "./threadChunkQuery";
@@ -35,6 +36,33 @@ describe("thread chunk query behavior", () => {
     expect(resolveThreadQueryError(null, chunkError, false, false)).toBe(
       chunkError,
     );
+  });
+
+  test("chunk 0欠落時は後続chunkが成功しても完全スナップショットにしない", () => {
+    expect(
+      hasCompleteThreadChunkSnapshot(
+        [undefined, [{ seq: 100, status: "unavailable" }]],
+        2,
+      ),
+    ).toBe(false);
+    expect(
+      hasCompleteThreadChunkSnapshot(
+        [[{ seq: 0, status: "unavailable" }], undefined],
+        2,
+      ),
+    ).toBe(false);
+  });
+
+  test("chunk 0から必要数が連続してそろった時だけ完全と判定する", () => {
+    expect(
+      hasCompleteThreadChunkSnapshot(
+        [
+          [{ seq: 0, status: "unavailable" }],
+          [{ seq: 100, status: "unavailable" }],
+        ],
+        2,
+      ),
+    ).toBe(true);
   });
 
   test("useThreadの手動更新とエラー解決へchunk回復処理を配線する", async () => {

@@ -22,6 +22,7 @@ import { mergeThreadPosts } from "../utils/threadPosts";
 import {
   createFailedThreadChunkRefetchFilters,
   getThreadChunkStaleTime,
+  hasCompleteThreadChunkSnapshot,
   resolveThreadQueryError,
   THREAD_CHUNK_QUERY_BEHAVIOR,
   THREAD_CHUNK_SIZE,
@@ -140,8 +141,13 @@ export function useThread(
     (maxSeq, element) => Math.max(maxSeq, element.seq),
     0,
   );
+  const requiredInitialChunkCount =
+    initialChunkCount ??
+    (stateData
+      ? Math.max(1, Math.floor(stateData.replyCount / THREAD_CHUNK_SIZE) + 1)
+      : 1);
   const chunkCount = Math.max(
-    initialChunkCount ?? 1,
+    requiredInitialChunkCount,
     Math.floor(acceptedMaxSeq / THREAD_CHUNK_SIZE) + 1,
   );
 
@@ -169,6 +175,11 @@ export function useThread(
     return transformedChunks.sort((left, right) => left.seq - right.seq);
   }, [aimogeGeneration, chunkQueries]);
 
+  const hasCompleteChunkSnapshot = hasCompleteThreadChunkSnapshot(
+    chunkQueries.map((query) => query.data),
+    requiredInitialChunkCount,
+  );
+
   const visibleNewPosts = useMemo(() => {
     const knownSeqs = new Set(chunkElements.map((element) => element.seq));
     const acceptedSeqs = new Set(
@@ -183,7 +194,7 @@ export function useThread(
   const data = useMemo<ThreadView | undefined>(() => {
     void aimogeGeneration;
     if (isArchiveView) return fullThreadData;
-    if (!stateData || chunkElements.length === 0) return undefined;
+    if (!stateData || !hasCompleteChunkSnapshot) return undefined;
 
     const allElements = mergeThreadChunkElements(
       acceptedNewPosts,
@@ -213,6 +224,7 @@ export function useThread(
     aimogeGeneration,
     chunkElements,
     fullThreadData,
+    hasCompleteChunkSnapshot,
     isArchiveView,
     postCache,
     stateData,
@@ -316,7 +328,7 @@ export function useThread(
       activeQuery.error,
       chunkError ?? null,
       isArchiveView,
-      Boolean(data),
+      isArchiveView ? Boolean(fullThreadData) : hasCompleteChunkSnapshot,
     ),
     isLoading,
     isPending: isLoading,

@@ -1,4 +1,5 @@
 import type { Query, QueryFilters } from "@tanstack/react-query";
+import type { ThreadChunkElement } from "@/entities/thread";
 
 export const THREAD_CHUNK_SIZE = 100;
 const THREAD_TAIL_STALE_TIME = 15_000;
@@ -25,13 +26,24 @@ export function createFailedThreadChunkRefetchFilters(
   };
 }
 
+export function hasCompleteThreadChunkSnapshot(
+  chunks: readonly (readonly ThreadChunkElement[] | undefined)[],
+  requiredChunkCount: number,
+): boolean {
+  if (requiredChunkCount < 1 || chunks.length < requiredChunkCount) return false;
+  if (!chunks[0]?.some((element) => element.seq === 0)) return false;
+  return chunks
+    .slice(0, requiredChunkCount)
+    .every((chunk) => chunk !== undefined);
+}
+
 export function resolveThreadQueryError(
   activeError: Error | null,
   chunkError: Error | null,
   isArchiveView: boolean,
-  hasData: boolean,
+  hasCompleteSnapshot: boolean,
 ): Error | null {
   if (activeError) return activeError;
-  if (!isArchiveView && !hasData) return chunkError;
+  if (!isArchiveView && !hasCompleteSnapshot) return chunkError;
   return null;
 }

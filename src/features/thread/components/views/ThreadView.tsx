@@ -46,6 +46,7 @@ import {
   getApiErrorMessage,
   isMissingThreadError,
 } from "@/shared/ui/feedback/apiErrorMessage";
+import { shouldShowThreadLoadError } from "@/shared/ui/feedback/threadLoadingState";
 import { ModalContext } from "@/shared/ui/overlay/modal-context";
 import { useReadReplyNumber } from "../../hooks/useReadReplyNumber";
 import { type UseThreadResult, useThread } from "../../hooks/useThread";
@@ -465,7 +466,9 @@ export const ThreadView: React.FunctionComponent<Props> = ({
   if (threadQuery.isLoading) {
     return <LoadingScreen message="スレッドを読み込み中..." />;
   }
-  if (threadQuery.error) {
+  if (
+    shouldShowThreadLoadError(threadQuery.error, Boolean(threadQuery.data))
+  ) {
     return (
       <ThreadLoadError
         error={threadQuery.error}
