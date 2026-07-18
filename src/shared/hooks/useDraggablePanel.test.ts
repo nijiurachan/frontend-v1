@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { clampPanelPosition } from "./useDraggablePanel";
+import { clampPanelPosition } from "@/shared/hooks/useDraggablePanel";
 
 describe("clampPanelPosition", () => {
   test("keeps an in-viewport position unchanged", () => {
