@@ -88,8 +88,13 @@ export interface TopPage {
 }
 
 export interface Catalog {
-  sort: "bump" | "new" | "old" | "replies";
+  sort: "bump" | "new" | "old" | "replies" | "momentum" | "soudane";
   threads: ThreadSummary[];
+  pagination: {
+    page: number;
+    limit: number;
+    hasNextPage: boolean;
+  };
 }
 
 export interface SearchResponse {

@@ -4,20 +4,26 @@ import type { Catalog } from "@/entities/thread";
 import { getCatalogPath } from "@/features/catalog/hooks/catalogPath";
 import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
 import { apiGet } from "@/shared/api";
-import { useIsDesktop } from "@/shared/hooks";
 import {
   runAimogeDataHook,
   useAimogeHookGeneration,
 } from "@/shared/lib/aimoge";
 
+export const CATALOG_AUTO_RELOAD_INTERVAL = 60_000;
+
+export function getCatalogRefetchInterval(
+  enabled: boolean,
+  visibilityState: DocumentVisibilityState,
+): number | false {
+  return enabled && visibilityState === "visible"
+    ? CATALOG_AUTO_RELOAD_INTERVAL
+    : false;
+}
+
 export function useThreads(): UseQueryResult<Catalog> {
-  const { currentSort, sortDirection } = useCatalogStore();
-  const isDesktop = useIsDesktop();
-  const catalogPath = getCatalogPath(
-    currentSort,
-    sortDirection,
-    isDesktop ? "desktop" : "mobile",
-  );
+  const { currentSort, page, columns, rows, autoReload } = useCatalogStore();
+  const limit = Math.max(1, Math.min(100, columns * rows));
+  const catalogPath = getCatalogPath(currentSort, page, limit);
   const aimogeGeneration = useAimogeHookGeneration();
   const transformCatalog = useCallback(
     (catalog: Catalog): Catalog => {
@@ -39,6 +45,12 @@ export function useThreads(): UseQueryResult<Catalog> {
     select: transformCatalog,
     staleTime: 30_000,
     refetchOnWindowFocus: true,
+    refetchInterval: () =>
+      getCatalogRefetchInterval(
+        autoReload,
+        typeof document === "undefined" ? "hidden" : document.visibilityState,
+      ),
+    refetchIntervalInBackground: false,
   });
 
   return query;

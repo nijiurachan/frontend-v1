@@ -22,7 +22,7 @@ interface HistoryState {
   ) => number | undefined;
 }
 
-const MAX_VIEWED = 100;
+export const MAX_VIEWED = 200;
 // 「0レス既読」を表す readReplyNumber。backend-v1 の OP seq は 0 開始。
 const INITIAL_READ_REPLY_NUMBER = 0;
 

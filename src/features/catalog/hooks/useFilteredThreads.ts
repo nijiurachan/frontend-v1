@@ -1,29 +1,20 @@
 import type { Thread } from "@/entities/thread";
 import { useCatalogStore } from "@/features/catalog/stores/catalogStore";
-import { sortCatalogThreads } from "@/features/catalog/utils/catalogSort";
 import { useNgStore } from "@/features/ng-filter/stores/ngStore";
-import { useIsDesktop } from "@/shared/hooks";
 
 /**
  * スレッド一覧に検索フィルターとNGフィルターを適用
  */
 export function useFilteredThreads(threads: Thread[] | undefined): Thread[] {
-  const { currentSort, sortDirection, searchQuery, selectedTag } =
-    useCatalogStore();
+  const { searchQuery, selectedTag } = useCatalogStore();
   const { isThreadHidden, showNgContent } = useNgStore();
-  const isDesktop = useIsDesktop();
-
-  const filteredThreads = filterCatalogThreads(
+  return filterCatalogThreads(
     threads,
     searchQuery,
     selectedTag,
     isThreadHidden,
     showNgContent,
   );
-
-  return isDesktop
-    ? filteredThreads
-    : sortCatalogThreads(filteredThreads, currentSort, sortDirection);
 }
 
 export function filterCatalogThreads(

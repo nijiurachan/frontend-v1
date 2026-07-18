@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
+import { usePostedHistoryStore } from "@/features/history/stores/postedHistoryStore";
 import type { CreatePostResult } from "@/shared/api";
 import { apiPost, getAltchaSolution, uploadAttachment } from "@/shared/api";
 import { toast } from "@/shared/ui/toast";
@@ -23,6 +24,7 @@ export function useSubmitPost(): UseMutationResult<
   SubmitParams
 > {
   const queryClient = useQueryClient();
+  const addPosted = usePostedHistoryStore((state) => state.addPosted);
 
   return useMutation({
     mutationFn: async ({
@@ -50,7 +52,8 @@ export function useSubmitPost(): UseMutationResult<
         mode === "thread" ? "/threads" : `/threads/${threadId}/posts`;
       return apiPost<CreatePostResult>(path, payload, { requiresToken: true });
     },
-    onSuccess: (_result: CreatePostResult, { mode }: SubmitParams): void => {
+    onSuccess: (result: CreatePostResult, { mode }: SubmitParams): void => {
+      addPosted(result.threadId);
       if (mode === "thread") {
         queryClient.invalidateQueries({ queryKey: ["threads"] });
       } else {

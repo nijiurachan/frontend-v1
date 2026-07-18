@@ -1,33 +1,29 @@
 import { describe, expect, test } from "bun:test";
 import {
-  getNextSortSelection,
+  getCatalogPageLimit,
   migrateCatalogState,
+  useCatalogStore,
 } from "@/features/catalog/stores/catalogStore";
 
 const THREAD_ID = "550e8400-e29b-41d4-a716-446655440000";
 
-describe("catalog sort selection", () => {
-  test("同じsortでは方向だけを反転する", () => {
-    expect(getNextSortSelection("date", "desc", "date")).toEqual({
-      sort: "date",
-      direction: "asc",
-    });
-    expect(getNextSortSelection("date", "asc", "date")).toEqual({
-      sort: "date",
-      direction: "desc",
+describe("catalog page size", () => {
+  test("uses the legacy desktop defaults", () => {
+    expect(useCatalogStore.getState()).toMatchObject({
+      columns: 7,
+      rows: 8,
+      textLength: 8,
     });
   });
 
-  test("別sortは降順から開始する", () => {
-    expect(getNextSortSelection("date", "asc", "sodane")).toEqual({
-      sort: "sodane",
-      direction: "desc",
-    });
+  test("uses columns times rows and respects the API maximum", () => {
+    expect(getCatalogPageLimit(7, 8)).toBe(56);
+    expect(getCatalogPageLimit(12, 20)).toBe(100);
   });
 });
 
 describe("migrateCatalogState", () => {
-  test("旧oldを日付昇順へ移行し、v0のスレッドIDも同時移行する", () => {
+  test("keeps old as a global server sort and removes legacy numeric IDs", () => {
     expect(
       migrateCatalogState(
         {
@@ -37,27 +33,30 @@ describe("migrateCatalogState", () => {
         0,
       ),
     ).toEqual({
-      currentSort: "date",
-      sortDirection: "asc",
+      currentSort: "old",
+      sortDirection: "desc",
+      page: 1,
       lastCatalogIds: [THREAD_ID],
     });
   });
 
   test.each([
-    ["default", "bump", "desc"],
-    ["created", "date", "desc"],
-    ["replies", "replies", "desc"],
-    ["soudane", "sodane", "desc"],
-    ["momentum", "bump", "desc"],
-  ])("旧sort %sを%s/%sへ移行する", (legacySort, sort, direction) => {
-    expect(migrateCatalogState({ currentSort: legacySort }, 1)).toEqual({
+    ["default", "desc", "bump"],
+    ["created", "desc", "new"],
+    ["date", "asc", "old"],
+    ["replies", "desc", "replies"],
+    ["sodane", "desc", "soudane"],
+    ["momentum", "desc", "momentum"],
+  ])("legacy sort %s/%s migrates to %s", (legacySort, direction, sort) => {
+    expect(
+      migrateCatalogState(
+        { currentSort: legacySort, sortDirection: direction },
+        2,
+      ),
+    ).toEqual({
       currentSort: sort,
-      sortDirection: direction,
+      sortDirection: "desc",
+      page: 1,
     });
-  });
-
-  test("v2の状態は変更しない", () => {
-    const persisted = { currentSort: "date", sortDirection: "asc" };
-    expect(migrateCatalogState(persisted, 2)).toBe(persisted);
   });
 });

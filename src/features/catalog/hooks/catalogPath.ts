@@ -1,27 +1,15 @@
-import type {
-  SortDirection,
-  SortType,
-} from "@/features/catalog/stores/catalogStore";
-import { getDesktopSortSelection } from "@/features/catalog/utils/catalogSort";
-
-export type CatalogLayout = "mobile" | "desktop";
+import type { SortType } from "@/features/catalog/stores/catalogStore";
 
 export function getCatalogPath(
   sortType: SortType,
-  direction: SortDirection = "desc",
-  layout: CatalogLayout = "mobile",
+  page: number,
+  limit: number,
 ): string {
-  const selection =
-    layout === "desktop"
-      ? getDesktopSortSelection(sortType, direction)
-      : { sort: sortType, direction };
-  const sort =
-    selection.sort === "date"
-      ? layout === "desktop" && selection.direction === "asc"
-        ? "old"
-        : "new"
-      : selection.sort === "replies"
-        ? "replies"
-        : "bump";
-  return `/catalog?sort=${sort}`;
+  const normalizedPage = Number.isFinite(page)
+    ? Math.max(1, Math.floor(page))
+    : 1;
+  const normalizedLimit = Number.isFinite(limit)
+    ? Math.max(1, Math.min(100, Math.floor(limit)))
+    : 100;
+  return `/catalog?sort=${sortType}&page=${normalizedPage}&limit=${normalizedLimit}`;
 }

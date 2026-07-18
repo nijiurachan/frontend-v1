@@ -4,28 +4,21 @@ import type { SortType } from "@/features/catalog/stores/catalogStore";
 
 describe("getCatalogPath", () => {
   test.each([
-    ["bump", "/catalog?sort=bump"],
-    ["date", "/catalog?sort=new"],
-    ["replies", "/catalog?sort=replies"],
-    ["sodane", "/catalog?sort=bump"],
-  ] satisfies [SortType, string][])("%s のAPIパスを返す", (sort, path) => {
-    expect(getCatalogPath(sort)).toBe(path);
+    "bump",
+    "new",
+    "old",
+    "replies",
+    "momentum",
+    "soudane",
+  ] satisfies SortType[])("requests the global %s sort", (sort) => {
+    expect(getCatalogPath(sort, 2, 56)).toBe(
+      `/catalog?sort=${sort}&page=2&limit=56`,
+    );
   });
 
-  test("モバイルの日付昇順もnewを要求してフロントで反転する", () => {
-    expect(getCatalogPath("date", "asc", "mobile")).toBe("/catalog?sort=new");
+  test("normalizes unsafe paging values", () => {
+    expect(getCatalogPath("bump", 0, 200)).toBe(
+      "/catalog?sort=bump&page=1&limit=100",
+    );
   });
-
-  test.each([
-    ["bump", "asc", "/catalog?sort=bump"],
-    ["date", "desc", "/catalog?sort=new"],
-    ["date", "asc", "/catalog?sort=old"],
-    ["replies", "asc", "/catalog?sort=replies"],
-    ["sodane", "desc", "/catalog?sort=bump"],
-  ] satisfies [SortType, "asc" | "desc", string][])(
-    "PCの%s/%sは従来API %sを要求する",
-    (sort, direction, path) => {
-      expect(getCatalogPath(sort, direction, "desktop")).toBe(path);
-    },
-  );
 });

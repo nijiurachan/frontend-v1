@@ -1,99 +1,23 @@
 import { describe, expect, test } from "bun:test";
-import type { Thread } from "@/entities/thread";
+import type { SortType } from "@/features/catalog/stores/catalogStore";
 import {
   getDesktopSortSelection,
-  getMobileSortPresentation,
-  sortCatalogThreads,
+  getSortPresentation,
 } from "@/features/catalog/utils/catalogSort";
 
-function makeThread(id: string, sodaneCount: number): Thread {
-  const createdAt = "2026-07-18T00:00:00.000Z";
-  return {
-    id,
-    replyCount: 0,
-    createdAt,
-    bumpedAt: createdAt,
-    tags: [],
-    opPost: {
-      id: `post-${id}`,
-      threadId: id,
-      seq: 0,
-      boardNo: null,
-      status: "public",
-      body: id,
-      createdAt,
-      attachment: null,
-      sodaneCount,
-      displayId: null,
-    },
-  };
-}
-
-describe("sortCatalogThreads", () => {
-  const threads = [makeThread("a", 3), makeThread("b", 8), makeThread("c", 3)];
-
-  test.each(["bump", "date", "replies"] as const)(
-    "%sの昇順は取得順を非破壊で反転する",
-    (sort) => {
-      const result = sortCatalogThreads(threads, sort, "asc");
-
-      expect(result.map((thread) => thread.id)).toEqual(["c", "b", "a"]);
-      expect(threads.map((thread) => thread.id)).toEqual(["a", "b", "c"]);
-    },
-  );
-
-  test("基本sortの降順も入力とは別の配列で取得順を維持する", () => {
-    const result = sortCatalogThreads(threads, "replies", "desc");
-
-    expect(result.map((thread) => thread.id)).toEqual(["a", "b", "c"]);
-    expect(result).not.toBe(threads);
-  });
-
-  test("そうだね数で両方向に並べ、同数は取得順を維持する", () => {
-    expect(
-      sortCatalogThreads(threads, "sodane", "desc").map((thread) => thread.id),
-    ).toEqual(["b", "a", "c"]);
-    expect(
-      sortCatalogThreads(threads, "sodane", "asc").map((thread) => thread.id),
-    ).toEqual(["a", "c", "b"]);
-  });
-});
-
-describe("getMobileSortPresentation", () => {
-  test("各sortの方向と意味をラベルで表す", () => {
-    expect(getMobileSortPresentation("bump", "desc")).toEqual({
-      label: "カタ新▽",
-      ariaLabel: "カタ新▽: カタログのbump新しい順",
-    });
-    expect(getMobileSortPresentation("bump", "asc").label).toBe("カタ古△");
-    expect(getMobileSortPresentation("date", "desc").label).toBe("新順▽");
-    expect(getMobileSortPresentation("date", "asc").label).toBe("古順△");
-    expect(getMobileSortPresentation("replies", "desc").label).toBe("多順▽");
-    expect(getMobileSortPresentation("replies", "asc").label).toBe("少順△");
-    expect(getMobileSortPresentation("sodane", "desc").label).toBe(
-      "そうだね多▽",
-    );
-    expect(getMobileSortPresentation("sodane", "asc").label).toBe(
-      "そうだね少△",
-    );
-  });
-});
-
-describe("getDesktopSortSelection", () => {
+describe("catalog sort presentation", () => {
   test.each([
-    ["bump", "asc", "bump", "desc"],
-    ["date", "desc", "date", "desc"],
-    ["date", "asc", "date", "asc"],
-    ["replies", "asc", "replies", "desc"],
-    ["sodane", "desc", "bump", "desc"],
-    ["sodane", "asc", "bump", "desc"],
-  ] as const)(
-    "%s/%sをPCの%s/%sとして扱う",
-    (sort, direction, expectedSort, expectedDirection) => {
-      expect(getDesktopSortSelection(sort, direction)).toEqual({
-        sort: expectedSort,
-        direction: expectedDirection,
-      });
-    },
-  );
+    ["bump", "カタ"],
+    ["new", "新順"],
+    ["old", "古順"],
+    ["replies", "多順"],
+    ["momentum", "勢順"],
+    ["soudane", "そ順"],
+  ] satisfies Array<[SortType, string]>)("labels %s as %s", (sort, label) => {
+    expect(getSortPresentation(sort).label).toBe(label);
+    expect(getDesktopSortSelection(sort)).toEqual({
+      sort,
+      direction: "desc",
+    });
+  });
 });

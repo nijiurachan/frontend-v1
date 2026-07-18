@@ -57,6 +57,10 @@ const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
     elementRef,
   }: CatalogItemContentProps) {
     const {
+      textLength,
+      textPosition,
+      imageSize,
+      openInNewTab,
       showNew,
       showCount,
       showUnreadCount,
@@ -69,13 +73,15 @@ const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
     const [menuOpen, setMenuOpen] = useState(false);
     const [ngRevealed, setNgRevealed] = useState(false);
     const [r18Revealed, setR18Revealed] = useState(false);
+    const [isHovered, setIsHovered] = useState(false);
 
     // カタログでのアニメ画像が許可されている場合のみアニメ画像のみ動かし、それ以外の場合は動かさない
     const imageUrl = getImageUrl(
       thread.opPost.attachment,
-      catalogAnim === "always" && thread.opPost.attachment?.kind === "animated",
+      (catalogAnim === "always" || (catalogAnim === "hover" && isHovered)) &&
+        thread.opPost.attachment?.kind === "animated",
     );
-    const title = getThreadTitle(thread);
+    const title = getThreadTitle(thread, textLength);
     const displayTitle = decorateTitle(title);
     const totalCount = thread.replyCount;
     const isVideo = thread.opPost.attachment
@@ -170,6 +176,7 @@ const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
           ref={elementRef}
           className={clsx(
             "group relative bg-card/50 rounded-lg overflow-hidden hover:bg-card transition-colors",
+            textPosition === "right" && "catalog-item-text-right",
             borderClass,
           )}
         >
@@ -177,10 +184,22 @@ const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
             to="/thread/$threadId"
             params={{ threadId: String(thread.id) }}
             className="block"
+            target={openInNewTab ? "_blank" : undefined}
+            rel={openInNewTab ? "noopener noreferrer" : undefined}
+            onMouseEnter={(): void => setIsHovered(true)}
+            onMouseLeave={(): void => setIsHovered(false)}
+            onFocus={(): void => setIsHovered(true)}
+            onBlur={(): void => setIsHovered(false)}
             {...(longPressOpensMenu ? longPressHandlers : {})}
             onClick={handleThreadClick}
           >
-            <div className="relative aspect-square bg-muted flex items-center justify-center">
+            <div
+              className="relative aspect-square bg-muted flex items-center justify-center catalog-configured-thumb"
+              style={{
+                width: `min(100%, ${imageSize}px)`,
+                maxHeight: `${imageSize}px`,
+              }}
+            >
               <img
                 src={imageUrl}
                 alt={displayTitle}
@@ -240,31 +259,39 @@ const CatalogItemContent: React.FunctionComponent<CatalogItemContentProps> =
               )}
             </div>
           </Link>
-          <div className="flex items-start pt-2 px-2 mb-2">
-            <Link
-              to="/thread/$threadId"
-              params={{ threadId: String(thread.id) }}
-              className={clsx(
-                "min-w-0 flex-1 text-xs text-muted-foreground line-clamp-2 leading-tight",
-                "group-hover:text-foreground transition-colors",
-                ((isNg && !ngRevealed) || isR18Hidden) && "blur-sm",
-              )}
-              {...(longPressOpensMenu ? longPressHandlers : {})}
-              onClick={handleThreadClick}
-            >
-              {displayTitle}
-            </Link>
-            {isMenuButtonDisplayed && (
-              <button
-                type="button"
-                onClick={handleMenuClick}
-                className="flex-shrink-0 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                aria-label="スレッドメニュー"
+          {textLength > 0 && (
+            <div className="flex items-start pt-2 px-2 mb-2">
+              <Link
+                to="/thread/$threadId"
+                params={{ threadId: String(thread.id) }}
+                target={openInNewTab ? "_blank" : undefined}
+                rel={openInNewTab ? "noopener noreferrer" : undefined}
+                onMouseEnter={(): void => setIsHovered(true)}
+                onMouseLeave={(): void => setIsHovered(false)}
+                onFocus={(): void => setIsHovered(true)}
+                onBlur={(): void => setIsHovered(false)}
+                className={clsx(
+                  "min-w-0 flex-1 text-xs text-muted-foreground line-clamp-2 leading-tight",
+                  "group-hover:text-foreground transition-colors",
+                  ((isNg && !ngRevealed) || isR18Hidden) && "blur-sm",
+                )}
+                {...(longPressOpensMenu ? longPressHandlers : {})}
+                onClick={handleThreadClick}
               >
-                <HiOutlineDotsVertical className="w-5 h-5" />
-              </button>
-            )}
-          </div>
+                {displayTitle}
+              </Link>
+              {isMenuButtonDisplayed && (
+                <button
+                  type="button"
+                  onClick={handleMenuClick}
+                  className="flex-shrink-0 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                  aria-label="スレッドメニュー"
+                >
+                  <HiOutlineDotsVertical className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          )}
           <TagBadges tags={thread.tags} className="px-2 pb-2" />
         </div>
 

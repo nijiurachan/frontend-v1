@@ -12,6 +12,8 @@ export const DesktopCatalogGrid: React.FunctionComponent = () => {
   const filteredThreads = useFilteredThreads(data?.threads);
   const visibleThreads = useFavoriteThreads(useOekakiFloor(filteredThreads));
   const lastCatalogIds = useCatalogStore((state) => state.lastCatalogIds);
+  const columns = useCatalogStore((state) => state.columns);
+  const imageSize = useCatalogStore((state) => state.imageSize);
   const newThreadIds = useMemo(() => {
     if (lastCatalogIds.length === 0) return new Set<string>();
     const previous = new Set(lastCatalogIds);
@@ -34,7 +36,15 @@ export const DesktopCatalogGrid: React.FunctionComponent = () => {
 
   return (
     <div className="desktop-catalog-grid-wrap">
-      <div className="desktop-catalog-grid">
+      <div
+        className="desktop-catalog-grid"
+        style={
+          {
+            "--catalog-columns": columns,
+            "--catalog-image-size": `${imageSize}px`,
+          } as React.CSSProperties
+        }
+      >
         {visibleThreads.map((thread) => (
           <DesktopCatalogItem
             key={thread.id}

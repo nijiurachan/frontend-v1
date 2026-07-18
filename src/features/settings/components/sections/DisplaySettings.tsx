@@ -1,10 +1,14 @@
 import { useState } from "react";
 import { FiLock, FiMinus, FiPlus } from "react-icons/fi";
 import {
+  type AnimSetting,
+  type CatalogImageSize,
+  type CatalogTextPosition,
   type ThreadMenuOpenMethod,
   useCatalogStore,
 } from "@/features/catalog/stores";
 import { useHistoryStore } from "@/features/history/stores";
+import { usePostedHistoryStore } from "@/features/history/stores/postedHistoryStore";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import {
@@ -44,20 +48,35 @@ export const DisplaySettings: React.FunctionComponent = () => {
   } = useSettingsStore();
   const {
     columns,
+    rows,
+    textLength,
+    textPosition,
+    imageSize,
+    openInNewTab,
     showNew,
     showCount,
     showUnreadCount,
     catalogAnim,
+    autoReload,
     threadMenuOpenMethod,
     setColumns,
+    setRows,
+    setTextLength,
+    setTextPosition,
+    setImageSize,
+    setOpenInNewTab,
     setShowNew,
     setShowCount,
     setShowUnreadCount,
     setCatalogAnim,
+    setAutoReload,
     setThreadMenuOpenMethod,
     resetCatalogSettings,
   } = useCatalogStore();
   const { clearHistory } = useHistoryStore();
+  const clearPostedHistory = usePostedHistoryStore(
+    (state) => state.clearPostedHistory,
+  );
   const { clearAllNgSettings } = useNgStore();
 
   const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
@@ -65,11 +84,13 @@ export const DisplaySettings: React.FunctionComponent = () => {
 
   const handleClearHistory = (): void => {
     clearHistory();
+    clearPostedHistory();
   };
 
   const handleClearAllData = (): void => {
     // すべてのストアをクリア
     clearHistory();
+    clearPostedHistory();
     clearAllNgSettings();
     resetCatalogSettings();
     resetSettings();
@@ -114,15 +135,19 @@ export const DisplaySettings: React.FunctionComponent = () => {
         </SettingRow>
         <SettingRow
           label="アニメ画像を再生"
-          description="※オンにするとGIF/WebP等のアニメ画像が表示されます。通信量を節約したい場合はオフにしてください"
+          description="GIF/WebP等のカタログでの再生方法です"
         >
-          <Toggle
-            checked={catalogAnim === "always"}
-            onChange={(v: boolean): void =>
-              setCatalogAnim(v ? "always" : "never")
+          <Select
+            value={catalogAnim}
+            onChange={(value: string): void =>
+              setCatalogAnim(value as AnimSetting)
             }
             aria-label="アニメ画像"
-          />
+          >
+            <option value="always">常に動く</option>
+            <option value="hover">カーソル時のみ</option>
+            <option value="never">動かない</option>
+          </Select>
         </SettingRow>
         <SettingRow
           label="全体文字サイズ"
@@ -237,12 +262,84 @@ export const DisplaySettings: React.FunctionComponent = () => {
             onChange={(value: string): void => setColumns(Number(value))}
             aria-label="カタログ列数"
           >
-            {[3, 4, 5, 6, 7, 8].map((n) => (
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((n) => (
               <option key={n} value={n}>
                 {n}列
               </option>
             ))}
           </Select>
+        </SettingRow>
+        <SettingRow
+          label="カタログ行数"
+          description={`${columns * rows > 100 ? 100 : columns * rows}件ずつ取得します`}
+        >
+          <Select
+            value={rows}
+            onChange={(value: string): void => setRows(Number(value))}
+            aria-label="カタログ行数"
+          >
+            {Array.from({ length: 20 }, (_, index) => index + 1).map((n) => (
+              <option key={n} value={n}>
+                {n}行
+              </option>
+            ))}
+          </Select>
+        </SettingRow>
+        <SettingRow label="OP本文の最大表示長">
+          <Input
+            type="number"
+            min={0}
+            max={200}
+            value={textLength}
+            onChange={(event: React.ChangeEvent<HTMLInputElement>): void =>
+              setTextLength(Number(event.target.value))
+            }
+            aria-label="OP本文の最大表示長"
+          />
+        </SettingRow>
+        <SettingRow label="本文位置">
+          <Select
+            value={textPosition}
+            onChange={(value: string): void =>
+              setTextPosition(value as CatalogTextPosition)
+            }
+            aria-label="カタログ本文位置"
+          >
+            <option value="below">画像の下</option>
+            <option value="right">画像の右</option>
+          </Select>
+        </SettingRow>
+        <SettingRow label="画像サイズ">
+          <Select
+            value={imageSize}
+            onChange={(value: string): void =>
+              setImageSize(Number(value) as CatalogImageSize)
+            }
+            aria-label="カタログ画像サイズ"
+          >
+            {[50, 75, 100, 125, 150, 175, 200].map((size) => (
+              <option key={size} value={size}>
+                {size}px
+              </option>
+            ))}
+          </Select>
+        </SettingRow>
+        <SettingRow label="新規タブで開く">
+          <Toggle
+            checked={openInNewTab}
+            onChange={setOpenInNewTab}
+            aria-label="スレッドを新規タブで開く"
+          />
+        </SettingRow>
+        <SettingRow
+          label="カタログ自動更新"
+          description="既定OFF・60秒間隔。非表示中は更新しません"
+        >
+          <Toggle
+            checked={autoReload}
+            onChange={setAutoReload}
+            aria-label="カタログ自動更新"
+          />
         </SettingRow>
         <SettingRow label="NEW表示">
           <Toggle

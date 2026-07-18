@@ -5,7 +5,7 @@ import { SearchBar } from "@/features/catalog/components";
 import { useIsPcForced } from "@/shared/hooks/useMediaQuery";
 import { buildMobileVersionUrl } from "@/shared/lib/forcePc";
 
-type AppPath = "/" | "/archive" | "/jukebox";
+type AppPath = "/" | "/archive" | "/board" | "/jukebox" | "/search";
 
 interface AppHeaderLink {
   label: string;
@@ -34,6 +34,8 @@ const NAV_LINKS: HeaderLink[] = [
 ];
 
 const UTILITY_LINKS: HeaderLink[] = [
+  { label: "掲示板", to: "/board" },
+  { label: "投稿検索", to: "/search" },
   { label: "🏛️過去ログ", to: "/archive" },
   { label: "Wiki", href: "https://wiki.nijiurachan.net/", external: true },
   { label: "📡API", href: "/api-docs" },

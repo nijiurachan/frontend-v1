@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { MAX_VIEWED } from "@/features/history/stores/historyStore";
 import {
   migrateHistoryState,
   migrateThreadIdArray,
@@ -7,6 +8,10 @@ import {
 const THREAD_ID = "550e8400-e29b-41d4-a716-446655440000";
 
 describe("persisted thread ID migrations", () => {
+  test("view history keeps up to 200 current UUID threads", () => {
+    expect(MAX_VIEWED).toBe(200);
+  });
+
   test("history v1 の数値IDを破棄しUUIDの既読位置を維持する", () => {
     expect(
       migrateHistoryState(

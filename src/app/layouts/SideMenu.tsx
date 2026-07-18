@@ -3,10 +3,13 @@ import { Link } from "@tanstack/react-router";
 import { AnimatePresence, motion, type PanInfo } from "motion/react";
 import { type SyntheticEvent, useEffect } from "react";
 import {
+  FiClock,
   FiGrid,
+  FiList,
   FiMonitor,
   FiMusic,
   FiRefreshCw,
+  FiSearch,
   FiSettings,
   FiShieldOff,
   FiWatch,
@@ -123,6 +126,22 @@ export const SideMenu: React.FunctionComponent<Props> = ({
               >
                 カタログに戻る
               </MenuItem>
+              <MenuItem
+                icon={<FiList className="w-5 h-5" />}
+                to="/board"
+                onClick={onClose}
+                isInternal
+              >
+                掲示板
+              </MenuItem>
+              <MenuItem
+                icon={<FiSearch className="w-5 h-5" />}
+                to="/search"
+                onClick={onClose}
+                isInternal
+              >
+                投稿検索
+              </MenuItem>
               {jukeboxEnabled && (
                 <MenuItem
                   icon={<FiMusic className="w-5 h-5" />}
@@ -154,6 +173,22 @@ export const SideMenu: React.FunctionComponent<Props> = ({
                 onClick={onClose}
               >
                 過去ログ
+              </MenuItem>
+              <MenuItem
+                icon={<FiClock className="w-5 h-5" />}
+                href="/history/viewed"
+                isInternal
+                onClick={onClose}
+              >
+                見歴
+              </MenuItem>
+              <MenuItem
+                icon={<FiClock className="w-5 h-5" />}
+                href="/history/posted"
+                isInternal
+                onClick={onClose}
+              >
+                書込履歴
               </MenuItem>
               <MenuItem
                 icon={<FiMonitor className="w-5 h-5" />}

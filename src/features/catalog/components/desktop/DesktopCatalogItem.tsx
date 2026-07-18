@@ -57,17 +57,27 @@ const DesktopCatalogItemContent: React.FunctionComponent<ContentProps> = memo(
     const showNew = useCatalogStore((state) => state.showNew);
     const showCount = useCatalogStore((state) => state.showCount);
     const showUnreadCount = useCatalogStore((state) => state.showUnreadCount);
+    const textLength = useCatalogStore((state) => state.textLength);
+    const textPosition = useCatalogStore((state) => state.textPosition);
+    const imageSize = useCatalogStore((state) => state.imageSize);
+    const openInNewTab = useCatalogStore((state) => state.openInNewTab);
+    const catalogAnim = useCatalogStore((state) => state.catalogAnim);
     const showR18 = useSettingsStore((state) => state.showR18);
     const { addViewed, getUnreadCount } = useHistoryStore();
     const { isThreadHidden, showNgContent } = useNgStore();
     const [menuOpen, setMenuOpen] = useState(false);
     const [revealed, setRevealed] = useState(false);
-    const title = getThreadTitle(thread);
+    const [isHovered, setIsHovered] = useState(false);
+    const title = getThreadTitle(thread, textLength);
     const isNg = showNgContent && isThreadHidden(thread);
     const isR18 = thread.tags.some((tag) => tag.name === "R18");
     const isMasked = (isNg || (isR18 && !showR18)) && !revealed;
     const unreadCount = getUnreadCount(thread.id, thread.replyCount) ?? 0;
-    const imageUrl = getImageUrl(thread.opPost.attachment, false);
+    const imageUrl = getImageUrl(
+      thread.opPost.attachment,
+      (catalogAnim === "always" || (catalogAnim === "hover" && isHovered)) &&
+        thread.opPost.attachment?.kind === "animated",
+    );
     const isVideo = thread.opPost.attachment
       ? isVideoAttachment(thread.opPost.attachment)
       : false;
@@ -83,11 +93,28 @@ const DesktopCatalogItemContent: React.FunctionComponent<ContentProps> = memo(
     };
 
     return (
-      <div ref={elementRef} className="desktop-catalog-item">
+      <div
+        ref={elementRef}
+        className={clsx(
+          "desktop-catalog-item",
+          textPosition === "right" && "desktop-catalog-item-right",
+        )}
+        style={
+          {
+            "--catalog-image-size": `${imageSize}px`,
+          } as React.CSSProperties
+        }
+      >
         <Link
           to="/thread/$threadId"
           params={{ threadId: thread.id }}
           onClick={handleClick}
+          target={openInNewTab ? "_blank" : undefined}
+          rel={openInNewTab ? "noopener noreferrer" : undefined}
+          onMouseEnter={(): void => setIsHovered(true)}
+          onMouseLeave={(): void => setIsHovered(false)}
+          onFocus={(): void => setIsHovered(true)}
+          onBlur={(): void => setIsHovered(false)}
         >
           <div className="desktop-catalog-thumb">
             <img
@@ -117,9 +144,13 @@ const DesktopCatalogItemContent: React.FunctionComponent<ContentProps> = memo(
               </span>
             )}
           </div>
-          <div className={clsx("desktop-catalog-text", isMasked && "blur-sm")}>
-            {title}
-          </div>
+          {textLength > 0 && (
+            <div
+              className={clsx("desktop-catalog-text", isMasked && "blur-sm")}
+            >
+              {title}
+            </div>
+          )}
           <div className={clsx("desktop-catalog-count", isMasked && "blur-sm")}>
             {showCount && thread.replyCount}
             {showUnreadCount && unreadCount > 0 && (

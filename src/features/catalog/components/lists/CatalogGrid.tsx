@@ -41,10 +41,12 @@ const MobileCatalogGrid: React.FunctionComponent = () => {
     );
   }
 
-  if (visibleThreads.length === 0 && data?.threads && data.threads.length > 0) {
+  if (visibleThreads.length === 0) {
     return (
       <Message variant="info">
-        検索条件に一致するスレッドが見つかりません
+        {(data?.threads.length ?? 0) > 0
+          ? "検索条件に一致するスレッドが見つかりません"
+          : "スレッドが見つかりません"}
       </Message>
     );
   }
