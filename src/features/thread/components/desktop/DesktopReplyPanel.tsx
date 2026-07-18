@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { Thread } from "@/entities/thread";
 import { PostForm } from "@/features/post/components/forms";
 import { useSettingsStore } from "@/features/settings/hooks";
+import { useDraggablePanel } from "@/shared/hooks";
 
 interface Props {
   thread: Thread;
@@ -22,11 +23,14 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
   const [manuallyCollapsed, setManuallyCollapsed] = useState(false);
   const collapsed = initialComment ? false : manuallyCollapsed;
   const deleteKey = useSettingsStore((state) => state.deleteKey);
+  const { panelRef, panelStyle, handleProps } = useDraggablePanel();
 
   if (isArchived) return null;
 
   return (
     <aside
+      ref={panelRef}
+      style={panelStyle}
       className="desktop-floating-panel"
       data-kind="reply"
       data-collapsed={collapsed}
@@ -41,7 +45,9 @@ export const DesktopReplyPanel: React.FunctionComponent<Props> = ({
         <span aria-hidden="true">▶</span>レス
       </button>
       <div className="desktop-floating-content">
-        <div className="desktop-floating-heading">返信フォーム</div>
+        <div className="desktop-floating-heading" {...handleProps}>
+          返信フォーム
+        </div>
         <div className="desktop-floating-form">
           <div className="desktop-floating-field">
             <label htmlFor="desktop-act">ACT</label>

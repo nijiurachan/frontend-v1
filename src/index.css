@@ -614,6 +614,10 @@ select option {
   background: #d0d0d0;
   color: #666;
   text-align: center;
+  /* タイトルバーを掴んでパネルを移動できる */
+  cursor: move;
+  user-select: none;
+  touch-action: none;
 }
 
 .desktop-floating-form {

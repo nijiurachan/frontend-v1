@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ThreadCreateForm } from "@/features/thread/components/forms/ThreadCreateForm";
 import { getDesktopThreadCreatePanelAction } from "@/features/thread/utils/desktopThreadCreatePanelState";
+import { useDraggablePanel } from "@/shared/hooks";
 
 interface Props {
   isOpen: boolean;
@@ -14,6 +15,7 @@ export const DesktopThreadCreatePanel: React.FunctionComponent<Props> = ({
 }: Props) => {
   const [manuallyCollapsed, setManuallyCollapsed] = useState(true);
   const collapsed = isOpen ? false : manuallyCollapsed;
+  const { panelRef, panelStyle, handleProps } = useDraggablePanel();
 
   const handleTabClick = (): void => {
     const action = getDesktopThreadCreatePanelAction(isOpen, manuallyCollapsed);
@@ -23,6 +25,8 @@ export const DesktopThreadCreatePanel: React.FunctionComponent<Props> = ({
 
   return (
     <aside
+      ref={panelRef}
+      style={panelStyle}
       className="desktop-floating-panel"
       data-kind="thread"
       data-collapsed={collapsed}
@@ -37,7 +41,9 @@ export const DesktopThreadCreatePanel: React.FunctionComponent<Props> = ({
         <span aria-hidden="true">◀</span>スレ立て
       </button>
       <div className="desktop-floating-content">
-        <div className="desktop-floating-heading">新規スレッド</div>
+        <div className="desktop-floating-heading" {...handleProps}>
+          新規スレッド
+        </div>
         <div className="desktop-floating-form">
           <ThreadCreateForm
             onSuccess={(): void => {
