@@ -71,6 +71,8 @@ export function primeServerTimeOffset(): Promise<void> {
     } catch {
       // 取得失敗時は PC時刻にフォールバック（オフセット 0 扱い）。
       // cachedOffsetMs は null のまま据え置き、次回開始時に再試行できる。
+    } finally {
+      inFlight = null;
     }
   })();
 
