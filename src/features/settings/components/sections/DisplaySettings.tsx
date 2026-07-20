@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FiLock, FiMinus, FiPlus } from "react-icons/fi";
+import { FiLock, FiMinus, FiPlus, FiX } from "react-icons/fi";
 import {
   type ThreadMenuOpenMethod,
   useCatalogStore,
@@ -39,8 +39,9 @@ export const DisplaySettings: React.FunctionComponent = () => {
     resetSettings,
     fontScalePosts,
     setFontScalePosts,
-    announceBannerIconSrc,
-    setAnnounceBannerIconSrc,
+    announceBannerIconSrcs,
+    addAnnounceBannerIconSrc,
+    removeAnnounceBannerIconSrc,
   } = useSettingsStore();
   const {
     columns,
@@ -62,6 +63,17 @@ export const DisplaySettings: React.FunctionComponent = () => {
 
   const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
   const [showClearAllDataDialog, setShowClearAllDataDialog] = useState(false);
+  const [announceIconInput, setAnnounceIconInput] = useState("");
+
+  const handleAddAnnounceIcon = (): void => {
+    const url = announceIconInput.trim();
+    if (!url) {
+      alert("アイコン画像のURLを入力してください");
+      return;
+    }
+    addAnnounceBannerIconSrc(url);
+    setAnnounceIconInput("");
+  };
 
   const handleClearHistory = (): void => {
     clearHistory();
@@ -219,20 +231,55 @@ export const DisplaySettings: React.FunctionComponent = () => {
             aria-label="ジュークボックス切替"
           />
         </SettingRow>
-        <SettingRow
-          label="運営告知バナーアイコン"
-          description="カタログ上部の告知バナー左端アイコンのURL。空欄で既定アイコン。"
-        >
+      </SettingSection>
+      <SettingSection
+        title="運営告知バナーアイコン"
+        description="複数登録するとカタログを開くたびにランダムで切替（未登録なら既定アイコン）"
+      >
+        <SettingRow>
           <Input
             type="url"
-            value={announceBannerIconSrc}
+            placeholder="https://example.com/icon.png"
+            className="w-full"
+            value={announceIconInput}
             onChange={(
               e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>,
-            ): void => setAnnounceBannerIconSrc(e.target.value)}
-            placeholder="https://example.com/icon.png"
+            ): void => setAnnounceIconInput(e.target.value)}
+            onKeyDown={(e: React.KeyboardEvent): void => {
+              if (e.key === "Enter") {
+                handleAddAnnounceIcon();
+              }
+            }}
             aria-label="運営告知バナーアイコンURL"
           />
+          <Button variant="primary" onClick={handleAddAnnounceIcon}>
+            追加
+          </Button>
         </SettingRow>
+        {announceBannerIconSrcs.length > 0 ? (
+          <div className="space-y-2">
+            {announceBannerIconSrcs.map((url) => (
+              <SettingRow key={url}>
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span className="text-foreground text-sm truncate">
+                    {url}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    onClick={(): void => removeAnnounceBannerIconSrc(url)}
+                    icon={<FiX size={16} />}
+                  >
+                    削除
+                  </Button>
+                </div>
+              </SettingRow>
+            ))}
+          </div>
+        ) : (
+          <SettingRow>
+            <span className="text-muted-foreground">なし</span>
+          </SettingRow>
+        )}
       </SettingSection>
       <SettingSection title="カタログ設定">
         <SettingRow label="カタログ列数">
