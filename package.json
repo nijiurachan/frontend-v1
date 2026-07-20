@@ -47,7 +47,7 @@
   "devDependencies": {
     "@biomejs/biome": "2.3.1",
     "@eslint/js": "^9.39.4",
-    "@nijiurachan/js": "github:ebine-lab/nijiurachan-js#claude/nijiurachan-announcement-banner-8vlsfj",
+    "@nijiurachan/js": "github:nijiurachan/nijiurachan-js#a3d26c7b5d32159b5e16c3e6c801d05968f75e59",
     "@tanstack/router-cli": "^1.166.16",
     "@tanstack/router-plugin": "^1.167.2",
     "@types/cloudflare-turnstile": "^0.2.2",
