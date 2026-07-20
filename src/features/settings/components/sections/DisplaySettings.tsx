@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FiLock, FiMinus, FiPlus, FiX } from "react-icons/fi";
 import {
   type ThreadMenuOpenMethod,
@@ -6,7 +6,11 @@ import {
 } from "@/features/catalog/stores";
 import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
-import { useSettingsStore } from "@/features/settings/hooks";
+import {
+  useAnnounceIcons,
+  useSettingsStore,
+} from "@/features/settings/hooks";
+import type { AnnounceIcon } from "@/features/settings/lib/announceIconDb";
 import {
   FONT_SCALE_MAX,
   FONT_SCALE_MIN,
@@ -39,10 +43,13 @@ export const DisplaySettings: React.FunctionComponent = () => {
     resetSettings,
     fontScalePosts,
     setFontScalePosts,
-    announceBannerIconSrcs,
-    addAnnounceBannerIconSrc,
-    removeAnnounceBannerIconSrc,
   } = useSettingsStore();
+  const {
+    icons: announceIcons,
+    add: addAnnounceIcon,
+    remove: removeAnnounceIcon,
+  } = useAnnounceIcons();
+  const announceFileInputRef = useRef<HTMLInputElement>(null);
   const {
     columns,
     showNew,
@@ -63,16 +70,22 @@ export const DisplaySettings: React.FunctionComponent = () => {
 
   const [showClearHistoryDialog, setShowClearHistoryDialog] = useState(false);
   const [showClearAllDataDialog, setShowClearAllDataDialog] = useState(false);
-  const [announceIconInput, setAnnounceIconInput] = useState("");
 
-  const handleAddAnnounceIcon = (): void => {
-    const url = announceIconInput.trim();
-    if (!url) {
-      alert("アイコン画像のURLを入力してください");
-      return;
+  const handleSelectAnnounceIcons = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ): Promise<void> => {
+    const files = Array.from(e.target.files ?? []);
+    // 同じファイルを続けて選択できるように input を毎回リセット
+    e.target.value = "";
+    for (const file of files) {
+      if (!file.type.startsWith("image/")) continue;
+      try {
+        await addAnnounceIcon(file);
+      } catch (err) {
+        console.warn("アイコン追加に失敗", err);
+        alert("アイコンの保存に失敗しました");
+      }
     }
-    addAnnounceBannerIconSrc(url);
-    setAnnounceIconInput("");
   };
 
   const handleClearHistory = (): void => {
@@ -237,42 +250,35 @@ export const DisplaySettings: React.FunctionComponent = () => {
         description="複数登録するとカタログを開くたびにランダムで切替（未登録なら既定アイコン）"
       >
         <SettingRow>
-          <Input
-            type="url"
-            placeholder="https://example.com/icon.png"
-            className="w-full"
-            value={announceIconInput}
-            onChange={(
-              e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>,
-            ): void => setAnnounceIconInput(e.target.value)}
-            onKeyDown={(e: React.KeyboardEvent): void => {
-              if (e.key === "Enter") {
-                handleAddAnnounceIcon();
-              }
+          <input
+            ref={announceFileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="sr-only"
+            onChange={(e): void => {
+              void handleSelectAnnounceIcons(e);
             }}
-            aria-label="運営告知バナーアイコンURL"
+            aria-label="アイコン画像を選択"
           />
-          <Button variant="primary" onClick={handleAddAnnounceIcon}>
-            追加
+          <Button
+            variant="primary"
+            className="w-full"
+            onClick={(): void => announceFileInputRef.current?.click()}
+          >
+            画像を追加
           </Button>
         </SettingRow>
-        {announceBannerIconSrcs.length > 0 ? (
-          <div className="space-y-2">
-            {announceBannerIconSrcs.map((url) => (
-              <SettingRow key={url}>
-                <div className="flex items-center justify-between w-full gap-2">
-                  <span className="text-foreground text-sm truncate">
-                    {url}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    onClick={(): void => removeAnnounceBannerIconSrc(url)}
-                    icon={<FiX size={16} />}
-                  >
-                    削除
-                  </Button>
-                </div>
-              </SettingRow>
+        {announceIcons.length > 0 ? (
+          <div className="divide-y divide-border">
+            {announceIcons.map((icon) => (
+              <AnnounceIconRow
+                key={icon.id}
+                icon={icon}
+                onRemove={(): void => {
+                  void removeAnnounceIcon(icon.id);
+                }}
+              />
             ))}
           </div>
         ) : (
@@ -386,3 +392,43 @@ export const DisplaySettings: React.FunctionComponent = () => {
     </>
   );
 };
+
+/** アップロード済みアイコン1件の行。サムネイル用object URLをmount中だけ保持 */
+const AnnounceIconRow: React.FunctionComponent<{
+  icon: AnnounceIcon;
+  onRemove: () => void;
+}> = ({ icon, onRemove }: { icon: AnnounceIcon; onRemove: () => void }) => {
+  // 行はicon.idでkey管理されるためblobは寿命内で不変
+  const [url] = useState(() => URL.createObjectURL(icon.blob));
+  useEffect(() => {
+    return (): void => URL.revokeObjectURL(url);
+  }, [url]);
+
+  return (
+    <SettingRow>
+      <div className="flex items-center justify-between w-full gap-3">
+        <img
+          src={url}
+          alt=""
+          className="w-8 h-8 object-contain rounded bg-muted"
+        />
+        <span className="text-muted-foreground text-xs flex-1 truncate">
+          {formatBytes(icon.blob.size)}
+        </span>
+        <Button
+          variant="ghost"
+          onClick={onRemove}
+          icon={<FiX size={16} />}
+        >
+          削除
+        </Button>
+      </div>
+    </SettingRow>
+  );
+};
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}

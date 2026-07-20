@@ -60,12 +60,6 @@ export type SettingsStore = SettingsStoreBase & {
   jukeboxEnabled: boolean;
   /** ジュークボックスの有効/無効を設定 */
   setJukeboxEnabled(value: boolean): void;
-  /** 運営告知バナーのアイコンURL候補(空配列なら既定アイコン、複数のときはマウント毎にランダム) */
-  announceBannerIconSrcs: string[];
-  /** 運営告知バナーのアイコンURL候補を追加 */
-  addAnnounceBannerIconSrc(value: string): void;
-  /** 運営告知バナーのアイコンURL候補を削除 */
-  removeAnnounceBannerIconSrc(value: string): void;
 };
 
 /** 表示設定のストアを作る */
@@ -85,22 +79,6 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
         setSpaceMode: (spaceMode: boolean) => set({ spaceMode }),
         jukeboxEnabled: true,
         setJukeboxEnabled: (jukeboxEnabled: boolean) => set({ jukeboxEnabled }),
-        announceBannerIconSrcs: [],
-        addAnnounceBannerIconSrc: (value: string) => {
-          const url = value.trim();
-          if (!url) return;
-          set((s) => ({
-            announceBannerIconSrcs: s.announceBannerIconSrcs.includes(url)
-              ? s.announceBannerIconSrcs
-              : [...s.announceBannerIconSrcs, url],
-          }));
-        },
-        removeAnnounceBannerIconSrc: (value: string) =>
-          set((s) => ({
-            announceBannerIconSrcs: s.announceBannerIconSrcs.filter(
-              (u) => u !== value,
-            ),
-          })),
         resetSettings(): void {
           base.resetSettings();
           set({
@@ -108,7 +86,6 @@ export const createSettingsStore: () => StoreApi<SettingsStore> = () =>
             fontScalePosts: FONT_SCALE_DEFAULT,
             spaceMode: false,
             jukeboxEnabled: true,
-            announceBannerIconSrcs: [],
           });
         },
       };
