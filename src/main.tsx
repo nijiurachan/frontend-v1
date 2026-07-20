@@ -9,6 +9,7 @@ import { createRoot } from "react-dom/client";
 import { routeTree } from "@/routeTree.gen";
 import "@/index.css";
 import { makeUpfileInputFragmentV2 } from "@nijiurachan/js/components/upfile-input-fragment-v2";
+import { AnnounceBannerElement } from "@nijiurachan/js/elements/announce-banner";
 import { makeUpfileInputV2Element } from "@nijiurachan/js/elements/upfile-input-v2";
 import { AxnosPaintPopup } from "@nijiurachan/js/io/axnos-paint-popup";
 import { KlecksPopup } from "@nijiurachan/js/io/klecks-popup";
@@ -36,6 +37,7 @@ const settingsStore: ReturnType<typeof createSettingsStore> =
   createSettingsStore();
 
 initUpfileInput(settingsStore);
+AnnounceBannerElement.define();
 
 createRoot(document.getElementById("root") as HTMLElement).render(
   makeRoot(settingsStore),

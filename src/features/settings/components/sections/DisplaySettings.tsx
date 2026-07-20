@@ -39,6 +39,8 @@ export const DisplaySettings: React.FunctionComponent = () => {
     resetSettings,
     fontScalePosts,
     setFontScalePosts,
+    announceBannerIconSrc,
+    setAnnounceBannerIconSrc,
   } = useSettingsStore();
   const {
     columns,
@@ -215,6 +217,20 @@ export const DisplaySettings: React.FunctionComponent = () => {
             checked={jukeboxEnabled}
             onChange={setJukeboxEnabled}
             aria-label="ジュークボックス切替"
+          />
+        </SettingRow>
+        <SettingRow
+          label="運営告知バナーアイコン"
+          description="カタログ上部の告知バナー左端アイコンのURL。空欄で既定アイコン。"
+        >
+          <Input
+            type="url"
+            value={announceBannerIconSrc}
+            onChange={(
+              e: React.ChangeEvent<HTMLInputElement, HTMLInputElement>,
+            ): void => setAnnounceBannerIconSrc(e.target.value)}
+            placeholder="https://example.com/icon.png"
+            aria-label="運営告知バナーアイコンURL"
           />
         </SettingRow>
       </SettingSection>

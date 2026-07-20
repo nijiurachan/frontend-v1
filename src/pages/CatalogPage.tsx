@@ -7,6 +7,7 @@ import { useCatalogStore } from "@/features/catalog/stores";
 import { ThreadCreateModal } from "@/features/thread/components/modals";
 import { useThreadCreateModalStore } from "@/features/thread/stores/threadCreateModalStore";
 import { BmgBanner } from "@/shared/ui/ad";
+import { AnnounceBanner } from "@/shared/ui/announce/AnnounceBanner";
 import { PullRefresh } from "@/shared/ui/feedback";
 
 export const CatalogPage: React.FunctionComponent = () => {
@@ -41,6 +42,7 @@ export const CatalogPage: React.FunctionComponent = () => {
     <>
       <title>{import.meta.env.APP_NAME}</title>
       <BmgBanner />
+      <AnnounceBanner />
       <PullRefresh onRefresh={onRefresh}>
         <CatalogGrid />
       </PullRefresh>
