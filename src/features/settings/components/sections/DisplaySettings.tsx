@@ -6,10 +6,7 @@ import {
 } from "@/features/catalog/stores";
 import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
-import {
-  useAnnounceIcons,
-  useSettingsStore,
-} from "@/features/settings/hooks";
+import { useAnnounceIcons, useSettingsStore } from "@/features/settings/hooks";
 import type { AnnounceIcon } from "@/features/settings/lib/announceIconDb";
 import {
   FONT_SCALE_MAX,
@@ -256,7 +253,7 @@ export const DisplaySettings: React.FunctionComponent = () => {
             accept="image/*"
             multiple
             className="sr-only"
-            onChange={(e): void => {
+            onChange={(e: React.ChangeEvent<HTMLInputElement>): void => {
               void handleSelectAnnounceIcons(e);
             }}
             aria-label="アイコン画像を選択"
@@ -415,11 +412,7 @@ const AnnounceIconRow: React.FunctionComponent<{
         <span className="text-muted-foreground text-xs flex-1 truncate">
           {formatBytes(icon.blob.size)}
         </span>
-        <Button
-          variant="ghost"
-          onClick={onRemove}
-          icon={<FiX size={16} />}
-        >
+        <Button variant="ghost" onClick={onRemove} icon={<FiX size={16} />}>
           削除
         </Button>
       </div>

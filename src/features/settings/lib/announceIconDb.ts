@@ -36,10 +36,7 @@ function openDb(): Promise<IDBDatabase> {
 export async function listAnnounceIcons(): Promise<AnnounceIcon[]> {
   const db = await openDb();
   return new Promise<AnnounceIcon[]>((resolve, reject) => {
-    const req = db
-      .transaction(STORE, "readonly")
-      .objectStore(STORE)
-      .getAll();
+    const req = db.transaction(STORE, "readonly").objectStore(STORE).getAll();
     req.onsuccess = (): void => {
       const rows = req.result as AnnounceIcon[];
       rows.sort((a, b) => a.addedAt - b.addedAt);

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
-  addAnnounceIcon,
   type AnnounceIcon,
+  addAnnounceIcon,
   listAnnounceIcons,
   removeAnnounceIcon,
 } from "@/features/settings/lib/announceIconDb";
