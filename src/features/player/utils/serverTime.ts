@@ -11,12 +11,11 @@
 // 取得に失敗した場合はオフセット 0（= PC時刻）にフォールバックするため、
 // 同期は従来どおり動作する（退行なし）。
 //
-// 時刻ソース: timeapi.io（CORS対応・APIキー不要）を JST で取得し、
-//   extractDoujiTime と同じ JST(+9)→UTC epoch 変換で絶対時刻を得る。
+// 時刻ソース: バックエンドサーバの時刻(epoch)。
 // ============================================================
 
-const TIME_API_URL =
-  "https://timeapi.io/api/Time/current/zone?timeZone=Asia/Tokyo";
+import { apiGet } from "@/shared/api";
+
 const FETCH_TIMEOUT_MS = 5000;
 
 /** serverEpochMs - localEpochMs。null = 未取得（PC時刻を使用） */
@@ -24,55 +23,28 @@ let cachedOffsetMs: number | null = null;
 /** 取得中の Promise（同時呼び出しを束ねる） */
 let inFlight: Promise<void> | null = null;
 
-/** timeapi.io のレスポンス（必要なフィールドのみ） */
-interface TimeApiResponse {
-  year: number;
-  month: number;
-  day: number;
-  hour: number;
-  minute: number;
-  seconds: number;
-  milliSeconds: number;
+/** バックエンドの時刻APIのレスポンス */
+interface BackendCurrentTimeResponse {
+  epoch_ms: number;
 }
 
 /**
- * JST の各時刻フィールドから UTC epoch ms を算出する。
- * extractDoujiTime と同じ JST(+9)→UTC 変換方式に揃える。
- * @returns epoch ms。フィールド不正なら null
+ * Promiseをタイムアウト付きで実行する。
+ *
+ * 注意: タイムアウトを迎えてもawaitが終了するだけで、引数の`promise`はキャンセルされず裏で走り続ける。
  */
-function jstFieldsToEpochMs(d: Partial<TimeApiResponse>): number | null {
-  const { year, month, day, hour, minute, seconds, milliSeconds } = d;
-  const required = [year, month, day, hour, minute, seconds];
-  if (required.some((v) => typeof v !== "number" || Number.isNaN(v))) {
-    return null;
+async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("request timed out")), ms);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer != null) clearTimeout(timer);
   }
-  // 値域検証。Date.UTC は範囲外の値を黙って正規化（例: month=13 → 翌年）
-  // してしまうため、不正なペイロードを誤ったオフセットに採用しないよう弾く。
-  const inRange =
-    (year as number) >= 1970 &&
-    (month as number) >= 1 &&
-    (month as number) <= 12 &&
-    (day as number) >= 1 &&
-    (day as number) <= 31 &&
-    (hour as number) >= 0 &&
-    (hour as number) <= 23 &&
-    (minute as number) >= 0 &&
-    (minute as number) <= 59 &&
-    (seconds as number) >= 0 &&
-    (seconds as number) <= 59;
-  if (!inRange) {
-    return null;
-  }
-  const ms = Date.UTC(
-    year as number,
-    (month as number) - 1,
-    day as number,
-    (hour as number) - 9,
-    minute as number,
-    seconds as number,
-    typeof milliSeconds === "number" ? milliSeconds : 0,
-  );
-  return Number.isNaN(ms) ? null : ms;
 }
 
 /**
@@ -85,20 +57,18 @@ export function primeServerTimeOffset(): Promise<void> {
   if (inFlight) return inFlight;
 
   inFlight = (async (): Promise<void> => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
     try {
       const t0 = Date.now();
-      const res = await fetch(TIME_API_URL, {
-        signal: controller.signal,
-        headers: { Accept: "application/json" },
-      });
+      const { epoch_ms: serverEpochMs } = await withTimeout(
+        apiGet<BackendCurrentTimeResponse>("/current-time"),
+        FETCH_TIMEOUT_MS,
+      );
       const t1 = Date.now();
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-      const data = (await res.json()) as Partial<TimeApiResponse>;
-      const serverEpochMs = jstFieldsToEpochMs(data);
-      if (serverEpochMs === null) throw new Error("invalid time payload");
+      // サーバから送られてきたデータが万が一壊れていたら再取得できるようにエラー扱いする
+      if (!Number.isFinite(serverEpochMs)) {
+        throw new Error("Invalid current-time response");
+      }
 
       // ラウンドトリップ遅延を半分で補正（送信〜受信の中点を基準にする）
       const localMid = (t0 + t1) / 2;
@@ -107,7 +77,6 @@ export function primeServerTimeOffset(): Promise<void> {
       // 取得失敗時は PC時刻にフォールバック（オフセット 0 扱い）。
       // cachedOffsetMs は null のまま据え置き、次回開始時に再試行できる。
     } finally {
-      clearTimeout(timer);
       inFlight = null;
     }
   })();
