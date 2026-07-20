@@ -65,6 +65,11 @@ export function primeServerTimeOffset(): Promise<void> {
       );
       const t1 = Date.now();
 
+      // サーバから送られてきたデータが万が一壊れていたら再取得できるようにエラー扱いする
+      if (!Number.isFinite(serverEpochMs)) {
+        throw new Error("Invalid current-time response");
+      }
+
       // ラウンドトリップ遅延を半分で補正（送信〜受信の中点を基準にする）
       const localMid = (t0 + t1) / 2;
       cachedOffsetMs = serverEpochMs - localMid;
