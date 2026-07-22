@@ -4,6 +4,7 @@ import { AnimatePresence, motion, type PanInfo } from "motion/react";
 import type { SyntheticEvent } from "react";
 import {
   FiGrid,
+  FiMail,
   FiMonitor,
   FiMusic,
   FiSettings,
@@ -140,6 +141,13 @@ export const SideMenu: React.FunctionComponent<Props> = ({
                 isInternal
               >
                 PC版に切替
+              </MenuItem>
+              <MenuItem
+                icon={<FiMail className="w-5 h-5" />}
+                href="https://announce.nijiurachan.net/"
+                isInternal
+              >
+                お知らせ
               </MenuItem>
             </nav>
 
