@@ -32,7 +32,7 @@
         "@types/youtube": "^0.2.0",
         "@vitejs/plugin-basic-ssl": "^2.3.0",
         "@vitejs/plugin-react": "^6.0.1",
-        "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#c139192a82bef6aa87161a26d1de758498d488ff",
+        "axnospaint-for-aimg": "github:nijiurachan/axnospaint-for-aimg#754217f4380d8ce9b5ec7c5c6fc9a034b4b9db94",
         "dompurify": "3.4.11",
         "eslint": "^9.39.4",
         "eslint-plugin-react-hooks": "^7.0.1",
@@ -423,7 +423,7 @@
 
     "argparse": ["argparse@2.0.1", "", {}, "sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q=="],
 
-    "axnospaint-for-aimg": ["axnospaint-for-aimg@github:nijiurachan/axnospaint-for-aimg#c139192", {}, "nijiurachan-axnospaint-for-aimg-c139192", "sha512-QaHPxY0YsJ43QxxURu7LRvQG5ZlJuEmsg/ITuCbGok4GDeIkMEojPz8sN7MV3S17slZaRVBoTcwqf75nFIpS4Q=="],
+    "axnospaint-for-aimg": ["axnospaint-for-aimg@github:nijiurachan/axnospaint-for-aimg#754217f", {}, "nijiurachan-axnospaint-for-aimg-754217f", "sha512-otgQExJqvwObBFM0/eCEdJrXAxwn885/8Mw/dHTCz2qGrKkhTV+MiTSqeAAnG9yn2FqmbOtuybVmBzHkWOo+4w=="],
 
     "babel-dead-code-elimination": ["babel-dead-code-elimination@1.0.12", "", { "dependencies": { "@babel/core": "^7.23.7", "@babel/parser": "^7.23.6", "@babel/traverse": "^7.23.7", "@babel/types": "^7.23.6" } }, "sha512-GERT7L2TiYcYDtYk1IpD+ASAYXjKbLTDPhBtYj7X1NuRMDTMtAx9kyBenub1Ev41lo91OHCKdmP+egTDmfQ7Ig=="],
 
