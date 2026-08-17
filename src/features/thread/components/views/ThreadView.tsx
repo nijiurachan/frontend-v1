@@ -25,7 +25,11 @@ import { useHistoryStore } from "@/features/history/stores";
 import { useNgStore } from "@/features/ng-filter/stores";
 import { useSettingsStore } from "@/features/settings/hooks";
 import type * as modals from "@/features/thread/components/modals";
-import { type ActionButton, BottomActionBar } from "@/features/thread/ui";
+import {
+  type ActionButton,
+  BottomActionBar,
+  NewRepliesBanner,
+} from "@/features/thread/ui";
 import { useSwipeBack } from "@/shared/hooks/useSwipeBack";
 import { BmgBanner } from "@/shared/ui/ad";
 import {
@@ -36,6 +40,7 @@ import {
   PullRefresh,
 } from "@/shared/ui/feedback";
 import { ModalContext } from "@/shared/ui/overlay/ModalContext";
+import { useNewReplyCheck } from "../../hooks/useNewReplyCheck";
 import { useThread } from "../../hooks/useThread";
 import { useReplyModalStore } from "../../stores/replyModalStore";
 import { extractImages } from "../../utils/extractImages";
@@ -145,6 +150,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
 }: Props) => {
   const { data, isLoading, error, refetch, isFetching, dataUpdatedAt } =
     useThread(threadId);
+  const { newCount } = useNewReplyCheck(threadId);
   const router = useRouter();
   const { hash } = useLocation();
   const { addViewed } = useHistoryStore();
@@ -509,6 +515,7 @@ export const ThreadView: React.FunctionComponent<Props> = ({
           onJumpToPost={handleJumpToPost}
         />
       </Suspense>
+      <NewRepliesBanner threadId={threadId} newCount={newCount} />
       <BottomActionBar actions={threadActions} primaryAction={replyAction} />
     </>
   );

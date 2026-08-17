@@ -131,10 +131,10 @@ export const SideMenu: React.FunctionComponent<Props> = ({
               </MenuItem>
               <MenuItem
                 icon={<FiWatch className="w-5 h-5" />}
-                href="/pc/archive.php"
-                isInternal
+                to="/archive"
+                onClick={onClose}
               >
-                過去ログ(PC版)
+                過去ログ
               </MenuItem>
               <MenuItem
                 icon={<FiMonitor className="w-5 h-5" />}

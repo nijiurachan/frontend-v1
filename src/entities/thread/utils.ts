@@ -4,7 +4,10 @@ import { UPLOADS_BASE } from "@/shared/api";
 import { decodeHtmlEntities } from "@/shared/lib";
 import type { Thread } from "./types";
 
-export function getThreadTitle(thread: Thread, maxLength: number = 30): string {
+export function getThreadTitle(
+  thread: Pick<Thread, "title" | "body">,
+  maxLength: number = 30,
+): string {
   if (thread.title) return decodeHtmlEntities(thread.title);
   const stripped = thread.body.replace(/<[^>]+>/g, "").trim();
   return decodeHtmlEntities(stripped).slice(0, maxLength) || "(無題)";

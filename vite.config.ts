@@ -24,6 +24,9 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
   const env = loadEnv(mode, import.meta.dirname, "");
   const klecksEmbedUrl =
     env.VITE_KLECKS_EMBED_URL?.trim() || "/assets/klecks/embed.js";
+  // ローカルAPI (AI_BBS) の起動アドレスが 8080 以外の場合に上書きできるようにする
+  // (例: VS Code の auto port-forward が 8080 を占有している環境)
+  const proxyTarget = env.VITE_PROXY_TARGET?.trim() || "http://localhost:8080";
 
   return {
     build: {
@@ -104,11 +107,11 @@ export default defineConfig(({ mode, command }: ConfigEnv) => {
     server: {
       proxy: {
         "/api": {
-          target: "http://localhost:8080",
+          target: proxyTarget,
           changeOrigin: true,
         },
         "/uploads": {
-          target: "http://localhost:8080",
+          target: proxyTarget,
           changeOrigin: true,
         },
       },
